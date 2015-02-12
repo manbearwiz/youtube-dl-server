@@ -10,7 +10,7 @@ FROM python:3-onbuild
 # Install ffmpeg.
 RUN \
   apt-get update && \
-  apt-get install -y ffmpeg && \
+  apt-get install -y libav-tools && \
   rm -rf /var/lib/apt/lists/*
 
 VOLUME ["/youtube-dl"]
