@@ -15,6 +15,4 @@ RUN \
 
 VOLUME ["/youtube-dl"]
 
-WORKDIR /youtube-dl
-
-CMD python ../youtube-dl-server.py
+CMD [ "python", "./youtube-dl-server.py" ]
