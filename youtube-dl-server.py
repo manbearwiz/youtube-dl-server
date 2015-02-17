@@ -39,7 +39,7 @@ def dl_worker():
         
 def download(url):
     print("Starting download of " + url)
-    command = """youtube-dl -o "/youtube-dl/%(title)s.%(ext)s" --restrict-filenames -f bestvideo+bestaudio --merge-output-format mp4 """ + url
+    command = """youtube-dl -o "/youtube-dl/%(title)s.%(ext)s" --restrict-filenames -f best[acodec=none][ext=mp4]+best[vcodec=none][ext=m4a] --merge-output-format mp4 """ + url
     print("Finished downloading " + url)
     subprocess.call(command, shell=True)
     
