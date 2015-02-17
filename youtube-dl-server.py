@@ -1,32 +1,55 @@
-from bottle import route, request, Bottle
+import json
+import os
 import subprocess
-import threading
+from queue import Queue
+from bottle import route, run, Bottle, request
+from threading import Thread
 
 app = Bottle()
 
-@app.route('/download')
-def download():
+@app.route('/youtube-dl')
+def dl_queue_list():
+    print("bar")
     return '''
-        <form action="/download" method="post">
+        <form action="/youtube-dl/q" method="POST">
             URL: <input name="url" type="text" />
             <input value="Submit" type="submit" />
         </form>
     '''
 
-@app.route('/download', method='POST')
-def do_download():
-    url = request.forms.get('url')
-    threading.Thread(target=exec_download, args=[url]).start()
-    return '''
-        <form action="/download" method="post">
-            URL: <input name="url" type="text" />
-            <input value="Submit" type="submit" />
-            <p>Downloading ''' + url + '''</p>
-        </form>
-    '''
+@app.route('/youtube-dl/q', method='GET')
+def q_size():
+    return { "success" : True, "size" : json.dumps(list(dl_q.queue)) }
+
+@app.route('/youtube-dl/q', method='POST')
+def q_put():
+    url = request.forms.get( "url" )
+    if "" != url:
+        dl_q.put( url )
+        print("Added url " + url + " to the download queue")
+        return { "success" : True, "url" : url }
+    else:
+        return { "success" : False, "error" : "dl called without a url" }
+        
+def dl_worker():
+    while not done:
+        item = dl_q.get() 
+        download(item)
+        dl_q.task_done()
+        
+def download(url):
+    print("Starting download of " + url)
+    command = "youtube-dl -o %(title)s.%(ext)s -f bestvideo+bestaudio --merge-output-format mp4 " + url
+    print("Finished downloading " + url)
+    subprocess.call(command)
     
-def exec_download(url):
-    print(url)
-    subprocess.call("youtube-dl -o %(title)s.%(ext)s -f bestvideo+bestaudio " + url)
+dl_q = Queue();
+done = False;
+dl_thread = Thread(target=dl_worker)
+dl_thread.start()
 
-app.run()
+print("Started download thread")
+
+app.run(host='localhost', port=8080, debug=True)
+done = True
+dl_thread.join()
