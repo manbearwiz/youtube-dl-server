@@ -15,6 +15,6 @@ RUN \
   
 EXPOSE 8080
 
-VOLUME ["/youtube-dl"]
+VOLUME ["/config", "/youtube-dl"]
 
 CMD [ "python", "-u", "./youtube-dl-server.py" ]
