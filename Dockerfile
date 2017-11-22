@@ -11,10 +11,10 @@ FROM python:3-onbuild
 RUN \
   apt-get update && \
   apt-get install -y libav-tools && \
-  rm -rf /var/lib/apt/lists/* && \
+  rm -rf /var/lib/apt/lists/*
 
 # Copy default youtube-dl.conf
-  cp -n /usr/src/app/youtube-dl.conf /config/youtube-dl.conf
+COPY youtube-dl.conf /config/youtube-dl.conf
   
 EXPOSE 8080
 
