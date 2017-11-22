@@ -18,6 +18,10 @@ This example uses host networking for simplicity. Also note the `-v` argument. T
 sudo docker run -d --net="host" --name youtube-dl -v /home/kevin/youtube-dl:/youtube-dl kmb32123/youtube-dl-server
 ```
 
+### Configuration
+
+Define custom configuration options within /config/youtube-dl.conf. See https://github.com/rg3/youtube-dl/blob/master/README.md#configuration for more details.
+
 ### Start a download remotely
 
 Downloads can be triggered by supplying the `{{url}}` of the requested video through the Web UI or through the REST interface via curl, etc.
