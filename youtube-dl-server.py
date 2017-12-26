@@ -22,8 +22,10 @@ def q_size():
 @app.route('/youtube-dl/q', method='POST')
 def q_put():
     url = request.forms.get( "url" )
+    audio = request.forms.get( "audio", "" )
     if "" != url:
-        dl_q.put( url )
+        only_audio = bool( audio )
+        dl_q.put( { "url": url, "only_audio":  only_audio } )
         print("Added url " + url + " to the download queue")
         return { "success" : True, "url" : url }
     else:
@@ -35,11 +37,15 @@ def dl_worker():
         download(item)
         dl_q.task_done()
 
-def download(url):
-    print("Starting download of " + url)
-    command = """youtube-dl -o "/youtube-dl/.incomplete/%(title)s.%(ext)s" -f bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4] --exec 'touch {} && mv {} /youtube-dl/' --merge-output-format mp4 """ + url
+def download(item):
+    only_audio_option = """ """
+    if item.get("only_audio"):
+        only_audio_option = """ -x """
+
+    print("Starting video download of " + item.get("url"))
+    command = """youtube-dl -o "/youtube-dl/.incomplete/%(title)s.%(ext)s" -f bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]""" + only_audio_option +  """--exec 'touch {} && mv {} /youtube-dl/' --merge-output-format mp4 """ + item.get("url")
     subprocess.call(command, shell=True)
-    print("Finished downloading " + url)
+    print("Finished downloading " + item.get("url") )
 
 dl_q = Queue();
 done = False;
