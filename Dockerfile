@@ -7,7 +7,7 @@
 FROM python:alpine
 
 RUN apk add --no-cache \
-  ffmpeg
+  ffmpeg \
   tzdata
 
 RUN mkdir -p /usr/src/app
