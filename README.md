@@ -15,7 +15,15 @@ Very spartan and opinionated Web / REST interface for downloading youtube videos
 This example uses host networking for simplicity. Also note the `-v` argument. This directory will be used to output the resulting videos
 
 ```shell
-sudo docker run -d --net="host" --name youtube-dl -v /home/kevin/youtube-dl:/youtube-dl kmb32123/youtube-dl-server
+docker run -d --net="host" --name youtube-dl -v /home/core/youtube-dl:/youtube-dl kmb32123/youtube-dl-server
+```
+
+### Alpine
+
+There is now a working image based on Alpine linux that is much smaller. This will likely become the main image in the future
+
+```shell
+docker run kmb32123/youtube-dl-server:alpine
 ```
 
 ### Start a download remotely
