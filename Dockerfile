@@ -7,22 +7,21 @@
 FROM python:alpine
 
 # install dependencies
-COPY requirements.txt /tmp/
 RUN apk add --no-cache \
 		ffmpeg \
 		tzdata && \
-	pip install --no-cache-dir -r /tmp/requirements.txt
+	pip install --upgrade --force-reinstall --ignore-installed \
+		bottle youtube-dl && \
+	rm -r /root/.cache && \
+	rm -rf /var/cache/apk/* && \
+	rm -rf /tmp/*
 
 # copy scripts
 COPY root/ /
-
-# cleanup
-RUN rm -rf /var/cache/apk/* \
-		&& rm -rf /tmp/*
-
-CMD [ "python", "-u", "./youtube-dl-server.py" ]
 
 # ports and volumes
 EXPOSE 8080
 VOLUME ["/youtube-dl"]
 WORKDIR /usr/src/app
+
+CMD [ "python", "-u", "./youtube-dl-server.py" ]
