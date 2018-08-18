@@ -4,6 +4,8 @@ import subprocess
 from queue import Queue
 from bottle import route, run, Bottle, request, static_file
 from threading import Thread
+from os import listdir
+from os.path import isfile, join
 
 app = Bottle()
 
@@ -14,6 +16,12 @@ def dl_queue_list():
 @app.route('/youtube-dl/static/:filename#.*#')
 def server_static(filename):
     return static_file(filename, root='./static')
+
+@app.route('/youtube-dl/completed', method='GET')
+def q_size():
+    downloadPath = '/youtube-dl'
+    completed = [f for f in listdir(downloadPath) if isfile(join(downloadPath, f))]
+    return { "success" : True, "files" : list(completed) }
 
 @app.route('/youtube-dl/q', method='GET')
 def q_size():
