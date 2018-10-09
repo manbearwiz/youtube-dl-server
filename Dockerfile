@@ -13,7 +13,7 @@ RUN \
   apt-get install -y libav-tools && \
   rm -rf /var/lib/apt/lists/*
   
-EXPOSE 8080
+EXPOSE 8765
 
 VOLUME ["/youtube-dl"]
 
