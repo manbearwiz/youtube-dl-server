@@ -48,7 +48,7 @@ def dl_worker():
 
 def download(item):
     l_command = ["youtube-dl",
-        "-o", "/youtube-dl/.incomplete/" + os.getenv("YTBDL_O", "%(title)s.%(ext)s"),
+        "-o", "/incomplete/" + os.getenv("YTBDL_O", "%(title)s.%(ext)s"),
         "-f", os.getenv("YTBDL_F", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]")]
     if item.get("only_audio"):
         l_command += ["-x"]

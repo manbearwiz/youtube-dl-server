@@ -21,7 +21,7 @@ COPY root/ /
 
 # ports and volumes
 EXPOSE 8080
-VOLUME ["/youtube-dl"]
+VOLUME /youtube-dl /incomplete
 WORKDIR /usr/src/app
 
 CMD [ "python", "-u", "./youtube-dl-server.py" ]
