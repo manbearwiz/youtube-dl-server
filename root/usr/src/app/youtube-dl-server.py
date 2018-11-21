@@ -21,6 +21,8 @@ def server_static(filename):
 def q_size():
     downloadPath = '/youtube-dl'
     completed = [f for f in listdir(downloadPath) if isfile(join(downloadPath, f))]
+    mtime = lambda f: os.stat(join(downloadPath, f)).st_mtime
+    completed = list(sorted(completed, key=mtime, reverse=True))
     return { "success" : True, "files" : list(completed) }
 
 @app.route('/youtube-dl/q', method='GET')
