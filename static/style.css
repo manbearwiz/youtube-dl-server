@@ -3,6 +3,11 @@
  */
 
 
+/* Loader */
+.loader {
+  max-width: 20%
+}
+
 /* Links */
 
 a, a:focus, a:hover {

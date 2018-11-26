@@ -26,15 +26,37 @@ There is now a working image based on Alpine linux that is much smaller. This wi
 docker run kmb32123/youtube-dl-server:alpine
 ```
 
-### Start a download remotely
+## Usage as an upstart service
+
+Create a file `/etc/init/youtube-dl.conf` with the following content,
+substituting `...pathToGitRepo...` with the actual path on your system:
+
+    start on startup
+    script
+        cd ...pathToGitRepo...
+        exec >> upstart.log
+        exec 2>&1
+        date
+        export BASE_URL=/...subdir.../youtube-dl
+        export PORT=8082
+        export DEST_DIR=$PWD/static
+        export ROBOTS_NOINDEX=True
+        python -u youtube-dl-server.py
+    end script
+
+Then start the service with:
+
+    service youtube-dl start
+
+## Start a download remotely
 
 Downloads can be triggered by supplying the `{{url}}` of the requested video through the Web UI or through the REST interface via curl, etc.
 
-#### HTML
+### HTML
 
 Just navigate to `http://{{address}}:8080/youtube-dl` and enter the requested `{{url}}`.
 
-#### Curl
+### Curl
 
 ```shell
 curl -X POST --data-urlencode "url={{url}}" http://{{address}}:8080/youtube-dl/q

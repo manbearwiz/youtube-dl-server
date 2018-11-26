@@ -8,6 +8,9 @@
 
   <meta name="description" content="">
   <meta name="author" content="">
+  % if ROBOTS_NOINDEX:
+  <meta name="robots" content="noindex">
+  % end
   <link rel="icon" href="../../favicon.ico">
 
   <title>youtube-dl</title>
@@ -26,7 +29,13 @@
           <h1 class="cover-heading">youtube-dl</h1>
           <p class="lead">Enter a video url to download the video to the server. Url can be to YouTube or <a href="https://rg3.github.io/youtube-dl/supportedsites.html">any other supported site</a>. The server will automatically download the highest quality version available.</p>
           <div class="row">
-            <form action="/youtube-dl/q" method="POST">
+            <form action="{{BASE_URL}}/q" method="POST">
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" name="audio-only" checked>
+                Audio only
+              </label>
+            </div>
             <div class="input-group">
               <input name="url" type="url" class="form-control" placeholder="URL">
               <span class="input-group-btn">
@@ -49,8 +58,6 @@
     </div>
   </div>
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 </body>
 
 </html>
