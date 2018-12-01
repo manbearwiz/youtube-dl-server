@@ -23,11 +23,13 @@ def q_size():
 @app.route('/youtube-dl/q', method='POST')
 def q_put():
     url = request.forms.get( "url" )
+    archive = request.forms.get("archive")
+    subfolder = request.forms.get("playlistfolder")
     # embed = request.forms.get( "embed_sub" )
     # write_sub = request.forms.get( "write_sub" )
     subs = request.forms.get( "subs" )
 
-    settings = {"url" : url ,"subs":subs}
+    settings = {"url" : url ,"subs":subs,"archive":archive,"subfolder":subfolder}
     if "" != url:
         dl_q.put( settings )
         print("Added url " + url + " to the download queue")
@@ -44,19 +46,21 @@ def dl_worker():
 def download(item):
     url = item["url"]
     print(item)
+    path = "/youtube-dl/%(playlist_title)s/%(title)s.%(ext)s" if item["subfolder"] == "True" else "/youtube-dl/%(title)s.%(ext)s"
+    runcall = ["youtube-dl","-q", "-o", path, "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]", "--merge-output-format", "mp4", url]
 
-    runcall = ["youtube-dl","-q", "-o", "/youtube-dl/%(playlist_title)s/%(title)s.%(ext)s", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]", "--merge-output-format", "mp4", url]
+    if item["archive"] == "True":
+        runcall.extend(["--download-archive", archive_file])
 
     if item["subs"] == "write" or item["subs"] == "embed":
         runcall.append("--write-sub")
-        runcall.extend(["--convert-subs","srt"])
         if sub_lang == "all":
             runcall.append("--all-subs")
         else:
-            runcall.append("--sub-lang")
-            runcall.append(sub_lang)
+            runcall.extend(["--sub-lang",sub_lang])
     if item["subs"] == "embed":
         runcall.append("--embed-subs")
+
 
     print("Starting download of " + url)
     subprocess.run(runcall)
@@ -64,6 +68,7 @@ def download(item):
 
 
 sub_lang = os.environ.get("SUB_LANGS","all")
+archive_file = os.environ.get("ARCHIVE_FILE","/youtube-dl/yt-dl_archive.txt")
 print("Sub langs:",sub_lang)
 
 dl_q = Queue();
