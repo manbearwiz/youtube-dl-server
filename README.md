@@ -4,7 +4,8 @@
 
 # youtube-dl-server
 
-Fork contains additional settings for example for subtitles.
+Fork contains additional settings and support for subtitles.
+Use environment variable _"SUB_LANGS"_ = enUS or deDE or valid lists to specify subtitles to pass to the `--sub-lang` parameter.
 
 Very spartan and opinionated Web / REST interface for downloading youtube videos onto a server. [`bottle`](https://github.com/bottlepy/bottle) + [`youtube-dl`](https://github.com/rg3/youtube-dl).
 

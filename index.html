@@ -36,11 +36,12 @@
               </span>
             </div>
             <fieldset id="subs">
-              <input type="radio" id="write_sub" name="subs" value="write" checked>
+              <input type="radio" id="write_sub" name="subs" value="write">
         			<label for="write_sub"> Write Subs</label>
-        			<input type="radio" id="embed_sub" name="subs" value="embed">
-        			<label for="embed_sub"> Embed Subs</label>
-        			<input type="radio" id="no_subs" name="subs" value="none">
+        			<!-- <input type="radio" id="embed_sub" name="subs" value="embed"> -->
+        			<!-- <label for="embed_sub"> Embed Subs</label> -->
+              <!-- Embedding does not work with avconv yet. Use ffmpeg instead -->
+        			<input type="radio" id="no_subs" name="subs" value="none" checked>
         			<label for="no_subs"> No Subs</label>
       		</fieldset>
           </form>
@@ -49,7 +50,7 @@
 
         <div class="mastfoot">
           <div class="inner">
-            <p>Web frontend for <a href="https://rg3.github.io/youtube-dl/">youtube-dl</a>, by <a href="https://twitter.com/manbearwiz">@manbearwiz</a>.</p>
+            <p>Web frontend for <a href="https://rg3.github.io/youtube-dl/">youtube-dl</a>, original by <a href="https://twitter.com/manbearwiz">@manbearwiz</a>. Modified by <a href="https://github.com/Ultrawipf">Ultrawipf</a>.</p>
           </div>
         </div>
 

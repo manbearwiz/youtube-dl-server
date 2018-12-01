@@ -4,6 +4,7 @@ import subprocess
 from queue import Queue
 from bottle import route, run, Bottle, request, static_file
 from threading import Thread
+import argparse
 
 app = Bottle()
 
@@ -44,17 +45,26 @@ def download(item):
     url = item["url"]
     print(item)
 
-    runcall = ["youtube-dl","-q", "-o", "/youtube-dl/%(playlist_title)s/%(title)s.%(ext)s", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]", "--merge-output-format", "mp4","--sub-lang", "deDE", "--sub-format", "srt", url]
+    runcall = ["youtube-dl","-q", "-o", "/youtube-dl/%(playlist_title)s/%(title)s.%(ext)s", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]", "--merge-output-format", "mp4", url]
 
     if item["subs"] == "write" or item["subs"] == "embed":
         runcall.append("--write-sub")
+        runcall.extend(["--convert-subs","srt"])
+        if sub_lang == "all":
+            runcall.append("--all-subs")
+        else:
+            runcall.append("--sub-lang")
+            runcall.append(sub_lang)
     if item["subs"] == "embed":
         runcall.append("--embed-subs")
 
     print("Starting download of " + url)
-    #subprocess.run("/youtube-dl/yt-dl/yt-dl.sh",url)
     subprocess.run(runcall)
     print("Finished downloading " + url)
+
+
+sub_lang = os.environ.get("SUB_LANGS","all")
+print("Sub langs:",sub_lang)
 
 dl_q = Queue();
 done = False;

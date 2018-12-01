@@ -1,8 +1,7 @@
 #
 # youtube-dl Server Dockerfile
 #
-# https://github.com/kmb32123/youtube-dl-server-dockerfile
-#
+
 
 # Pull base image.
 FROM python:3-onbuild
@@ -10,9 +9,10 @@ FROM python:3-onbuild
 # Install ffmpeg.
 RUN \
   apt-get update && \
-  apt-get install -y libav-tools && \
-  rm -rf /var/lib/apt/lists/*
-  
+  apt-get install -y libav-tools libavcodec-extra && \
+  rm -rf /var/lib/apt/lists/* \
+  pip install --upgrade youtube-dl
+
 EXPOSE 8080
 
 VOLUME ["/youtube-dl"]
