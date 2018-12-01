@@ -22,10 +22,15 @@ def q_size():
 @app.route('/youtube-dl/q', method='POST')
 def q_put():
     url = request.forms.get( "url" )
+    # embed = request.forms.get( "embed_sub" )
+    # write_sub = request.forms.get( "write_sub" )
+    subs = request.forms.get( "subs" )
+
+    settings = {"url" : url ,"subs":subs}
     if "" != url:
-        dl_q.put( url )
+        dl_q.put( settings )
         print("Added url " + url + " to the download queue")
-        return { "success" : True, "url" : url }
+        return settings
     else:
         return { "success" : False, "error" : "dl called without a url" }
 
@@ -35,9 +40,20 @@ def dl_worker():
         download(item)
         dl_q.task_done()
 
-def download(url):
+def download(item):
+    url = item["url"]
+    print(item)
+
+    runcall = ["youtube-dl","-q", "-o", "/youtube-dl/%(playlist_title)s/%(title)s.%(ext)s", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]", "--merge-output-format", "mp4","--sub-lang", "deDE", "--sub-format", "srt", url]
+
+    if item["subs"] == "write" or item["subs"] == "embed":
+        runcall.append("--write-sub")
+    if item["subs"] == "embed":
+        runcall.append("--embed-subs")
+
     print("Starting download of " + url)
-    subprocess.run(["youtube-dl", "-o", "/youtube-dl/.incomplete/%(title)s.%(ext)s", "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]", "--exec", "touch {} && mv {} /youtube-dl/", "--merge-output-format", "mp4", url])
+    #subprocess.run("/youtube-dl/yt-dl/yt-dl.sh",url)
+    subprocess.run(runcall)
     print("Finished downloading " + url)
 
 dl_q = Queue();
