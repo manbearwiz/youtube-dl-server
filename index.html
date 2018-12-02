@@ -35,18 +35,25 @@
                 </button>
               </span>
             </div>
+            <br>
+            <div>
             <fieldset id="subs">
-              <input type="radio" id="write_sub" name="subs" value="write">
-        			<label for="write_sub"> Write Subs</label>
+              <label for="subs">Subtitles: </label>
+              <input type="radio" id="no_subs" name="subs" value="none" checked>
+        			<label for="no_subs"> No</label>
+              <input type="radio" id="write_subs" name="subs" value="write">
+        			<label for="write_subs">Yes</label>
+              <input type="radio" id="all_subs" name="subs" value="all">
+        			<label for="all_subs">All</label>
         			<!-- <input type="radio" id="embed_sub" name="subs" value="embed"> -->
         			<!-- <label for="embed_sub"> Embed Subs</label> -->
               <!-- Embedding does not work with avconv yet. Use ffmpeg instead -->
-        			<input type="radio" id="no_subs" name="subs" value="none" checked>
-        			<label for="no_subs"> No Subs</label>
+
       		</fieldset>
           <label><input type="checkbox" name="archive" value="True">Enable archive</label>
-          <label><input type="checkbox" name="playlistfolder" value="True" checked>Playlist subfolder</label>
-          <label><input type="checkbox" name="audio_only" value="True" checked>Audio only</label>
+          <label><input type="checkbox" name="playlistfolder" value="True">Playlist subfolder</label>
+          <label><input type="checkbox" name="audio_only" value="True">Audio only</label>
+        </div>
           </form>
           </div>
         </div>

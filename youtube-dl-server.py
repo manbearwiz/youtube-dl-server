@@ -57,9 +57,9 @@ def download(item):
     if item["audio_only"] == "True":
         runcall.append("--extract-audio")
 
-    if item["subs"] == "write" or item["subs"] == "embed":
+    if not item["subs"] == "none":
         runcall.append("--write-sub")
-        if sub_lang == "all":
+        if sub_lang == "all" or item["subs"] == "all":
             runcall.append("--all-subs")
         else:
             runcall.extend(["--sub-lang",sub_lang])
