@@ -28,8 +28,9 @@ def q_put():
     archive = request.forms.get("archive")
     subfolder = request.forms.get("playlistfolder")
     subs = request.forms.get( "subs" )
+    audio_only =  request.forms.get( "audio_only" )
 
-    settings = {"url" : url ,"subs":subs,"archive":archive,"subfolder":subfolder}
+    settings = {"url" : url ,"subs":subs,"archive":archive,"subfolder":subfolder,"audio_only":audio_only}
     if "" != url:
         dl_q.put( settings )
         print("Added url " + url + " to the download queue")
@@ -52,6 +53,9 @@ def download(item):
 
     if item["archive"] == "True":
         runcall.extend(["--download-archive", archive_file])
+
+    if item["audio_only"] == "True":
+        runcall.append("--extract-audio")
 
     if item["subs"] == "write" or item["subs"] == "embed":
         runcall.append("--write-sub")
