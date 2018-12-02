@@ -9,9 +9,8 @@ FROM python:3-onbuild
 # Install ffmpeg.
 RUN \
   apt-get update && \
-  apt-get install -y libav-tools libavcodec-extra && \
-  rm -rf /var/lib/apt/lists/* \
-  pip install --upgrade youtube-dl
+  apt-get install -y libav-tools && \
+  rm -rf /var/lib/apt/lists/*
 
 EXPOSE 8080
 

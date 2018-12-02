@@ -4,7 +4,9 @@ import subprocess
 from queue import Queue
 from bottle import route, run, Bottle, request, static_file
 from threading import Thread
-import argparse
+
+sub_lang = os.environ.get("SUB_LANGS","all")
+archive_file = os.environ.get("ARCHIVE_FILE","/youtube-dl/yt-dl_archive.txt")
 
 app = Bottle()
 
@@ -25,14 +27,13 @@ def q_put():
     url = request.forms.get( "url" )
     archive = request.forms.get("archive")
     subfolder = request.forms.get("playlistfolder")
-    # embed = request.forms.get( "embed_sub" )
-    # write_sub = request.forms.get( "write_sub" )
     subs = request.forms.get( "subs" )
 
     settings = {"url" : url ,"subs":subs,"archive":archive,"subfolder":subfolder}
     if "" != url:
         dl_q.put( settings )
         print("Added url " + url + " to the download queue")
+        settings.update({"success" : True})
         return settings
     else:
         return { "success" : False, "error" : "dl called without a url" }
@@ -67,8 +68,6 @@ def download(item):
     print("Finished downloading " + url)
 
 
-sub_lang = os.environ.get("SUB_LANGS","all")
-archive_file = os.environ.get("ARCHIVE_FILE","/youtube-dl/yt-dl_archive.txt")
 print("Sub langs:",sub_lang)
 
 dl_q = Queue();
