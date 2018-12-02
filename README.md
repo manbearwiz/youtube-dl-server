@@ -55,4 +55,4 @@ The server uses [`bottle`](https://github.com/bottlepy/bottle) for the web frame
 
 This docker image is based on [`python:3-onbuild`](https://registry.hub.docker.com/_/python/) and consequently [`debian:jessie`](https://registry.hub.docker.com/u/library/debian/).
 
-[1]: https://raw.githubusercontent.com/manbearwiz/youtube-dl-server/master/youtube-dl-server.png
+[1]: youtube-dl-server.png
