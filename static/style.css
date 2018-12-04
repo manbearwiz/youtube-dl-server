@@ -5,3 +5,7 @@ body {
 .container {
   height: 100vh;
 }
+
+div.input-group>select.custom-select {
+  flex: 0 1 160px;
+}

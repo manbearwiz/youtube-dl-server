@@ -14,7 +14,9 @@ app = Bottle()
 
 app_defaults = {
     'YDL_FORMAT': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
-    'YDL_EXTRACT_AUDIO': False,
+    'YDL_EXTRACT_AUDIO_FORMAT': None,
+    'YDL_EXTRACT_AUDIO_QUALITY': '192',
+    'YDL_RECODE_VIDEO_FORMAT': None,
     'YDL_OUTPUT_TEMPLATE': '/youtube-dl/%(title)s [%(id)s].%(ext)s',
     'YDL_ARCHIVE_FILE': None
 }
@@ -38,37 +40,67 @@ def q_size():
 @app.route('/youtube-dl/q', method='POST')
 def q_put():
     url = request.forms.get("url")
-    if "" != url:
-        dl_q.put(url)
-        print("Added url " + url + " to the download queue")
-        return {"success": True, "url": url}
-    else:
-        return {"success": False, "error": "dl called without a url"}
+    options = {
+        'format': request.forms.get("format")
+    }
+
+    if not url:
+        return {"success": False, "error": "/q called without a 'url' query param"}
+
+    dl_q.put((url, options))
+    print("Added url " + url + " to the download queue")
+    return {"success": True, "url": url, "options": options}
 
 
 def dl_worker():
     while not done:
-        item = dl_q.get()
-        download(item)
+        url, options = dl_q.get()
+        download(url, options)
         dl_q.task_done()
 
 
-def get_ydl_options():
-    ydl_vars = ChainMap(os.environ, app_defaults)
+def get_ydl_options(request_options):
+    request_vars = {
+        'YDL_EXTRACT_AUDIO_FORMAT': None,
+        'YDL_RECODE_VIDEO_FORMAT': None,
+    }
+
+    requested_format = request_options.get('format', 'bestvideo')
+
+    if requested_format in ['aac', 'flac', 'mp3', 'm4a', 'opus', 'vorbis', 'wav']:
+        request_vars['YDL_EXTRACT_AUDIO_FORMAT'] = requested_format
+    elif requested_format == 'bestaudio':
+        request_vars['YDL_EXTRACT_AUDIO_FORMAT'] = 'best'
+    elif requested_format in ['mp4', 'flv', 'webm', 'ogg', 'mkv', 'avi']:
+        request_vars['YDL_RECODE_VIDEO_FORMAT'] = requested_format
+
+    ydl_vars = ChainMap(request_vars, os.environ, app_defaults)
+
+    postprocessors = []
+
+    if(ydl_vars['YDL_EXTRACT_AUDIO_FORMAT']):
+        postprocessors.append({
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': ydl_vars['YDL_EXTRACT_AUDIO_FORMAT'],
+            'preferredquality': ydl_vars['YDL_EXTRACT_AUDIO_QUALITY'],
+        })
+
+    if(ydl_vars['YDL_RECODE_VIDEO_FORMAT']):
+        postprocessors.append({
+            'key': 'FFmpegVideoConvertor',
+            'preferedformat': ydl_vars['YDL_RECODE_VIDEO_FORMAT'],
+        })
 
     return {
         'format': ydl_vars['YDL_FORMAT'],
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }] if ydl_vars['YDL_EXTRACT_AUDIO'] else [],
+        'postprocessors': postprocessors,
         'outtmpl': ydl_vars['YDL_OUTPUT_TEMPLATE'],
         'download_archive': ydl_vars['YDL_ARCHIVE_FILE']
     }
 
-def download(url):
-    with youtube_dl.YoutubeDL(get_ydl_options()) as ydl:
+
+def download(url, request_options):
+    with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
         ydl.download([url])
 
 
