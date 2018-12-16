@@ -52,7 +52,19 @@ Just navigate to `http://{{host}}:8080/youtube-dl` and enter the requested `{{ur
 #### Curl
 
 ```shell
-curl -X POST --data-urlencode "url={{url}}" http://{{address}}:8080/youtube-dl/q
+curl -X POST --data-urlencode "url={{url}}" http://{{host}}:8080/youtube-dl/q
+```
+
+#### Fetch
+
+```javascript
+fetch(`http://${host}:8080/youtube-dl/q`, {
+  method: "POST",
+  body: new URLSearchParams({
+    url: url,
+    format: "bestvideo"
+  }),
+});
 ```
 
 ## Implementation
