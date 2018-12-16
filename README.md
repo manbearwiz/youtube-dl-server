@@ -67,6 +67,14 @@ fetch(`http://${host}:8080/youtube-dl/q`, {
 });
 ```
 
+#### Bookmarklet
+
+Add the following bookmarklet to your bookmark bar so you can conviently send the current page url to your youtube-dl-server instance.
+
+```javascript
+javascript:!function(){fetch("http://${host}:8080/youtube-dl/q",{body:new URLSearchParams({url:window.location.href,format:"bestvideo"}),method:"POST"})}();
+```
+
 ## Implementation
 
 The server uses [`bottle`](https://github.com/bottlepy/bottle) for the web framework and [`youtube-dl`](https://github.com/rg3/youtube-dl) to handle the downloading. The integration with youtube-dl makes use of their [python api](https://github.com/rg3/youtube-dl#embedding-youtube-dl).
