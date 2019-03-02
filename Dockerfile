@@ -1,9 +1,3 @@
-#
-# youtube-dl Server Dockerfile
-#
-# https://github.com/manbearwiz/youtube-dl-server-dockerfile
-#
-
 FROM python:alpine
 
 # install dependencies
@@ -12,9 +6,10 @@ RUN apk add --no-cache \
 		tzdata && \
 	pip install --upgrade --force-reinstall --ignore-installed \
 		bottle youtube-dl && \
-	rm -r /root/.cache && \
-	rm -rf /var/cache/apk/* && \
-	rm -rf /tmp/*
+	rm -rf \
+	    /root/.cache \
+	    /var/cache/apk/* \
+	    /tmp/*
 
 # copy scripts
 COPY root/ /
