@@ -7,7 +7,10 @@ from bottle import route, run, Bottle, request, static_file
 from threading import Thread
 import youtube_dl
 from pathlib import Path
-from collections import ChainMap
+try:
+    from collections import ChainMap
+except ImportError:
+     from chainmap import ChainMap
 
 app = Bottle()
 
