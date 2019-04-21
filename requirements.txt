@@ -1,2 +1,4 @@
 bottle
 youtube-dl
+pathlib; python_version < '3'
+ChainMap; python_version < '3'
