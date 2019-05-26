@@ -4,7 +4,9 @@
 # https://github.com/manbearwiz/youtube-dl-server-dockerfile
 #
 
-FROM python:alpine
+# FROM python:alpine
+# for armhf
+FROM lsiobase/alpine.python3.armhf
 
 RUN apk add --no-cache \
   ffmpeg \
@@ -22,4 +24,6 @@ EXPOSE 8080
 
 VOLUME ["/youtube-dl"]
 
-CMD [ "python", "-u", "./youtube-dl-server.py" ]
+#ifelse: fatal: unable to exec python: no such file or directory
+#CMD [ "python", "-u", "./youtube-dl-server.py" ]
+CMD [ "python3", "-u", "./youtube-dl-server.py" ]
