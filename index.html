@@ -28,6 +28,17 @@
         <form action="/youtube-dl/q" method="POST">
           <div class="input-group">
             <input name="url" type="url" class="form-control" placeholder="URL" aria-label="URL" aria-describedby="button-submit">
+            <input type="text" name="daterange" value="01/01/2019 - 01/15/2019" />
+
+<script>
+$(function() {
+  $('input[name="daterange"]').daterangepicker({
+    opens: 'left'
+  }, function(start, end, label) {
+    console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+  });
+});
+</script>
             <select class="custom-select" name="format">
               <optgroup label="Video">
                 <option value="bestvideo">Best Video</option>
