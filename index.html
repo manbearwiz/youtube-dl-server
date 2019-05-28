@@ -28,29 +28,7 @@
         <form action="/youtube-dl/q" method="POST">
           <div class="input-group">
             <input name="url" type="url" class="form-control" placeholder="URL" aria-label="URL" aria-describedby="button-submit">
-            <input type="text" name="daterange" value="" />
-
-<script type="text/javascript">
-$(function() {
-
-  $('input[name="daterange"]').daterangepicker({
-      autoUpdateInput: false,
-      locale: {
-          cancelLabel: 'Clear'
-      }
-  });
-
-  $('input[name="daterange"]').on('apply.daterangepicker', function(ev, picker) {
-      $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
-  });
-
-  $('input[name="daterange"]').on('cancel.daterangepicker', function(ev, picker) {
-      $(this).val('');
-  });
-
-});
-</script>
-
+            
             <select class="custom-select" name="format">
               <optgroup label="Video">
                 <option value="bestvideo">Best Video</option>
@@ -76,6 +54,29 @@ $(function() {
               <button class="btn btn-primary" type="submit" id="button-submit">Submit</button>
             </div>
           </div>
+          <input type="text" name="daterange" value="" />
+
+<script type="text/javascript">
+$(function() {
+
+  $('input[name="daterange"]').daterangepicker({
+      autoUpdateInput: false,
+      locale: {
+          cancelLabel: 'Clear'
+      }
+  });
+
+  $('input[name="daterange"]').on('apply.daterangepicker', function(ev, picker) {
+      $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
+  });
+
+  $('input[name="daterange"]').on('cancel.daterangepicker', function(ev, picker) {
+      $(this).val('');
+  });
+
+});
+</script>
+
         </form>
       </div>
     </div>
