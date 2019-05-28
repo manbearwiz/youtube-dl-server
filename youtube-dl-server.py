@@ -43,6 +43,7 @@ def q_size():
 def q_put():
     url = request.forms.get("url")
     options = {
+        'daterange': request.forms.get("daterange"),
         'format': request.forms.get("format")
     }
 
