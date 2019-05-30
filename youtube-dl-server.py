@@ -93,10 +93,10 @@ def get_ydl_options(request_options):
             'key': 'FFmpegVideoConvertor',
             'preferedformat': ydl_vars['YDL_RECODE_VIDEO_FORMAT'],
         })
-
-     date_range = request_options.get('daterange')	
-
-     return {
+    
+    date_range = request_options.get('daterange')	
+    
+    return {
 	'daterange': date_range,
         'format': ydl_vars['YDL_FORMAT'],       
         'postprocessors': postprocessors,
