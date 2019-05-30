@@ -97,7 +97,7 @@ def get_ydl_options(request_options):
      date_range = request_options.get('daterange')	
 
      return {
-	    'daterange': date_range,
+	'daterange': date_range,
         'format': ydl_vars['YDL_FORMAT'],       
         'postprocessors': postprocessors,
         'outtmpl': ydl_vars['YDL_OUTPUT_TEMPLATE'],
