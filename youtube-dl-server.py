@@ -94,8 +94,11 @@ def get_ydl_options(request_options):
             'preferedformat': ydl_vars['YDL_RECODE_VIDEO_FORMAT'],
         })
 
-    return {
-        'format': ydl_vars['YDL_FORMAT'],
+     date_range = request_options.get('daterange')	
+
+     return {
+	    'daterange': date_range,
+        'format': ydl_vars['YDL_FORMAT'],       
         'postprocessors': postprocessors,
         'outtmpl': ydl_vars['YDL_OUTPUT_TEMPLATE'],
         'download_archive': ydl_vars['YDL_ARCHIVE_FILE']
