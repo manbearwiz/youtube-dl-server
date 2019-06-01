@@ -35,14 +35,14 @@
           <div class="input-group">
             <input name="url" type="url" class="form-control" placeholder="URL" aria-label="URL" aria-describedby="button-submit">
           <input type="text" name="daterange" value="" />
-		<script>		
+		<script>
 		  $('input[name="daterange"]').daterangepicker({
 		    "locale":{
+					"format":"YYYYMMDD"
+			},
 			"showDropdowns": true,
-			"format":"YYYYMMDD"
-			}  
 		   });	            
-            	 </script>
+         </script>
 	   <select class="custom-select" name="format">
               <optgroup label="Video">
                 <option value="bestvideo">Best Video</option>
