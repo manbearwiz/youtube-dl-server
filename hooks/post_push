@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+function add_tag() {
+  docker tag $IMAGE_NAME $DOCKER_REPO:$1
+  docker push $DOCKER_REPO:$1
+}
+
+CID=$(docker run -d $IMAGE_NAME)
+sleep 10s
+YTBDL_VERSION=$(docker exec $CID youtube-dl --version)
+docker rm -f $CID
+
+add_tag $DOCKER_TAG
+add_tag $YTBDL_VERSION
+
+exit $?

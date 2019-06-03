@@ -12,11 +12,11 @@ RUN apk add --no-cache \
 	    /tmp/*
 
 # copy scripts
-COPY root/ /
+COPY app/ /usr/src/app
 
 # ports and volumes
 EXPOSE 8080
-VOLUME /youtube-dl /incomplete
+VOLUME /youtube-dl
 WORKDIR /usr/src/app
 
 CMD [ "python", "-u", "./youtube-dl-server.py" ]
