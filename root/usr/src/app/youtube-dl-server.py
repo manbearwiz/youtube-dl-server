@@ -30,7 +30,7 @@ def q_completed():
 
 
 @app.route('/youtube-dl/q', method='GET')
-def q_size():
+def q_get():
     return {"success": True, "size": json.dumps(list(dl_q.queue))}
 
 
@@ -38,12 +38,12 @@ def q_size():
 def q_put():
     url = request.forms.get("url")
     audio = request.forms.get("audio")
-    if "" != url:
+    if not url:
+        return {"success": False, "error": "dl called without a url"}
+    else:
         dl_q.put({"url": url, "audio": bool(audio)})
         print("Added url " + url + " to the download queue")
         return {"success": True, "url": url}
-    else:
-        return {"success": False, "error": "dl called without a url"}
 
 
 def dl_worker():
@@ -70,6 +70,8 @@ done = False
 dl_thread = Thread(target=dl_worker)
 dl_thread.start()
 
+ydl_ver = subprocess.check_output("youtube-dl --version", shell=True).decode('utf-8').strip()
+print('Youtube-dl version:', ydl_ver)
 print("Started download thread")
 
 app.run(host='0.0.0.0', port=8080, debug=True)
