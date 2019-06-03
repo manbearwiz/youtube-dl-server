@@ -1,5 +1,5 @@
 import json
-import os
+import tempfile
 import subprocess
 from queue import Queue
 from bottle import Bottle, request, static_file
@@ -54,15 +54,16 @@ def dl_worker():
 
 
 def download(item):
-    l_command = ["youtube-dl",
-                 "-o", "/incomplete/" + os.getenv("YTBDL_O", "%(title)s.%(ext)s"),
-                 "-f", os.getenv("YTBDL_F", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]")]
-    if item.get("audio"):
-        l_command += ["-x"]
-    url = item.get("url")
-    print("Starting download of " + url)
-    subprocess.run(l_command + ["--exec", "touch {} && mv {} /youtube-dl/", "--merge-output-format", "mp4", url])
-    print("Finished downloading " + url)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        l_command = ["youtube-dl",
+                     "-o", join(tmpdir, os.getenv("YTBDL_O", "%(title)s.%(ext)s")),
+                     "-f", os.getenv("YTBDL_F", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]")]
+        if item.get("audio"):
+            l_command += ["-x"]
+        url = item.get("url")
+        print("Starting download of " + url)
+        subprocess.run(l_command + ["--exec", "touch {} && " + "mv {}/* {}/".format(tmpdir, dl_path), "--merge-output-format", "mp4", url])
+        print("Finished downloading " + url)
 
 
 dl_q = Queue()
