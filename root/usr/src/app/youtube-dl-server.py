@@ -4,7 +4,7 @@ import subprocess
 from queue import Queue
 from bottle import Bottle, request, static_file
 from threading import Thread
-from os import listdir, stat
+from os import listdir, stat, getenv
 from os.path import isfile, join
 
 app = Bottle()
@@ -56,13 +56,16 @@ def dl_worker():
 def download(item):
     with tempfile.TemporaryDirectory() as tmpdir:
         l_command = ["youtube-dl",
-                     "-o", join(tmpdir, os.getenv("YTBDL_O", "%(title)s.%(ext)s")),
-                     "-f", os.getenv("YTBDL_F", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]")]
+                     "-o", join(tmpdir, getenv("YTBDL_O", "%(title)s.%(ext)s")),
+                     "-f", getenv("YTBDL_F", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]"),
+                     "--merge-output-format", getenv("YTBDL_F_MERGE", "mp4"),
+                     "--exec", "touch {} && " + "mv {}/* {}/".format(tmpdir, dl_path),
+                     ]
         if item.get("audio"):
             l_command += ["-x"]
         url = item.get("url")
         print("Starting download of " + url)
-        subprocess.run(l_command + ["--exec", "touch {} && " + "mv {}/* {}/".format(tmpdir, dl_path), "--merge-output-format", "mp4", url])
+        subprocess.run(l_command + [url])
         print("Finished downloading " + url)
 
 
@@ -75,6 +78,6 @@ ydl_ver = subprocess.check_output("youtube-dl --version", shell=True).decode('ut
 print('Youtube-dl version:', ydl_ver)
 print("Started download thread")
 
-app.run(host='0.0.0.0', port=8080, debug=True)
+app.run(host=getenv("YTBDL_SERVER_HOST", '0.0.0.0'), port=getenv("YTBDL_SERVER_PORT", 8080), debug=True)
 done = True
 dl_thread.join()
