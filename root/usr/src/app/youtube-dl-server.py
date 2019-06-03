@@ -37,9 +37,9 @@ def q_size():
 @app.route('/youtube-dl/q', method='POST')
 def q_put():
     url = request.forms.get("url")
-    audio = request.forms.get("audio", "")
+    audio = request.forms.get("audio")
     if "" != url:
-        dl_q.put({"url": url, "only_audio":  bool(audio)})
+        dl_q.put({"url": url, "audio": bool(audio)})
         print("Added url " + url + " to the download queue")
         return {"success": True, "url": url}
     else:
@@ -57,7 +57,7 @@ def download(item):
     l_command = ["youtube-dl",
                  "-o", "/incomplete/" + os.getenv("YTBDL_O", "%(title)s.%(ext)s"),
                  "-f", os.getenv("YTBDL_F", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]")]
-    if item.get("only_audio"):
+    if item.get("audio"):
         l_command += ["-x"]
     url = item.get("url")
     print("Starting download of " + url)
