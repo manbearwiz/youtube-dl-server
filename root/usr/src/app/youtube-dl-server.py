@@ -4,10 +4,11 @@ import subprocess
 from queue import Queue
 from bottle import Bottle, request, static_file
 from threading import Thread
-from os import listdir
+from os import listdir, stat
 from os.path import isfile, join
 
 app = Bottle()
+dl_path = '/youtube-dl'
 
 
 @app.route('/youtube-dl')
@@ -21,12 +22,11 @@ def server_static(filename):
 
 
 @app.route('/youtube-dl/completed', method='GET')
-def q_size():
-    dl_path = '/youtube-dl'
+def q_completed():
     completed = [f for f in listdir(dl_path) if isfile(join(dl_path, f))]
-    mtime = lambda f: os.stat(join(dl_path, f)).st_mtime
-    completed = list(sorted(completed, key=mtime, reverse=True))
-    return {"success": True, "files": list(completed)}
+    mtime = lambda f: stat(join(dl_path, f)).st_mtime
+    completed = sorted(completed, key=mtime, reverse=True)
+    return {"success": True, "files": completed}
 
 
 @app.route('/youtube-dl/q', method='GET')
