@@ -59,13 +59,14 @@ def download(item):
                      "-o", join(tmpdir, getenv("YTBDL_O", "%(title)s.%(ext)s")),
                      "-f", getenv("YTBDL_F", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]"),
                      "--merge-output-format", getenv("YTBDL_F_MERGE", "mp4"),
-                     "--exec", "touch {} && " + "mv {}/* {}/".format(tmpdir, dl_path),
                      ]
         if item.get("audio"):
             l_command += ["-x"]
         url = item.get("url")
         print("Starting download of " + url)
         subprocess.run(l_command + [url])
+        print("Moving downloaded files from {} to {} ...".format(tmpdir, dl_path))
+        subprocess.call(["mv {}/* {}/".format(tmpdir, dl_path)], shell=True)
         print("Finished downloading " + url)
 
 
