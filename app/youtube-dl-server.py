@@ -1,11 +1,16 @@
 import json
+import shutil
 import tempfile
 import subprocess
-from queue import Queue
-from bottle import Bottle, request, static_file
-from threading import Thread
+
+from pathlib import Path
 from os import listdir, stat, getenv
-from os.path import isfile, join
+from os.path import isfile, join, relpath
+from queue import Queue
+from threading import Thread
+
+from bottle import Bottle, request, static_file
+
 
 app = Bottle()
 dl_path = '/youtube-dl'
@@ -66,7 +71,8 @@ def download(item):
         print("Starting download of " + url)
         subprocess.run(l_command + [url])
         print("Moving downloaded files from {} to {} ...".format(tmpdir, dl_path))
-        subprocess.call(["mv {}/* {}/".format(tmpdir, dl_path)], shell=True)
+        for file in Path(tmpdir).glob('**/*.*'):
+            shutil.move(file, join(dl_path, relpath(file, tmpdir)))
         print("Finished downloading " + url)
 
 
