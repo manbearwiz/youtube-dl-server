@@ -1,0 +1,9 @@
+#!/usr/bin/with-contenv bash
+
+if [[ "${YTBDL_VER:-latest}" == "latest" ]]; then
+	pip -q install -U youtube-dl
+else
+	pip -q install -U youtube-dl=="${YTBDL_VER}"
+fi
+
+echo "Youtube-dl version: $(youtube-dl --version)"
