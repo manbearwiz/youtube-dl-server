@@ -53,6 +53,16 @@ def q_put():
     print("Added url " + url + " to the download queue")
     return {"success": True, "url": url, "options": options}
 
+@app.route("/youtube-dl/update", method="GET")
+def update():
+    command = ["pip", "install", "--upgrade", "youtube-dl"]
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    output, error = proc.communicate()
+    return {
+        "output": output.decode('ascii'),
+        "error":  error.decode('ascii')
+    }
 
 def dl_worker():
     while not done:
@@ -110,6 +120,11 @@ dl_q = Queue()
 done = False
 dl_thread = Thread(target=dl_worker)
 dl_thread.start()
+
+print("Updating youtube-dl to the newest version")
+updateResult = update()
+print(updateResult["output"])
+print(updateResult["error"])
 
 print("Started download thread")
 
