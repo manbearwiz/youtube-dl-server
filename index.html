@@ -1,77 +1,76 @@
+
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="Description" content="Web frontend for youtube-dl">
+    <meta name="author" content="Kevin Brey">
+    <title>youtube-dl-server</title>
 
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
-    crossorigin="anonymous">
-  <link href="youtube-dl/static/style.css" rel="stylesheet">
 
-  <title>youtube-dl</title>
-</head>
 
-<body>
-  <div class="container d-flex flex-column text-light text-center">
-    <div class="flex-grow-1"></div>
-    <div class="jumbotron bg-transparent flex-grow-1">
-      <h1 class="display-4">youtube-dl</h1>
-      <p class="lead">Enter a video url to download the video to the server. Url can be to YouTube or <a class="text-info"
+    <!-- Bootstrap core CSS -->
+<link href="static/vendor/bootstrap-4.3.1-dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link href="static/cover.css" rel="stylesheet">
+<link href="static/style.css" rel="stylesheet" _integrity="sha384-GIlolJA5K9PZNXXHZTLiIZiAA97sdQgceUgjXr0/VB1f9u1Id3BMKvw8wPrrSMVt" >
+  </head>
+  <body class="text-center">
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+  <header class="masthead mb-auto">
+    <div class="inner">
+      <h3 class="masthead-brand">youtube-dl</h3>
+      <nav class="nav nav-masthead justify-content-center">
+        <a class="nav-link active" href="/">Home</a>
+        <a class="nav-link" href="https://github.com/manbearwiz/youtube-dl-server">GitHub <img class="external-link-icon" src="static/fontawesome/external-link-square-alt-solid.svg"></a>
+        <a class="nav-link" href="/youtube-dl/update">Update</a>
+      </nav>
+    </div>
+  </header>
+
+  <main role="main" class="inner cover">
+    <p class="lead">Enter a video url to download the video to the server. Url can be to YouTube or <a class="text-info"
           href="https://rg3.github.io/youtube-dl/supportedsites.html">any
           other supported site</a>. The server will automatically download the highest quality version available.</p>
-      <hr class="my-4">
-      <div>
-        <form action="/youtube-dl/q" method="POST">
-          <div class="input-group">
-            <input name="url" type="url" class="form-control" placeholder="URL" aria-label="URL" aria-describedby="button-submit">
-            <select class="custom-select" name="format">
-              <optgroup label="Video">
-                <option value="bestvideo">Best Video</option>
-                <option value="mp4">MP4</option>
-                <option value="flv">Flash Video (FLV)</option>
-                <option value="webm">WebM</option>
-                <option value="ogg">Ogg</option>
-                <option value="mkv">Matroska (MKV)</option>
-                <option value="avi">AVI</option>
-              </optgroup>
-              <optgroup label="Audio">
-                <option value="bestaudio">Best Audio</option>
-                <option value="aac">AAC</option>
-                <option value="flac">FLAC</option>
-                <option value="mp3">MP3</option>
-                <option value="m4a">M4A</option>
-                <option value="opus">Opus</option>
-                <option value="vorbis">Vorbis</option>
-                <option value="wav">WAV</option>
-              </optgroup>
-            </select>
-            <div class="input-group-append">
-              <button class="btn btn-primary" type="submit" id="button-submit">Submit</button>
-            </div>
-          </div>
-        </form>
+  </main>
+
+  <form action="/youtube-dl/q" method="POST">
+    <div class="input-group">
+      <input name="url" type="url" class="form-control" placeholder="URL" aria-label="URL" aria-describedby="button-submit">
+      <select class="custom-select" name="format">
+        <optgroup label="Video">
+          <option value="bestvideo">Best Video</option>
+          <option value="mp4">MP4</option>
+          <option value="flv">Flash Video (FLV)</option>
+          <option value="webm">WebM</option>
+          <option value="ogg">Ogg</option>
+          <option value="mkv">Matroska (MKV)</option>
+          <option value="avi">AVI</option>
+        </optgroup>
+        <optgroup label="Audio">
+          <option value="bestaudio">Best Audio</option>
+          <option value="aac">AAC</option>
+          <option value="flac">FLAC</option>
+          <option value="mp3">MP3</option>
+          <option value="m4a">M4A</option>
+          <option value="opus">Opus</option>
+          <option value="vorbis">Vorbis</option>
+          <option value="wav">WAV</option>
+        </optgroup>
+      </select>
+      <div class="input-group-append">
+        <button class="btn btn-primary" type="submit" id="button-submit">Submit</button>
       </div>
     </div>
-    <footer>
-      <div>
-        <p class="text-muted">Web frontend for <a class="text-light" href="https://rg3.github.io/youtube-dl/">youtube-dl</a>,
-          by <a class="text-light" href="https://twitter.com/manbearwiz">@manbearwiz</a>.</p>
-      </div>
-    </footer>
-  </div>
+  </form>
 
-  <!-- Optional JavaScript -->
-  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-    crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-    crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
-    crossorigin="anonymous"></script>
+  <footer class="mastfoot mt-auto">
+    <div class="inner">
+      <p>youtube-dl-server by <a class="text-light" href="https://twitter.com/manbearwiz">@manbearwiz</a></p>
+      <p>Cover template for <a href="https://getbootstrap.com/">Bootstrap</a>, by <a href="https://twitter.com/mdo">@mdo</a>.</p> 
+    </div>
+  </footer>
+</div>
 </body>
-
 </html>
