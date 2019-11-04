@@ -47,7 +47,7 @@ def q_put():
     }
 
     if not url:
-        return {"success": False, "error": "/q called without a 'url' query param"}
+        return {"success": False, "error": "/q called without a 'url' in form data"}
 
     dl_q.put((url, options))
     print("Added url " + url + " to the download queue")
