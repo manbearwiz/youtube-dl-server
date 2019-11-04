@@ -1,11 +1,36 @@
+/* Original CSS */
 body {
   background-color: #002b36;
 }
 
-.container {
-  height: 100vh;
+
+/* Bootstrap cover example: https://getbootstrap.com/docs/4.3/examples/cover/ */
+.bd-placeholder-img {
+  font-size: 1.125rem;
+  text-anchor: middle;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-div.input-group>select.custom-select {
-  flex: 0.1 1 100px;
+@media (min-width: 768px) {
+  .bd-placeholder-img-lg {
+    font-size: 3.5rem;
+  }
+}
+
+/* FONTS */
+
+body {
+  font-family: Futura;
+}
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6{
+	font-family: "Bodoni";
+}
+
+/* External Links */
+
+.external-link-icon{
+	width:15px;
 }
