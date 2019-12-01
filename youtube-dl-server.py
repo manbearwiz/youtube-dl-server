@@ -112,8 +112,11 @@ def get_ydl_options(request_options):
 
 
 def download(url, request_options):
-    with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
-        ydl.download([url])
+    try:
+        with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
+            ydl.download([url])
+    except:
+        pass
 
 
 dl_q = Queue()
