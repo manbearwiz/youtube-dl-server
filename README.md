@@ -32,7 +32,7 @@ services:
       - YTBDL_F=bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]
 ```
 
-Create and run your container as above, and then access to ```/youtube-dl```
+Create and run your container as above, and then access to ```http://${DOCKER_HOST_IP}:${PORT_TO_EXPOSE}/youtube-dl```
 
 ## REST API
 
@@ -48,14 +48,10 @@ Create and run your container as above, and then access to ```/youtube-dl```
 | ```YTBDL_VER```  | either of ```latest``` or youtube-dl version, e.g. ```2019.09.28```  | ```latest```  |
 | ```YTBDL_O```  | [OUTPUT TEMPLATE](https://github.com/rg3/youtube-dl#output-template)  | ```%(uploader)s/%(title)s.%(ext)s```  |
 | ```YTBDL_F```  | [FORMAT SELECTION](https://github.com/rg3/youtube-dl#format-selection)  | ```bestvideo[ext=mp4][height<=1080]+bestaudio[ext=m4a]/best[ext=mp4]/best```  |
+| ```YTBDL_I```  | set ```true``` to ignore youtube-dl errors, the same as passing ```--ignore-errors``` in commandline  |
 | ```YTBDL_SERVER_HOST```  |   | ```0.0.0.0```
 | ```YTBDL_SERVER_PORT```  |   | ```8080```
 
-## Known issues
-
-- ```caused by URLError(OSError(99, 'Address not available'),)``` in a just-created continer. Restart container resolves this issue.
-
 ## TODO
 
-- Support incomplete folder that can be specified by users
 - Support http basic auth

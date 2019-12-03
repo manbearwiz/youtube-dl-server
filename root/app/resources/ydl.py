@@ -1,6 +1,6 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from flask_restful import Resource, fields, marshal_with, reqparse, inputs
+from flask_restful import Resource, fields, marshal, reqparse, inputs
 
 import os
 import shutil
@@ -24,25 +24,36 @@ parser.add_argument(
 )
 
 # output
-output_fields = {
+fields_on_success = {
     'success': fields.Boolean,
     'queue': fields.List(fields.String),
     'completed': fields.List(fields.String),
+    'incomplete': fields.List(fields.String),
+}
+fields_on_failed = {
+    'success': fields.Boolean,
+    'message': fields.String,
 }
 
 
 class YoutubeDLAPI(Resource):
-    @marshal_with(output_fields)
     def get(self):
-        completed = [f for f in listdir(dl_path) if isfile(join(dl_path, f))]
-        mtime = lambda f: stat(join(dl_path, f)).st_mtime
-        completed = sorted(completed, key=mtime, reverse=True)
-        queue = [q['url'] for q in list(dl_q.queue)]
-        return {
-            'success': True,
-            'queue': queue,
-            'completed': completed,
-        }
+        try:
+            all_files = [str(f) for f in Path(dl_path).glob('**/*') if isfile(f)]
+            completed = [f for f in all_files if 'incomplete_' not in f]
+            incomplete = [f for f in all_files if 'incomplete_' in f]
+            mtime = lambda f: stat(f).st_mtime
+            return marshal({
+                'success': True,
+                'queue': [q['url'] for q in list(dl_q.queue)],
+                'completed': [relpath(f, dl_path) for f in sorted(completed, key=mtime, reverse=True)],
+                'incomplete': [relpath(f, dl_path) for f in sorted(incomplete, key=mtime, reverse=True)],
+            }, fields_on_success), 200
+        except Exception as e:
+            return marshal({
+                'success': False,
+                'message': e,
+            }, fields_on_failed), 200
 
     def post(self):
         args = parser.parse_args()
@@ -79,19 +90,30 @@ def parse_request_args(args):
         'format': ydl_format,
         'postprocessors': postprocessor,
         'outtmpl': outtmpl,
+        'ignoreerrors': os.getenv('YTBDL_I','false').lower() == 'true',
     }
 
 
 def download(args):
+    tmpdir = tempfile.mkdtemp(prefix='incomplete_', dir=dl_path)
     url, ydl_options = parse_request_args(args)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        ydl_options.update({'outtmpl': join(tmpdir, ydl_options['outtmpl'])})
-        with youtube_dl.YoutubeDL(ydl_options) as ytb_dl:
+    ydl_options.update({'outtmpl': join(tmpdir, ydl_options['outtmpl'])})
+    with youtube_dl.YoutubeDL(ydl_options) as ytb_dl:
+        try:
             ytb_dl.download([url])
-            for file in Path(tmpdir).glob('**/*.*'):
-                subdir = join(dl_path, dirname(relpath(file, tmpdir)))
+            for f in Path(tmpdir).glob('**/*'):
+                subdir = join(dl_path, dirname(relpath(f, tmpdir)))
                 os.makedirs(subdir, exist_ok=True)
-                shutil.move(file, join(dl_path, relpath(file, tmpdir)))
+                shutil.move(f, join(dl_path, relpath(f, tmpdir)))
+        except Exception as e:
+            print(e)
+            print('Consider setting "YTBDL_I=true" to ignore youtube-dl errors')
+
+    print('Cleaning incomplete directory {}'.format(tmpdir))
+    try:
+        os.rmdir(tmpdir)
+    except Exception as e:
+        print('Failed to delete incomplete directory: {}'.format(e))
 
 
 dl_path = '/youtube-dl'

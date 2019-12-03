@@ -15,7 +15,7 @@ RUN \
 		ffmpeg \
 		tzdata && \
 	echo "**** install python packages ****" && \
-    pip install --upgrade --force-reinstall --ignore-installed \
+    pip install --upgrade \
         flask \
         flask-restful \
         youtube-dl && \
