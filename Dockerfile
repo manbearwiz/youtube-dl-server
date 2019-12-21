@@ -1,4 +1,4 @@
-FROM lsiobase/alpine:latest
+FROM lsiobase/alpine:3.11
 
 ENV XDG_CACHE_HOME /tmp
 
