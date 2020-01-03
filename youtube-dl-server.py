@@ -3,7 +3,7 @@ import json
 import os
 import subprocess
 from queue import Queue
-from bottle import route, run, Bottle, request, static_file
+from bottle import route, run, Bottle, request, static_file, redirect
 from threading import Thread
 import youtube_dl
 from pathlib import Path
@@ -27,6 +27,12 @@ app_defaults = {
 @app.route('/youtube-dl')
 def dl_queue_list():
     return static_file('index.html', root='./')
+
+
+@app.route('/youtube-dl/')
+@app.route('/')
+def redirectToCorrectIndexURL():
+    redirect("/youtube-dl")
 
 
 @app.route('/youtube-dl/static/:filename#.*#')
