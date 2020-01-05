@@ -52,7 +52,7 @@ class YoutubeDLAPI(Resource):
         except Exception as e:
             return marshal({
                 'success': False,
-                'message': e,
+                'message': str(e),
             }, fields_on_failed), 200
 
     def post(self):

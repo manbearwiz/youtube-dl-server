@@ -7,11 +7,15 @@ import logging
 from blueprints.ydl import ydl
 from resources.ydl import YoutubeDLAPI
 
+http_root = os.getenv('YTBDL_SERVER_ROOT', '/youtube-dl')
+if not http_root.startswith('/'):
+    http_root = '/' + http_root
+
 app = Flask(__name__)
-app.register_blueprint(ydl, url_prefix='/youtube-dl')
+app.register_blueprint(ydl, url_prefix=http_root)
 
 api = Api(app)
-api.add_resource(YoutubeDLAPI, '/youtube-dl/q')
+api.add_resource(YoutubeDLAPI, http_root + '/q')
 
 
 if __name__ == '__main__':

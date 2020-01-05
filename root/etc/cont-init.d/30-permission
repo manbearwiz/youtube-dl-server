@@ -1,8 +1,8 @@
 #!/usr/bin/with-contenv bash
 
 # make folders
-# mkdir -p \
-# 	/youtube-dl
+mkdir -p \
+        /youtube-dl
 
 # permissions
 chown -R abc:abc \

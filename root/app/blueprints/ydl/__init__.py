@@ -1,12 +1,12 @@
-from flask import Blueprint, send_from_directory, redirect
+from flask import Blueprint, send_from_directory, redirect, render_template
 
 
-ydl = Blueprint('ydl', __name__, static_folder='static', static_url_path='')
+ydl = Blueprint('ydl', __name__, template_folder='static', static_folder='static', static_url_path='')
 
 
 @ydl.route('/')
 def youtube_dl_default():
-    return redirect('/youtube-dl/index.html')
+    return render_template('index.html')
 
 
 @ydl.route('/<path:path>')
