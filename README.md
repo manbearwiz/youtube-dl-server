@@ -51,8 +51,9 @@ Create and run your container as above, and then access to ```http://${DOCKER_HO
 | ```YTBDL_I```  | set ```true``` to ignore youtube-dl errors, the same as passing ```--ignore-errors``` in commandline  |
 | ```YTBDL_SERVER_HOST```  |   | ```0.0.0.0```
 | ```YTBDL_SERVER_PORT```  |   | ```8080```
-| ```YTBDL_SERVER_ROOT```  | http server root path  | ```/youtube-dl```
+| ```YTBDL_SERVER_ROOT```  | set ```/``` if you want to access without a location path   | ```/youtube-dl```
+| ```YTBDL_SERVER_USER``` / ```YTBDL_SERVER_PASS```  | requires both to activate basicauth   |
 
 ## TODO
 
-- Support http basic auth
+- ~~Support http basic auth~~

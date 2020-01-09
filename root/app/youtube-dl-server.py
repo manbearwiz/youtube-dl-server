@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_restful import Api
+from flask_basicauth import BasicAuth
 
 import os
 import logging
@@ -12,10 +13,19 @@ if not http_root.startswith('/'):
     http_root = '/' + http_root
 
 app = Flask(__name__)
+
+username = os.getenv('YTBDL_SERVER_USER', '')
+password = os.getenv('YTBDL_SERVER_PASS', '')
+if username and password:
+    app.config['BASIC_AUTH_USERNAME'] = username
+    app.config['BASIC_AUTH_PASSWORD'] = password
+    app.config['BASIC_AUTH_FORCE'] = True
+    basic_auth = BasicAuth(app)
+
 app.register_blueprint(ydl, url_prefix=http_root)
 
 api = Api(app)
-api.add_resource(YoutubeDLAPI, http_root + '/q')
+api.add_resource(YoutubeDLAPI, http_root  + ('q' if http_root.endswith('/') else '/q'))
 
 
 if __name__ == '__main__':
