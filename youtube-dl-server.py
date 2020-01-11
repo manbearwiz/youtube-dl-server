@@ -17,7 +17,7 @@ app_defaults = {
     'YDL_EXTRACT_AUDIO_FORMAT': None,
     'YDL_EXTRACT_AUDIO_QUALITY': '192',
     'YDL_RECODE_VIDEO_FORMAT': None,
-    'YDL_OUTPUT_TEMPLATE': '/youtube-dl/%(title)s [%(id)s].%(ext)s',
+    'YDL_OUTPUT_TEMPLATE': './video/%(id)s.%(ext)s',
     'YDL_ARCHIVE_FILE': None,
     'YDL_SERVER_HOST': '0.0.0.0',
     'YDL_SERVER_PORT': 8080,
@@ -32,6 +32,11 @@ def dl_queue_list():
 @app.route('/youtube-dl/static/:filename#.*#')
 def server_static(filename):
     return static_file(filename, root='./static')
+
+
+@app.route('/video/:filename#.*#')
+def server_video_static(filename):
+    return static_file(filename, root='./video')
 
 
 @app.route('/youtube-dl/q', method='GET')
@@ -53,16 +58,19 @@ def q_put():
     print("Added url " + url + " to the download queue")
     return {"success": True, "url": url, "options": options}
 
+
 @app.route("/youtube-dl/update", method="GET")
 def update():
     command = ["pip", "install", "--upgrade", "youtube-dl"]
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     output, error = proc.communicate()
     return {
         "output": output.decode('ascii'),
         "error":  error.decode('ascii')
     }
+
 
 def dl_worker():
     while not done:
@@ -133,6 +141,7 @@ print("Started download thread")
 
 app_vars = ChainMap(os.environ, app_defaults)
 
-app.run(host=app_vars['YDL_SERVER_HOST'], port=app_vars['YDL_SERVER_PORT'], debug=True)
+app.run(host=app_vars['YDL_SERVER_HOST'],
+        port=app_vars['YDL_SERVER_PORT'], debug=True)
 done = True
 dl_thread.join()
