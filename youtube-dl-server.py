@@ -2,12 +2,15 @@ from __future__ import unicode_literals
 import json
 import os
 import subprocess
+import glob
 from queue import Queue
 from bottle import route, run, Bottle, request, static_file
 from threading import Thread
 import youtube_dl
 from pathlib import Path
 from collections import ChainMap
+
+VIDEO_FOLDER = 'video'
 
 app = Bottle()
 
@@ -17,7 +20,7 @@ app_defaults = {
     'YDL_EXTRACT_AUDIO_FORMAT': None,
     'YDL_EXTRACT_AUDIO_QUALITY': '192',
     'YDL_RECODE_VIDEO_FORMAT': None,
-    'YDL_OUTPUT_TEMPLATE': './video/%(id)s.%(ext)s',
+    'YDL_OUTPUT_TEMPLATE': f'./{VIDEO_FOLDER}/%(id)s.%(ext)s',
     'YDL_ARCHIVE_FILE': None,
     'YDL_SERVER_HOST': '0.0.0.0',
     'YDL_SERVER_PORT': 8080,
@@ -36,7 +39,7 @@ def server_static(filename):
 
 @app.route('/video/:filename#.*#')
 def server_video_static(filename):
-    return static_file(filename, root='./video')
+    return static_file(filename, root=f'./{VIDEO_FOLDER}')
 
 
 @app.route('/youtube-dl/q', method='GET')
@@ -53,6 +56,11 @@ def q_put():
 
     if not url:
         return {"success": False, "error": "/q called without a 'url' query param"}
+
+    if 'youtube.com' not in url:
+        # Check if file exists
+        if glob.glob(f'./{VIDEO_FOLDER}/{url}.*'):
+            return {"success": True, "url": url, "options": options, "exists": True}
 
     dl_q.put((url, options))
     print("Added url " + url + " to the download queue")
