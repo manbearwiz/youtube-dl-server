@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from flask_restful import Resource, fields, marshal, reqparse, inputs
+from auth import basic_auth
 
 import os
 import shutil
@@ -37,6 +38,8 @@ fields_on_failed = {
 
 
 class YoutubeDLAPI(Resource):
+    decorators = [basic_auth.login_required]
+
     def get(self):
         try:
             all_files = [str(f) for f in Path(dl_path).glob('**/*') if isfile(f)]

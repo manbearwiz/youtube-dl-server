@@ -18,7 +18,7 @@ RUN \
     pip install --upgrade \
         flask \
         flask-restful \
-		flask-basicauth \
+		flask-httpauth \
         youtube-dl && \
 	rm -rf \
 	    /root/.cache \
