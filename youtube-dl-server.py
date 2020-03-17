@@ -67,7 +67,10 @@ def update():
 def dl_worker():
     while not done:
         url, options = dl_q.get()
-        download(url, options)
+        try:
+            download(url, options)
+        except Exception as e:
+            print("Exception during download task:\n" + e)
         dl_q.task_done()
 
 
