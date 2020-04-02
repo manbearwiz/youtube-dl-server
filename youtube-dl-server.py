@@ -29,7 +29,7 @@ def dl_queue_list():
     return static_file('index.html', root='./')
 
 
-@app.route('/youtube-dl/static/:filename#.*#')
+@app.route('/static/:filename#.*#')
 def server_static(filename):
     return static_file(filename, root='./static')
 
