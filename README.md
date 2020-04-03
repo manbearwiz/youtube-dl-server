@@ -47,18 +47,18 @@ Downloads can be triggered by supplying the `{{url}}` of the requested video thr
 
 #### HTML
 
-Just navigate to `http://{{host}}:8080/youtube-dl` and enter the requested `{{url}}`.
+Just navigate to `http://{{host}}:8080/` and enter the requested `{{url}}`.
 
 #### Curl
 
 ```shell
-curl -X POST --data-urlencode "url={{url}}" http://{{host}}:8080/youtube-dl/q
+curl -X POST --data-urlencode "url={{url}}" http://{{host}}:8080/downloads
 ```
 
 #### Fetch
 
 ```javascript
-fetch(`http://${host}:8080/youtube-dl/q`, {
+fetch(`http://${host}:8080/downloads`, {
   method: "POST",
   body: new URLSearchParams({
     url: url,
@@ -72,7 +72,7 @@ fetch(`http://${host}:8080/youtube-dl/q`, {
 Add the following bookmarklet to your bookmark bar so you can conviently send the current page url to your youtube-dl-server instance.
 
 ```javascript
-javascript:!function(){fetch("http://${host}:8080/youtube-dl/q",{body:new URLSearchParams({url:window.location.href,format:"bestvideo"}),method:"POST"})}();
+javascript:!function(){fetch("http://${host}:8080/downloads",{body:new URLSearchParams({url:window.location.href,format:"bestvideo"}),method:"POST"})}();
 ```
 
 ## Implementation
