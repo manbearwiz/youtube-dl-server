@@ -24,7 +24,7 @@ app_defaults = {
 }
 
 
-@app.route('/youtube-dl')
+@app.route('/')
 def dl_queue_list():
     return static_file('index.html', root='./')
 
@@ -34,12 +34,12 @@ def server_static(filename):
     return static_file(filename, root='./static')
 
 
-@app.route('/youtube-dl/q', method='GET')
+@app.route('/downloads/count', method='GET')
 def q_size():
     return {"success": True, "size": json.dumps(list(dl_q.queue))}
 
 
-@app.route('/youtube-dl/q', method='POST')
+@app.route('/downloads', method='POST')
 def q_put():
     url = request.forms.get("url")
     options = {
@@ -47,7 +47,7 @@ def q_put():
     }
 
     if not url:
-        return {"success": False, "error": "/q called without a 'url' query param"}
+        return {"success": False, "error": "'url' query parameter omitted"}
 
     dl_q.put((url, options))
     print("Added url " + url + " to the download queue")
