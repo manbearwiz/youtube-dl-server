@@ -18,6 +18,7 @@ app_defaults = {
     'YDL_EXTRACT_AUDIO_QUALITY': '192',
     'YDL_RECODE_VIDEO_FORMAT': None,
     'YDL_OUTPUT_TEMPLATE': '/youtube-dl/%(title)s [%(id)s].%(ext)s',
+    'YDL_OUTPUT_TEMPLATE_PLAYLIST': '/youtube-dl/%(playlist_title)s/%(title)s [%(id)s].%(ext)s',
     'YDL_ARCHIVE_FILE': None,
     'YDL_SERVER_HOST': '0.0.0.0',
     'YDL_SERVER_PORT': 8080,
@@ -116,6 +117,10 @@ def get_ydl_options(request_options):
 
 def download(url, request_options):
     with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
+        info = ydl.extract_info(url, download=False)
+        if '_type' in info and info['_type'] == 'playlist' \
+                and 'YDL_OUTPUT_TEMPLATE_PLAYLIST' in app_defaults:
+            ydl.params['outtmpl'] = app_defaults['YDL_OUTPUT_TEMPLATE_PLAYLIST']
         ydl.download([url])
 
 
