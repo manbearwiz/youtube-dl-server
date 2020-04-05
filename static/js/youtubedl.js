@@ -13,6 +13,7 @@ function submit_video(){
   $.post("/downloads", data)
     .done(function (data) {
       set_dismissible_message(data);
+      $("#url").val("");
     })
     .fail(function() {
       set_dismissible_message({'success': false, 'error': 'Could not add the url to the queue'});
