@@ -15,6 +15,25 @@
 </head>
 
 <body>
+  <header>
+    <nav class="navbar navbar-expand-md navbar-dark">
+      <a class="navbar-brand abs" href="/">YoutubeDL</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsingNavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="navbar-collapse collapse" id="collapsingNavbar">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <span class="navbar-text">
+              Tasks pending: 
+              <span id='queue_size' class="badge badge-info">0</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
   <div class="container d-flex flex-column text-light text-center">
     <div class="flex-grow-1"></div>
     <div class="jumbotron bg-transparent flex-grow-1">
@@ -69,6 +88,10 @@
   <script src="/static/js/popper.min.js"></script>
   <script src="/static/js/bootstrap.min.js"></script>
   <script src="/static/js/youtubedl.js"></script>
+  <script>
+    window.setInterval(update_queue_size, 5000);
+    update_queue_size();
+  </script>
 </body>
 
 </html>

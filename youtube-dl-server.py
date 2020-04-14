@@ -26,7 +26,7 @@ app_defaults = {
 
 
 @app.route('/')
-def dl_queue_list():
+def front_index():
     return static_file('index.html', root='./')
 
 
@@ -35,13 +35,14 @@ def server_static(filename):
     return static_file(filename, root='./static')
 
 
-@app.route('/downloads/count', method='GET')
-def q_size():
-    return {"success": True, "size": json.dumps(list(dl_q.queue))}
+@app.route('/api/downloads/count', method='GET')
+def api_queue_size():
+    return {"success": True, "size": len(list(dl_q.queue))}
 
 
-@app.route('/downloads', method='POST')
-def q_put():
+
+@app.route('/api/downloads', method='POST')
+def api_queue_download():
     url = request.forms.get("url")
     options = {
         'format': request.forms.get("format")
@@ -55,7 +56,7 @@ def q_put():
     return {"success": True, "url": url, "options": options}
 
 @app.route("/youtube-dl/update", method="GET")
-def update():
+def ydl_update():
     command = ["pip", "install", "--upgrade", "youtube-dl"]
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

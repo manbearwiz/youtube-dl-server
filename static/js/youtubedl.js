@@ -37,9 +37,17 @@ function submit_video(){
   });
 }
 
+function update_queue_size(){
+  $.getJSON("/api/downloads/count", function (data) {
+    $("#queue_size").html(data.size);
+  });
+}
+
+
 $('#url').keypress(function (e) {
   if (e.which == 13) {
     submit_video();
+    update_queue_size();
     return false;
   }
 });

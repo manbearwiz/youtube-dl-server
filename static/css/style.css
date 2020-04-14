@@ -2,6 +2,10 @@ body {
   background-color: #002b36;
 }
 
+nav {
+  background-color: #001b26;
+}
+
 .container {
   height: 100vh;
 }
