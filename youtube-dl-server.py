@@ -33,6 +33,11 @@ def front_index():
     return static_file('index.html', root='./')
 
 
+@app.route('/logs')
+def front_logs():
+    return static_file('logs.html', root='./')
+
+
 @app.route('/static/:filename#.*#')
 def server_static(filename):
     return static_file(filename, root='./static')

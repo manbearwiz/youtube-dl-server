@@ -44,6 +44,44 @@ function update_queue_size(){
 }
 
 
+function get_download_logs(){
+  $.getJSON("/api/downloads", function (data) {
+    var download_logs = "";
+    $.each(data, function(key, row) {
+      download_logs += "<tr " + (row.status == 'Failed' ? "class='bg-danger'":"") + ">";
+      download_logs += "<td>" + row.id + "</td>";
+      download_logs += "<td>" + row.last_update + "</td>";
+      download_logs += "<td>" + row.name + "</td>";
+      download_logs += "<td>" + row.status + "</td>";
+      download_logs += "<td style='text-align: left;'>" + row.log.replace(/\n|\r/g, '<br/>') + "</td>";
+      download_logs += "</tr>";
+    });
+    var visible = $("td:nth-child(5)").is(":visible");
+    $("#job_logs").html(download_logs);
+    if (!visible) {
+      hide_logs_detail();
+    }
+  });
+}
+
+function hide_logs_detail(){
+  $('td:nth-child(5),th:nth-child(5)').hide();
+}
+
+function show_logs_detail(){
+  $('td:nth-child(5),th:nth-child(5)').show();
+}
+
+function toggle_hide_logs_detail(){
+  console.log($("td:nth-child(5)").is(":visible"))
+  if ($("td:nth-child(5)").is(":visible")) {
+    hide_logs_detail();
+  }
+  else {
+    show_logs_detail();
+  }
+}
+
 $('#url').keypress(function (e) {
   if (e.which == 13) {
     submit_video();

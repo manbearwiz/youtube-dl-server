@@ -39,45 +39,25 @@
     </nav>
   </header>
 
-  <div class="container d-flex flex-column text-light text-center">
-    <div class="flex-grow-1"></div>
-    <div class="jumbotron bg-transparent flex-grow-1">
-      <h1 class="display-4">youtube-dl</h1>
-      <p class="lead">Enter a video url to download the video to the server. Url can be to YouTube or <a class="text-info"
-          href="https://rg3.github.io/youtube-dl/supportedsites.html">any
-          other supported site</a>. The server will automatically download the highest quality version available.</p>
-      <div>
-        <div class="input-group">
-          <input name="url" type="url" class="form-control" placeholder="URL" aria-label="URL" aria-describedby="button-submit" id="url" autofocus>
-          <select class="custom-select" name="format" id="format">
-            <optgroup label="Video">
-              <option value="bestvideo">Best Video</option>
-              <option value="mp4">MP4</option>
-              <option value="flv">Flash Video (FLV)</option>
-              <option value="webm">WebM</option>
-              <option value="ogg">Ogg</option>
-              <option value="mkv">Matroska (MKV)</option>
-              <option value="avi">AVI</option>
-            </optgroup>
-            <optgroup label="Audio">
-              <option value="bestaudio">Best Audio</option>
-              <option value="aac">AAC</option>
-              <option value="flac">FLAC</option>
-              <option value="mp3">MP3</option>
-              <option value="m4a">M4A</option>
-              <option value="opus">Opus</option>
-              <option value="vorbis">Vorbis</option>
-              <option value="wav">WAV</option>
-            </optgroup>
-          </select>
-          <div class="input-group-append">
-            <button class="btn btn-primary" id="button-submit" onclick="submit_video()">Submit</button>
-          </div>
-        </div>
-      </div>
+  <div class="container-fluid d-flex flex-column text-light text-center">
+    <div class="container-fluid flex-grow-1">
+      <h1 class="display-4">Download History</h1>
+      <button class="btn btn-dark" onclick="toggle_hide_logs_detail()">Show/Hide logs</button>
+      <button class="btn btn-dark" onclick="get_download_logs()">Refresh</button>
       <br/>
-      <div id="message_list">
-      </div>
+      <table class="col-md-16 table table-stripped table-md table-dark">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Last update</th>
+            <th>URL</th>
+            <th>Status</th>
+            <th>Log</th>
+          </tr>
+          <tbody id="job_logs">
+          </tbody>
+        </thead>
+      </table>
     </div>
     <footer>
       <div>
@@ -95,7 +75,9 @@
   <script src="/static/js/youtubedl.js"></script>
   <script>
     window.setInterval(update_queue_size, 5000);
+    window.setInterval(get_download_logs, 5000);
     update_queue_size();
+    get_download_logs();
   </script>
 </body>
 
