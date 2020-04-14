@@ -153,7 +153,7 @@ dl_thread = Thread(target=dl_worker)
 dl_thread.start()
 
 print("Updating youtube-dl to the newest version")
-updateResult = update()
+updateResult = ydl_update()
 print(updateResult["output"])
 print(updateResult["error"])
 
