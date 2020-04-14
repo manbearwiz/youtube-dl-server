@@ -27,7 +27,7 @@ function set_dismissible_message(result_data){
 
 function submit_video(){
   data = {url: $("#url").val(),format: $("#format").val()};
-  $.post("/downloads", data)
+  $.post("/api/downloads", data)
     .done(function (data) {
       set_dismissible_message(data);
       $("#url").val("");

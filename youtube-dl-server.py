@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import json
+import contextlib, io
 import os
 import subprocess
 from queue import Queue
@@ -8,6 +9,7 @@ from threading import Thread
 import youtube_dl
 from pathlib import Path
 from collections import ChainMap
+from youtube_dl_logdb import JobsDB, Job
 
 app = Bottle()
 
@@ -22,6 +24,7 @@ app_defaults = {
     'YDL_ARCHIVE_FILE': None,
     'YDL_SERVER_HOST': '0.0.0.0',
     'YDL_SERVER_PORT': 8080,
+    'YDL_DB_PATH': '/youtube-dl/.ydl-metadata.db',
 }
 
 
@@ -40,6 +43,10 @@ def api_queue_size():
     return {"success": True, "size": len(list(dl_q.queue))}
 
 
+@app.route('/api/downloads', method='GET')
+def api_logs():
+    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=True)
+    return json.dumps(db.get_all())
 
 @app.route('/api/downloads', method='POST')
 def api_queue_download():
@@ -67,12 +74,19 @@ def ydl_update():
     }
 
 def dl_worker():
+    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=False)
     while not done:
         url, options = dl_q.get()
+        job = Job(url, 0, "")
+        db.insert_job(job)
         try:
-            download(url, options)
+            job.log = download(url, options)
+            job.status = 1
         except Exception as e:
-            print("Exception during download task:\n" + e)
+            job.status = 2
+            job.log += str(e)
+            print("Exception during download task:\n" + str(e))
+        db.update_job(job)
         dl_q.task_done()
 
 
@@ -122,7 +136,10 @@ def download(url, request_options):
         if '_type' in info and info['_type'] == 'playlist' \
                 and 'YDL_OUTPUT_TEMPLATE_PLAYLIST' in app_defaults:
             ydl.params['outtmpl'] = app_defaults['YDL_OUTPUT_TEMPLATE_PLAYLIST']
+        # Swap out sys.stdout as ydl's output so we can capture it
+        ydl._screen_file = io.StringIO()
         ydl.download([url])
+        return ydl._screen_file.getvalue()
 
 
 dl_q = Queue()
