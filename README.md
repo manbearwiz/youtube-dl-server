@@ -8,6 +8,9 @@ Very spartan Web and REST interface for downloading youtube videos onto a server
 
 ![screenshot][1]
 
+
+![screenshot][2]
+
 ## Running
 
 ### Docker CLI
@@ -82,3 +85,4 @@ The server uses [`bottle`](https://github.com/bottlepy/bottle) for the web frame
 This docker image is based on [`python:alpine`](https://registry.hub.docker.com/_/python/) and consequently [`alpine:3.8`](https://hub.docker.com/_/alpine/).
 
 [1]:youtube-dl-server.png
+[2]:youtube-dl-server-logs.png
