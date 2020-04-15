@@ -42,6 +42,15 @@ function update_queue_size(){
   });
 }
 
+function purge_download_logs(){
+  $.ajax({
+    url: '/api/downloads',
+    type: 'DELETE',
+    success: function(data) {
+      get_download_logs();
+    }
+  });
+}
 
 function get_download_logs(){
   $.getJSON("/api/downloads", function (data) {

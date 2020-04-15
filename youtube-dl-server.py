@@ -13,6 +13,10 @@ from youtube_dl_logdb import JobsDB, Job
 
 app = Bottle()
 
+class QueueAction:
+    DOWNLOAD = 1
+    PURGE_LOGS = 2
+
 
 app_defaults = {
     'YDL_FORMAT': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
@@ -53,6 +57,12 @@ def api_logs():
     db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=True)
     return json.dumps(db.get_all())
 
+@app.route('/api/downloads', method='DELETE')
+def api_logs_purge():
+    dl_q.put((QueueAction.PURGE_LOGS, None))
+    return {"success": True}
+
+
 @app.route('/api/downloads', method='POST')
 def api_queue_download():
     url = request.forms.get("url")
@@ -63,7 +73,7 @@ def api_queue_download():
     if not url:
         return {"success": False, "error": "'url' query parameter omitted"}
 
-    dl_q.put((url, options))
+    dl_q.put((QueueAction.DOWNLOAD, (url, options)))
     print("Added url " + url + " to the download queue")
     return {"success": True, "url": url, "options": options}
 
@@ -81,17 +91,21 @@ def ydl_update():
 def dl_worker():
     db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=False)
     while not done:
-        url, options = dl_q.get()
-        job = Job(url, 0, "")
-        db.insert_job(job)
-        try:
-            job.log = download(url, options)
-            job.status = 1
-        except Exception as e:
-            job.status = 2
-            job.log += str(e)
-            print("Exception during download task:\n" + str(e))
-        db.update_job(job)
+        action, extras = dl_q.get()
+        if action == QueueAction.DOWNLOAD:
+            url, options = extras
+            job = Job(url, 0, "")
+            db.insert_job(job)
+            try:
+                job.log = download(url, options)
+                job.status = 1
+            except Exception as e:
+                job.status = 2
+                job.log += str(e)
+                print("Exception during download task:\n" + str(e))
+            db.update_job(job)
+        elif action == QueueAction.PURGE_LOGS:
+            db.purge_jobs()
         dl_q.task_done()
 
 

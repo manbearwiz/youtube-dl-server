@@ -38,6 +38,11 @@ class JobsDB:
                 where id = ?;", (str(job.status), job.log, str(job.id)))
         self.conn.commit()
 
+    def purge_jobs(self):
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM jobs;")
+        self.conn.commit()
+
     def create_table(self):
         cursor = self.conn.cursor()
         cursor.execute("CREATE TABLE jobs (id INTEGER PRIMARY KEY \
