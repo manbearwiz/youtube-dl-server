@@ -28,6 +28,7 @@ app_defaults = {
     'YDL_ARCHIVE_FILE': None,
     'YDL_SERVER_HOST': '0.0.0.0',
     'YDL_SERVER_PORT': 8080,
+    'YDL_CACHE_DIR': '/youtube-dl/.cache',
     'YDL_DB_PATH': '/youtube-dl/.ydl-metadata.db',
 }
 
@@ -79,7 +80,7 @@ def api_queue_download():
 
 @app.route("/youtube-dl/update", method="GET")
 def ydl_update():
-    command = ["pip", "install", "--upgrade", "youtube-dl"]
+    command = ["pip", "install", "--no-cache-dir", "--upgrade", "youtube-dl"]
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     output, error = proc.communicate()
@@ -145,7 +146,8 @@ def get_ydl_options(request_options):
         'format': ydl_vars['YDL_FORMAT'],
         'postprocessors': postprocessors,
         'outtmpl': ydl_vars['YDL_OUTPUT_TEMPLATE'],
-        'download_archive': ydl_vars['YDL_ARCHIVE_FILE']
+        'download_archive': ydl_vars['YDL_ARCHIVE_FILE'],
+        'cachedir': ydl_vars['YDL_CACHE_DIR']
     }
 
 
