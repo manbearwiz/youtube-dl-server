@@ -9,11 +9,6 @@ FROM python:alpine
 RUN apk add --no-cache ffmpeg tzdata curl wget
 
 RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-
-COPY requirements.txt /usr/src/app/
-RUN pip install --no-cache-dir -r requirements.txt
-
 COPY . /usr/src/app
 
 # Download static files (JS/CSS Libraries)
@@ -27,9 +22,11 @@ RUN mv tmp_bs/*/css/* css/
 RUN mv tmp_bs/*/js/* js/
 RUN rm -rf bootstrap-4.4.1-dist.zip tmp_bs
 
+WORKDIR /usr/src/app
+RUN pip install --no-cache-dir -r requirements.txt
+
 EXPOSE 8080
 
-WORKDIR /usr/src/app
 VOLUME ["/youtube-dl"]
 
 CMD [ "python", "-u", "./youtube-dl-server.py" ]
