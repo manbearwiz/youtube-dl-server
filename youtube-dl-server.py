@@ -153,10 +153,13 @@ def get_ydl_options(request_options):
 
 def download(url, request_options):
     with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
+        ydl.params['extract_flat']= 'in_playlist'
         info = ydl.extract_info(url, download=False)
         if '_type' in info and info['_type'] == 'playlist' \
                 and 'YDL_OUTPUT_TEMPLATE_PLAYLIST' in app_defaults:
             ydl.params['outtmpl'] = app_defaults['YDL_OUTPUT_TEMPLATE_PLAYLIST']
+        ydl.params['extract_flat']= False
+
         # Swap out sys.stdout as ydl's output so we can capture it
         ydl._screen_file = io.StringIO()
         ydl.download([url])
