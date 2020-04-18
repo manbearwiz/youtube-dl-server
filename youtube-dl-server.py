@@ -98,7 +98,7 @@ def dl_worker():
             job = Job(url, 0, "")
             db.insert_job(job)
             try:
-                job.log = download(url, options)
+                job.log = Job.clean_logs(download(url, options))
                 job.status = 1
             except Exception as e:
                 job.status = 2

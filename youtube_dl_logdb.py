@@ -1,5 +1,6 @@
 import os
 import sqlite3
+import re
 
 STATUS_NAME =["Running",
         "Completed",
@@ -11,6 +12,17 @@ class Job:
         self.status = status
         self.log = log
         self.last_update = ""
+
+    @staticmethod
+    def clean_logs(logs):
+        if not logs:
+            return logs
+        clean = ""
+        for line in logs.split('\n'):
+            line = re.sub('.*\r', '', line)
+            if len(line) > 0:
+                clean = '%s%s\n' % (clean, line)
+        return clean
 
 class JobsDB:
     def __init__(self, db_path, readonly=True):
