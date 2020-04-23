@@ -30,8 +30,8 @@ app_defaults = {
     'YDL_SERVER_PORT': 8080,
     'YDL_CACHE_DIR': '/youtube-dl/.cache',
     'YDL_DB_PATH': '/youtube-dl/.ydl-metadata.db',
+    'YDL_SUBTITLES_LANGUAGES': None,
 }
-
 
 @app.route('/')
 def front_index():
@@ -142,7 +142,7 @@ def get_ydl_options(request_options):
             'preferedformat': ydl_vars['YDL_RECODE_VIDEO_FORMAT'],
         })
 
-    return {
+    ydl_options = {
         'format': ydl_vars['YDL_FORMAT'],
         'postprocessors': postprocessors,
         'outtmpl': ydl_vars['YDL_OUTPUT_TEMPLATE'],
@@ -150,6 +150,15 @@ def get_ydl_options(request_options):
         'cachedir': ydl_vars['YDL_CACHE_DIR']
     }
 
+    if ydl_vars['YDL_SUBTITLES_LANGUAGES']:
+        ydl_options['writesubtitles'] = True
+        if ydl_vars['YDL_SUBTITLES_LANGUAGES'] != 'all':
+            ydl_options['subtitleslangs'] = \
+                    ydl_vars['YDL_SUBTITLES_LANGUAGES'].split(',')
+        else:
+            ydl_options['allsubtitles'] = True
+
+    return ydl_options
 
 def download(url, request_options):
     with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
