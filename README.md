@@ -18,3 +18,6 @@ docker run -d -p 8080:8080 --name youtube-dl -v /home/$USER/youtube-dl:/youtube-
 Go to http://localhost:8080 and ENJOY !
 
 More information ? Please see original repository https://github.com/nbr23/youtube-dl-server
+
+[1]:youtube-dl-server.png
+[2]:youtube-dl-server-logs.png
