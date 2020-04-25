@@ -1,12 +1,28 @@
 import os
 import sqlite3
 import re
+from queue import Queue
+from threading import Thread
 
 STATUS_NAME =["Running",
         "Completed",
         "Failed",
         "Pending"]
+
+
+class Actions:
+    DOWNLOAD = 1
+    PURGE_LOGS = 2
+    INSERT = 3
+    UPDATE = 4
+    RESUME = 5
+
 class Job:
+    RUNNING = 0
+    COMPLETED = 1
+    FAILED = 2
+    PENDING = 3
+
     def __init__(self, name, status, log, format):
         self.id = -1
         self.name = name
@@ -78,3 +94,4 @@ class JobsDB:
                         'format': format,
                         'last_update': last_update})
         return rows
+

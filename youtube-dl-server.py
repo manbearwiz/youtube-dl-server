@@ -9,14 +9,10 @@ from threading import Thread
 import youtube_dl
 from pathlib import Path
 from collections import ChainMap
-from youtube_dl_logdb import JobsDB, Job
+from youtube_dl_logdb import JobsDB, Job, Actions
+import jobshandler
 
 app = Bottle()
-
-class QueueAction:
-    DOWNLOAD = 1
-    PURGE_LOGS = 2
-
 
 app_defaults = {
     'YDL_FORMAT': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
@@ -70,25 +66,20 @@ def api_logs():
 
 @app.route('/api/downloads', method='DELETE')
 def api_logs_purge():
-    dl_q.put((QueueAction.PURGE_LOGS, None))
+    jobshandler.put((Actions.PURGE_LOGS, None))
     return {"success": True}
 
 
 @app.route('/api/downloads', method='POST')
 def api_queue_download():
     url = request.forms.get("url")
-    options = {
-        'format': request.forms.get("format")
-    }
+    options = {'format': request.forms.get("format")}
 
     if not url:
         return {"success": False, "error": "'url' query parameter omitted"}
 
-    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=False)
-    job = Job(url, 3, "", options['format'])
-    # Thanks to job, we can retry on startup @todo
-    db.insert_job(job)
-    dl_q.put((QueueAction.DOWNLOAD, (url, options, job)))
+    job = Job(url, 3, "", request.forms.get("format"))
+    jobshandler.put((Actions.INSERT, job))
 
     print("Added url " + url + " to the download queue")
     return {"success": True, "url": url, "options": options}
@@ -105,25 +96,20 @@ def ydl_update():
     }
 
 def dl_worker():
-    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=False)
     while not done:
-        action, extras = dl_q.get()
-        if action == QueueAction.DOWNLOAD:
-            url, options, job = extras
-            job.status = 0
-            db.update_job(job)
+        action, job = dl_q.get()
+        if action == Actions.DOWNLOAD:
+            job.status = Job.RUNNING
+            jobshandler.put((Actions.UPDATE, job))
             try:
-                job.log = Job.clean_logs(download(url, options))
-                job.status = 1
+                job.log = Job.clean_logs(download(job.name, {'format':  job.format}))
+                job.status = Job.COMPLETED
             except Exception as e:
-                job.status = 2
+                job.status = Job.FAILED
                 job.log += str(e)
                 print("Exception during download task:\n" + str(e))
-            db.update_job(job)
-        elif action == QueueAction.PURGE_LOGS:
-            db.purge_jobs()
+            jobshandler.put((Actions.UPDATE, job))
         dl_q.task_done()
-
 
 def get_ydl_options(request_options):
     request_vars = {
@@ -190,17 +176,19 @@ def download(url, request_options):
         ydl.download([url])
         return ydl._screen_file.getvalue()
 
-def pendings_to_failed():
+def resume_pending():
     db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=False)
     jobs = db.get_all()
     not_endeds = [job for job in jobs if job['status'] == "Pending" or job['status'] == 'Running']
     for pending in not_endeds:
-        job = Job(pending["name"], 2, "Queue stopped", pending["format"])
+        job = Job(pending["name"], Job.PENDING, "Queue stopped", pending["format"])
         job.id = pending["id"]
-        db.update_job(job)
+        jobshandler.put((Actions.RESUME, job))
 
-pendings_to_failed()
 dl_q = Queue()
+jobshandler.start(app_defaults['YDL_DB_PATH'], dl_q)
+
+resume_pending()
 done = False
 dl_thread = Thread(target=dl_worker)
 dl_thread.start()
@@ -216,4 +204,6 @@ app_vars = ChainMap(os.environ, app_defaults)
 
 app.run(host=app_vars['YDL_SERVER_HOST'], port=app_vars['YDL_SERVER_PORT'], debug=True)
 done = True
+jobshandler.finish()
 dl_thread.join()
+jobshandler.thread.join()
