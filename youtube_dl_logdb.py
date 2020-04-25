@@ -4,7 +4,8 @@ import re
 
 STATUS_NAME =["Running",
         "Completed",
-        "Failed"]
+        "Failed",
+        "Pending"]
 class Job:
     def __init__(self, name, status, log):
         self.id = -1
