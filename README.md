@@ -23,12 +23,34 @@ docker run -d --net="host" --name youtube-dl -v /home/core/youtube-dl:/youtube-d
 
 ### Docker Compose
 
-This is an example service definition that could be put in `docker-compose.yml`. This service uses a VPN client container for its networking.
+This is an example service definition that could be put in `docker-compose.yml`. In this example, the service uses a VPN client container for its networking.
 
 ```yml
   youtube-dl:
     image: "kmb32123/youtube-dl-server"
     network_mode: "service:vpn"
+    volumes:
+      - /home/core/youtube-dl:/youtube-dl
+    restart: always
+```
+
+#### Configuration
+For easier configuration management and edition, you can save your variables in an external file and source them in your docker-compose.yml like the following example.
+
+Configuration file `config.env`:
+
+```
+YDL_RECODE_VIDEO_FORMAT="webm"
+YDL_SUBTITLES_LANGUAGES="en"
+```
+
+docker-compose.yml:
+```yml
+  youtube-dl:
+    image: "kmb32123/youtube-dl-server"
+    network_mode: "service:vpn"
+    env_file:
+      - ./config.env
     volumes:
       - /home/core/youtube-dl:/youtube-dl
     restart: always
