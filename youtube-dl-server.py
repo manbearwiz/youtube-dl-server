@@ -30,17 +30,17 @@ app_defaults = {
     'YDL_SERVER_PORT': 8080,
     'YDL_CACHE_DIR': '/youtube-dl/.cache',
     'YDL_DB_PATH': '/youtube-dl/.ydl-metadata.db',
-    'YDL_SUBTITLES_LANGUAGES': None,
+    'YDL_SUBTITLES_LANGUAGES': 'all',
 }
 
 @app.route('/')
 def front_index():
-    return static_file('index.html', root='./')
+    return static_file('templates/index.html', root='./')
 
 
 @app.route('/logs')
 def front_logs():
-    return static_file('logs.html', root='./')
+    return static_file('templates/logs.html', root='./')
 
 
 @app.route('/static/:filename#.*#')

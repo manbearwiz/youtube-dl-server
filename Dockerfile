@@ -8,7 +8,9 @@ FROM python:alpine
 
 
 RUN mkdir -p /usr/src/app
-COPY . /usr/src/app
+COPY *.py /usr/src/app/
+COPY ./static /usr/src/app/static
+COPY ./templates /usr/src/app/templates
 
 # Download static files (JS/CSS Libraries)
 WORKDIR /usr/src/app/static
@@ -24,6 +26,7 @@ RUN apk add --no-cache ffmpeg tzdata curl wget && \
   apk del curl wget
 
 WORKDIR /usr/src/app
+COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8080
