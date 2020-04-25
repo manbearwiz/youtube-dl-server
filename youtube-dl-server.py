@@ -190,7 +190,16 @@ def download(url, request_options):
         ydl.download([url])
         return ydl._screen_file.getvalue()
 
+def pendings_to_failed():
+    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=False)
+    jobs = db.get_all()
+    not_endeds = [job for job in jobs if job['status'] == "Pending" or job['status'] == 'Running']
+    for pending in not_endeds:
+        job = Job(pending["name"], 2, "Queue stopped", pending["format"])
+        job.id = pending["id"]
+        db.update_job(job)
 
+pendings_to_failed()
 dl_q = Queue()
 done = False
 dl_thread = Thread(target=dl_worker)
