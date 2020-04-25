@@ -74,7 +74,11 @@ def api_queue_download():
     if not url:
         return {"success": False, "error": "'url' query parameter omitted"}
 
-    dl_q.put((QueueAction.DOWNLOAD, (url, options)))
+    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=False)
+    job = Job(url, 3, "")
+    db.insert_job(job)
+    dl_q.put((QueueAction.DOWNLOAD, (url, options, job)))
+
     print("Added url " + url + " to the download queue")
     return {"success": True, "url": url, "options": options}
 
@@ -94,9 +98,9 @@ def dl_worker():
     while not done:
         action, extras = dl_q.get()
         if action == QueueAction.DOWNLOAD:
-            url, options = extras
-            job = Job(url, 0, "")
-            db.insert_job(job)
+            url, options, job = extras
+            job.status = 0
+            db.update_job(job)
             try:
                 job.log = Job.clean_logs(download(url, options))
                 job.status = 1
