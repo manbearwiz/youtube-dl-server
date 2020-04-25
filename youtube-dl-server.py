@@ -171,6 +171,7 @@ def download(url, request_options):
 
         # Swap out sys.stdout as ydl's output so we can capture it
         ydl._screen_file = io.StringIO()
+        ydl._err_file = ydl._screen_file
         ydl.download([url])
         return ydl._screen_file.getvalue()
 
