@@ -30,15 +30,22 @@ function submit_video(){
     .done(function (data) {
       set_dismissible_message(data.success, data.success ? (escapeHtml($("#url").val()) + " added to the list.") : data.error);
       $("#url").val("");
+      update_stats();
     })
     .fail(function() {
       set_dismissible_message(false, 'Could not add the url to the queue.');
   });
 }
 
-function update_queue_size(){
-  $.getJSON("/api/downloads/count", function (data) {
-    $("#queue_size").html(data.size);
+function update_stats(){
+  $.getJSON("/api/downloads/stats", function (data) {
+    var stats = data.stats;
+    var queue_pending_val = stats.queue === stats.pending ? stats.queue : stats.queue + '|' + stats.pending;
+
+    $("#queue_pending_size").html(queue_pending_val);
+    $("#running_size").html(stats.running);
+    $("#completed_size").html(stats.completed);
+    $("#failed_size").html(stats.failed);
   });
 }
 
@@ -60,11 +67,12 @@ function get_download_logs(){
       download_logs += "<td>" + row.id + "</td>";
       download_logs += "<td>" + row.last_update + "</td>";
       download_logs += "<td>" + row.name + "</td>";
+      download_logs += "<td>" + row.format + "</td>";
       download_logs += "<td>" + row.status + "</td>";
       download_logs += "<td style='text-align: left;'>" + row.log.replace(/\n|\r/g, '<br/>') + "</td>";
       download_logs += "</tr>";
     });
-    var visible = $("td:nth-child(5)").is(":visible");
+    var visible = $("td:nth-child(6)").is(":visible");
     $("#job_logs").html(download_logs);
     if (!visible) {
       hide_logs_detail();
@@ -73,15 +81,15 @@ function get_download_logs(){
 }
 
 function hide_logs_detail(){
-  $('td:nth-child(5),th:nth-child(5)').hide();
+  $('td:nth-child(6),th:nth-child(6)').hide();
 }
 
 function show_logs_detail(){
-  $('td:nth-child(5),th:nth-child(5)').show();
+  $('td:nth-child(6),th:nth-child(6)').show();
 }
 
 function toggle_hide_logs_detail(){
-  if ($("th:nth-child(5)").is(":visible")) {
+  if ($("th:nth-child(6)").is(":visible")) {
     hide_logs_detail();
   }
   else {

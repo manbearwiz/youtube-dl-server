@@ -13,3 +13,7 @@ nav {
 div.input-group>select.custom-select {
   flex: 0.1 1 100px;
 }
+
+.nav-item .badge {
+  margin-right: 2px;
+}
