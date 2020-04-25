@@ -30,8 +30,11 @@
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
             <span class="navbar-text">
-              Tasks pending: 
-              <span id='queue_size' class="badge badge-info">0</span>
+              Stats:
+              <span id='queue_pending_size' class="badge badge-secondary">-</span>
+              <span id='running_size' class="badge badge-info">-</span>
+              <span id='completed_size' class="badge badge-success">-</span>
+              <span id='failed_size' class="badge badge-danger">-</span>
             </span>
           </li>
         </ul>
@@ -52,6 +55,7 @@
             <th>ID</th>
             <th>Last update</th>
             <th>URL</th>
+            <th>Format</th>
             <th>Status</th>
             <th>Log</th>
           </tr>
@@ -75,9 +79,10 @@
   <script src="/static/js/bootstrap.min.js"></script>
   <script src="/static/js/youtubedl.js"></script>
   <script>
-    window.setInterval(update_queue_size, 5000);
+    window.setInterval(update_stats, 5000);
+    update_stats();
+
     window.setInterval(get_download_logs, 5000);
-    update_queue_size();
     get_download_logs();
   </script>
 </body>

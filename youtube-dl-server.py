@@ -48,10 +48,20 @@ def server_static(filename):
     return static_file(filename, root='./static')
 
 
-@app.route('/api/downloads/count', method='GET')
+@app.route('/api/downloads/stats', method='GET')
 def api_queue_size():
-    return {"success": True, "size": len(list(dl_q.queue))}
-
+    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=True)
+    jobs = db.get_all()
+    return {
+        "success": True,
+        "stats": {
+            "queue": len(list(dl_q.queue)),
+            "pending": len([job for job in jobs if job['status'] == "Pending"]),
+            "running": len([job for job in jobs if job['status'] == "Running"]),
+            "completed": len([job for job in jobs if job['status'] == "Completed"]),
+            "failed": len([job for job in jobs if job['status'] == "Failed"])
+        }
+    }
 
 @app.route('/api/downloads', method='GET')
 def api_logs():
@@ -75,7 +85,8 @@ def api_queue_download():
         return {"success": False, "error": "'url' query parameter omitted"}
 
     db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=False)
-    job = Job(url, 3, "")
+    job = Job(url, 3, "", options['format'])
+    # Thanks to job, we can retry on startup @todo
     db.insert_job(job)
     dl_q.put((QueueAction.DOWNLOAD, (url, options, job)))
 

@@ -7,12 +7,13 @@ STATUS_NAME =["Running",
         "Failed",
         "Pending"]
 class Job:
-    def __init__(self, name, status, log):
+    def __init__(self, name, status, log, format):
         self.id = -1
         self.name = name
         self.status = status
         self.log = log
         self.last_update = ""
+        self.format = format
 
     @staticmethod
     def clean_logs(logs):
@@ -40,8 +41,8 @@ class JobsDB:
 
     def insert_job(self, job):
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO jobs (name, status, log) VALUES (?,\
-                ?, ?);", (job.name, str(job.status), job.log))
+        cursor.execute("INSERT INTO jobs (name, status, log, format) VALUES (?,\
+                ?, ?, ?);", (job.name, str(job.status), job.log, job.format))
         job.id = cursor.lastrowid
         self.conn.commit()
 
@@ -61,17 +62,19 @@ class JobsDB:
         cursor.execute("CREATE TABLE jobs (id INTEGER PRIMARY KEY \
                 AUTOINCREMENT, name TEXT NOT NULL, \
                 status INTEGER NOT NULL, log TEXT, \
+                format TEXT NOT NULL, \
                 last_update DATETIME DEFAULT CURRENT_TIMESTAMP);")
         self.conn.commit()
 
     def get_all(self, limit=50):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT id, name, status, log, last_update from jobs ORDER BY last_update DESC LIMIT ?;", (str(limit),))
+        cursor.execute("SELECT id, name, status, log, last_update, format from jobs ORDER BY last_update DESC LIMIT ?;", (str(limit),))
         rows = []
-        for job_id, name, status, log, last_update in cursor.fetchall():
+        for job_id, name, status, log, last_update, format in cursor.fetchall():
             rows.append({'id': job_id,
                         'name': name,
                         'status': STATUS_NAME[status],
                         'log': log,
+                        'format': format,
                         'last_update': last_update})
         return rows
