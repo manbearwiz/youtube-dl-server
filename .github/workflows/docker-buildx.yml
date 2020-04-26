@@ -1,0 +1,46 @@
+name: docker-buildx-manual
+
+on:
+  watch:
+    types: [started]
+  schedule:
+    - cron: "0 6 * * 6"
+
+jobs:
+  docker-buildx:
+    runs-on: ubuntu-latest
+    if: (github.event_name != 'watch') || (github.actor == github.event.repository.owner.login)
+    steps:
+      - 
+        name: Load Variables
+        id: vars
+        run: |
+          echo ::set-output name=buildx_platforms::linux/amd64,linux/arm/v7,linux/arm64
+          echo ::set-output name=dockerhub_user::wiserain
+          echo ::set-output name=dockerhub_repo::youtube-dl-server
+          echo ::set-output name=version::$(pip3 search youtube_dl | grep YouTube | awk '{print $2}' | tr -d '()')
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      - 
+        name: Dockerhub Login
+        env:
+          DOCKERHUB_PASS: ${{ secrets.DOCKERHUB_PASS }}
+        run: |
+          echo "${DOCKERHUB_PASS}" | docker login --username "${{ steps.vars.outputs.dockerhub_user }}" --password-stdin
+      -
+        name: Setup Buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          version: latest
+      - 
+        name: Run Buildx
+        env:
+          IMAGE_NAME: ${{ steps.vars.outputs.dockerhub_user }}/${{ steps.vars.outputs.dockerhub_repo }}
+        run: |
+          docker buildx build \
+            --output "type=image,push=true" \
+            --platform ${{ steps.vars.outputs.buildx_platforms }} \
+            --tag "${IMAGE_NAME}:${{ steps.vars.outputs.version }}" \
+            --tag "${IMAGE_NAME}:latest" \
+            --file Dockerfile .
