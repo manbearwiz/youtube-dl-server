@@ -43,11 +43,20 @@ class Job:
         return clean
 
 class JobsDB:
+
+    @staticmethod
+    def init_db(db_path):
+        conn = sqlite3.connect("file://%s" % db_path)
+        cursor = conn.cursor()
+        cursor.execute("CREATE TABLE if not exists jobs (id INTEGER PRIMARY KEY \
+                AUTOINCREMENT, name TEXT NOT NULL, \
+                status INTEGER NOT NULL, log TEXT, \
+                format TEXT NOT NULL, \
+                last_update DATETIME DEFAULT CURRENT_TIMESTAMP);")
+        conn.commit()
+        conn.close()
+
     def __init__(self, db_path, readonly=True):
-        if not os.path.isfile(db_path):
-            self.conn = sqlite3.connect("file://%s" % db_path)
-            self.create_table()
-            self.conn.close()
         self.conn = sqlite3.connect("file://%s%s" % (db_path,
                                             "?mode=ro" if readonly else ""),
                                     uri=True)
@@ -71,15 +80,6 @@ class JobsDB:
     def purge_jobs(self):
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM jobs;")
-        self.conn.commit()
-
-    def create_table(self):
-        cursor = self.conn.cursor()
-        cursor.execute("CREATE TABLE jobs (id INTEGER PRIMARY KEY \
-                AUTOINCREMENT, name TEXT NOT NULL, \
-                status INTEGER NOT NULL, log TEXT, \
-                format TEXT NOT NULL, \
-                last_update DATETIME DEFAULT CURRENT_TIMESTAMP);")
         self.conn.commit()
 
     def get_all(self, limit=50):

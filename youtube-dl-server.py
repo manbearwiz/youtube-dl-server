@@ -185,6 +185,9 @@ def resume_pending():
         job.id = pending["id"]
         jobshandler.put((Actions.RESUME, job))
 
+
+JobsDB.init_db(app_defaults['YDL_DB_PATH'])
+
 dl_q = Queue()
 jobshandler.start(app_defaults['YDL_DB_PATH'], dl_q)
 
