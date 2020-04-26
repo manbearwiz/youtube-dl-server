@@ -59,11 +59,18 @@ function purge_download_logs(){
   });
 }
 
+var statusToTrClass = {
+  Pending: '',
+  Failed: 'bg-danger',
+  Running: 'bg-info',
+  Completed: 'bg-success'
+}
+
 function get_download_logs(){
   $.getJSON("api/downloads", function (data) {
     var download_logs = "";
     $.each(data, function(key, row) {
-      download_logs += "<tr " + (row.status == 'Failed' ? "class='bg-danger'":"") + ">";
+      download_logs += "<tr class=\"" + statusToTrClass[row.status] + "\">";
       download_logs += "<td>" + row.id + "</td>";
       download_logs += "<td>" + row.last_update + "</td>";
       download_logs += "<td>" + row.name + "</td>";

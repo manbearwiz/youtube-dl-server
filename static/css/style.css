@@ -7,7 +7,7 @@ nav {
 }
 
 .container {
-  height: 100vh;
+  height: calc(100vh - 56px);
 }
 
 div.input-group>select.custom-select {
