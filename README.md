@@ -77,13 +77,13 @@ Just navigate to `http://{{host}}:8080/` and enter the requested `{{url}}`.
 #### Curl
 
 ```shell
-curl -X POST --data-urlencode "url={{url}}" http://{{host}}:8080/downloads
+curl -X POST --data-urlencode "url={{url}}" http://{{host}}:8080/api/downloads
 ```
 
 #### Fetch
 
 ```javascript
-fetch(`http://${host}:8080/downloads`, {
+fetch(`http://${host}:8080/api/downloads`, {
   method: "POST",
   body: new URLSearchParams({
     url: url,
@@ -96,8 +96,19 @@ fetch(`http://${host}:8080/downloads`, {
 
 Add the following bookmarklet to your bookmark bar so you can conviently send the current page url to your youtube-dl-server instance.
 
+##### HTTPS
+If your youtube-dl-server is served through https (behind a reverse proxy handling https for example), you can use the following bookmarklet:
+
 ```javascript
-javascript:!function(){fetch("http://${host}:8080/downloads",{body:new URLSearchParams({url:window.location.href,format:"bestvideo"}),method:"POST"})}();
+javascript:fetch("https://${host}/api/downloads",{body:new URLSearchParams({url:window.location.href,format:"bestvideo"}),method:"POST"});
+```
+
+##### Plain text
+If you are hosting it without HTTPS, the previous bookmarklet will likely be blocked by your browser (as it will generate mixed content when used on HTTPS sites).
+Instead, you can use the following bookmarklet:
+
+```javascript
+javascript:(function(){document.body.innerHTML += '<form name="ydl_form" method="POST" action="http://${host}/api/downloads"><input name="url" type="url" value="'+window.location.href+'"/></form>';document.ydl_form.submit()})();
 ```
 
 ## Implementation
