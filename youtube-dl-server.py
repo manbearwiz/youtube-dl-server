@@ -26,7 +26,7 @@ app_defaults = {
     'YDL_SERVER_PORT': 8080,
     'YDL_CACHE_DIR': '/youtube-dl/.cache',
     'YDL_DB_PATH': '/youtube-dl/.ydl-metadata.db',
-    'YDL_SUBTITLES_LANGUAGES': 'all',
+    'YDL_SUBTITLES_LANGUAGES': None,
 }
 
 @app.route('/')
