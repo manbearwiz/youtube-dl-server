@@ -60,22 +60,22 @@ function purge_download_logs(){
 }
 
 var statusToTrClass = {
-  Pending: '',
-  Failed: 'bg-danger',
-  Running: 'bg-info',
-  Completed: 'bg-success'
+  Pending: 'badge',
+  Failed: 'badge badge-danger',
+  Running: 'badge badge-info',
+  Completed: 'badge badge-success'
 }
 
 function get_download_logs(){
   $.getJSON("api/downloads", function (data) {
     var download_logs = "";
     $.each(data, function(key, row) {
-      download_logs += "<tr class=\"" + statusToTrClass[row.status] + "\">";
+      download_logs += "<tr>";
       download_logs += "<td>" + row.id + "</td>";
       download_logs += "<td>" + row.last_update + "</td>";
       download_logs += "<td>" + row.name + "</td>";
       download_logs += "<td>" + row.format + "</td>";
-      download_logs += "<td>" + row.status + "</td>";
+      download_logs += "<td> <span class='" + statusToTrClass[row.status] + "'>" + row.status + "</span></td>";
       download_logs += "<td style='text-align: left;'>" + row.log.replace(/\n|\r/g, '<br/>') + "</td>";
       download_logs += "</tr>";
     });
