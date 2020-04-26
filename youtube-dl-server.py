@@ -29,7 +29,7 @@ app_defaults = {
     'YDL_SUBTITLES_LANGUAGES': None,
 }
 
-@app.route('/')
+@app.route(['/', '/index'])
 def front_index():
     return static_file('templates/index.html', root='./')
 
@@ -42,7 +42,6 @@ def front_logs():
 @app.route('/static/:filename#.*#')
 def server_static(filename):
     return static_file(filename, root='./static')
-
 
 @app.route('/api/downloads/stats', method='GET')
 def api_queue_size():

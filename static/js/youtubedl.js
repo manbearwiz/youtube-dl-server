@@ -26,7 +26,7 @@ function set_dismissible_message(success, message){
 
 function submit_video(){
   data = {url: $("#url").val(),format: $("#format").val()};
-  $.post("/api/downloads", data)
+  $.post("api/downloads", data)
     .done(function (data) {
       set_dismissible_message(data.success, data.success ? (escapeHtml($("#url").val()) + " added to the list.") : data.error);
       $("#url").val("");
@@ -38,7 +38,7 @@ function submit_video(){
 }
 
 function update_stats(){
-  $.getJSON("/api/downloads/stats", function (data) {
+  $.getJSON("api/downloads/stats", function (data) {
     var stats = data.stats;
     var queue_pending_val = stats.queue === stats.pending ? stats.queue : stats.queue + '|' + stats.pending;
 
@@ -51,7 +51,7 @@ function update_stats(){
 
 function purge_download_logs(){
   $.ajax({
-    url: '/api/downloads',
+    url: 'api/downloads',
     type: 'DELETE',
     success: function(data) {
       get_download_logs();
@@ -60,7 +60,7 @@ function purge_download_logs(){
 }
 
 function get_download_logs(){
-  $.getJSON("/api/downloads", function (data) {
+  $.getJSON("api/downloads", function (data) {
     var download_logs = "";
     $.each(data, function(key, row) {
       download_logs += "<tr " + (row.status == 'Failed' ? "class='bg-danger'":"") + ">";
