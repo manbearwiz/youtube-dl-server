@@ -47,7 +47,7 @@ class JobsDB:
 
     @staticmethod
     def init_db():
-        conn = sqlite3.connect("file://%s" % app_defaults['YDL_DB_PATH'])
+        conn = sqlite3.connect("file://%s" % app_defaults['YDL_DB_PATH'], uri=True)
         cursor = conn.cursor()
         cursor.execute("CREATE TABLE if not exists jobs (id INTEGER PRIMARY KEY \
                 AUTOINCREMENT, name TEXT NOT NULL, \
