@@ -1,6 +1,6 @@
 from queue import Queue
 from threading import Thread
-from youtube_dl_logdb import JobsDB, Job, Actions
+from ydl_server.logdb import JobsDB, Job, Actions
 
 queue = Queue()
 db_path = None

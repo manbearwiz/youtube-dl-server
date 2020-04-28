@@ -8,12 +8,11 @@ FROM python:alpine
 
 
 RUN mkdir -p /usr/src/app
-COPY *.py /usr/src/app/
-COPY ./static /usr/src/app/static
-COPY ./templates /usr/src/app/templates
+COPY ./ydl_server /usr/src/app/ydl_server
+COPY ./youtube-dl-server.py /usr/src/app/
 
 # Download static files (JS/CSS Libraries)
-WORKDIR /usr/src/app/static
+WORKDIR /usr/src/app/ydl_server/static
 RUN apk add --no-cache ffmpeg tzdata curl wget && \
   curl -s https://code.jquery.com/jquery-3.4.1.min.js > js/jquery.min.js && \
   curl -s https://unpkg.com/@popperjs/core@2.1.1/dist/umd/popper.min.js > js/popper.min.js && \
