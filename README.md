@@ -1,10 +1,12 @@
-![Docker Stars Shield](https://img.shields.io/docker/stars/kmb32123/youtube-dl-server.svg?style=flat-square)
-![Docker Pulls Shield](https://img.shields.io/docker/pulls/kmb32123/youtube-dl-server.svg?style=flat-square)
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://raw.githubusercontent.com/manbearwiz/youtube-dl-server/master/LICENSE)
+![Docker Stars Shield](https://img.shields.io/docker/stars/nbr23/youtube-dl-server.svg?style=flat-square)
+![Docker Pulls Shield](https://img.shields.io/docker/pulls/nbr23/youtube-dl-server.svg?style=flat-square)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://raw.githubusercontent.com/nbr23/youtube-dl-server/master/LICENSE)
 
 # youtube-dl-server
 
-Very spartan Web and REST interface for downloading youtube videos onto a server. [`bottle`](https://github.com/bottlepy/bottle) + [`youtube-dl`](https://github.com/rg3/youtube-dl).
+Simple Web and REST interface for downloading youtube videos onto a server. [`bottle`](https://github.com/bottlepy/bottle) + [`youtube-dl`](https://github.com/rg3/youtube-dl).
+
+Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube-dl-server).
 
 ![screenshot][1]
 
@@ -13,24 +15,25 @@ Very spartan Web and REST interface for downloading youtube videos onto a server
 
 ## Running
 
+For easier deployment, a docker image is available on [dockerhub](https://hub.docker.com/r/nbr23/youtube-dl-server).
+
 ### Docker CLI
 
-This example uses the docker run command to create the container to run the app. Here we also use host networking for simplicity. Also note the `-v` argument. This directory will be used to output the resulting videos
+This example uses the docker run command to create the container to run the app. Note the `-v` argument to specify the volume and its binding on the host. This directory will be used to output the resulting videos.
 
 ```shell
-docker run -d --net="host" --name youtube-dl -v /home/core/youtube-dl:/youtube-dl kmb32123/youtube-dl-server
+docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server
 ```
 
 ### Docker Compose
 
-This is an example service definition that could be put in `docker-compose.yml`. In this example, the service uses a VPN client container for its networking.
+This is an example service definition that could be put in `docker-compose.yml`.
 
 ```yml
   youtube-dl:
-    image: "kmb32123/youtube-dl-server"
-    network_mode: "service:vpn"
+    image: "nbr23/youtube-dl-server"
     volumes:
-      - /home/core/youtube-dl:/youtube-dl
+      - $HOME/youtube-dl:/youtube-dl
     restart: always
 ```
 
@@ -47,12 +50,11 @@ YDL_SUBTITLES_LANGUAGES="en"
 docker-compose.yml:
 ```yml
   youtube-dl:
-    image: "kmb32123/youtube-dl-server"
-    network_mode: "service:vpn"
+    image: "nbr23/youtube-dl-server"
     env_file:
       - ./config.env
     volumes:
-      - /home/core/youtube-dl:/youtube-dl
+      - $HOME/youtube-dl:/youtube-dl
     restart: always
 ```
 
