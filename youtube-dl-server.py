@@ -87,7 +87,9 @@ print(updateResult["error"])
 
 app_vars = ChainMap(os.environ, app_defaults)
 
-app.run(host=app_vars['YDL_SERVER_HOST'], port=app_vars['YDL_SERVER_PORT'], debug=True)
+app.run(host=app_vars['YDL_SERVER_HOST'],
+        port=app_vars['YDL_SERVER_PORT'],
+        debug=app_vars['YDL_DEBUG'])
 ydlhandler.finish()
 jobshandler.finish()
 ydlhandler.thread.join()
