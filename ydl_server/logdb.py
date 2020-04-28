@@ -3,6 +3,7 @@ import sqlite3
 import re
 from queue import Queue
 from threading import Thread
+from ydl_server.config import app_defaults
 
 STATUS_NAME =["Running",
         "Completed",
@@ -45,8 +46,8 @@ class Job:
 class JobsDB:
 
     @staticmethod
-    def init_db(db_path):
-        conn = sqlite3.connect("file://%s" % db_path)
+    def init_db():
+        conn = sqlite3.connect("file://%s" % app_defaults['YDL_DB_PATH'])
         cursor = conn.cursor()
         cursor.execute("CREATE TABLE if not exists jobs (id INTEGER PRIMARY KEY \
                 AUTOINCREMENT, name TEXT NOT NULL, \
@@ -56,8 +57,8 @@ class JobsDB:
         conn.commit()
         conn.close()
 
-    def __init__(self, db_path, readonly=True):
-        self.conn = sqlite3.connect("file://%s%s" % (db_path,
+    def __init__(self, readonly=True):
+        self.conn = sqlite3.connect("file://%s%s" % (app_defaults['YDL_DB_PATH'],
                                             "?mode=ro" if readonly else ""),
                                     uri=True)
 

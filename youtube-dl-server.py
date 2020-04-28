@@ -29,7 +29,7 @@ def server_static(filename):
 
 @app.route('/api/downloads/stats', method='GET')
 def api_queue_size():
-    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=True)
+    db = JobsDB(readonly=True)
     jobs = db.get_all()
     return {
         "success": True,
@@ -44,7 +44,7 @@ def api_queue_size():
 
 @app.route('/api/downloads', method='GET')
 def api_logs():
-    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=True)
+    db = JobsDB(readonly=True)
     return json.dumps(db.get_all())
 
 @app.route('/api/downloads', method='DELETE')
@@ -71,11 +71,11 @@ def api_queue_download():
 def ydl_update():
     return ydlhandler.update()
 
-JobsDB.init_db(app_defaults['YDL_DB_PATH'])
+JobsDB.init_db()
 
 ydlhandler.start()
 print("Started download thread")
-jobshandler.start(app_defaults['YDL_DB_PATH'], ydlhandler.queue)
+jobshandler.start(ydlhandler.queue)
 print("Started jobs manager thread")
 
 ydlhandler.resume_pending()

@@ -116,7 +116,7 @@ def download(url, request_options):
         return ydl._screen_file.getvalue()
 
 def resume_pending():
-    db = JobsDB(app_defaults['YDL_DB_PATH'], readonly=False)
+    db = JobsDB(readonly=False)
     jobs = db.get_all()
     not_endeds = [job for job in jobs if job['status'] == "Pending" or job['status'] == 'Running']
     for pending in not_endeds:
