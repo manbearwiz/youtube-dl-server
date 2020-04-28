@@ -55,6 +55,7 @@ function purge_download_logs(){
     type: 'DELETE',
     success: function(data) {
       get_download_logs();
+      update_stats();
     }
   });
 }
@@ -107,7 +108,7 @@ function toggle_hide_logs_detail(){
 $('#url').keypress(function (e) {
   if (e.which == 13) {
     submit_video();
-    update_queue_size();
+    update_stats();
     return false;
   }
 });
