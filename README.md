@@ -61,7 +61,7 @@ docker-compose.yml:
 If you have python ^3.3.0 installed in your PATH you can simply run like this, providing optional environment variable overrides inline.
 
 ```shell
-sudo YDL_SERVER_PORT=8123 python3 -u ./youtube-dl-server.py
+YDL_SERVER_PORT=8123 python3 -u ./youtube-dl-server.py
 ```
 
 ## Usage
