@@ -1,13 +1,19 @@
-body {
+html, body {
+  height: 100%;
   background-color: #002b36;
+  margin: 0;
+}
+
+.content {
+  min-height: 100%;
+  margin-top: -50px;
+  padding-top: 70px;
+  margin-bottom: -50px;
+  padding-bottom: 50px;
 }
 
 nav {
   background-color: #001b26;
-}
-
-.container {
-  height: calc(100vh - 56px);
 }
 
 div.input-group>select.custom-select {
@@ -18,10 +24,6 @@ div.input-group>select.custom-select {
   margin-right: 2px;
 }
 
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 60px;
-  line-height: 60px;
+.footer{
+  height: 50px;
 }

@@ -1,88 +1,91 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
-<head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="Description" content="Web frontend for youtube-dl">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="Description" content="Web frontend for youtube-dl">
 
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="static/css/bootstrap.min.css">
-  <link href="static/css/style.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="static/css/bootstrap.min.css">
+    <link href="static/css/style.css" rel="stylesheet">
 
-  <title>youtube-dl</title>
-</head>
+    <title>youtube-dl</title>
+  </head>
 
-<body>
-  <header>
-    <nav class="navbar navbar-expand-md navbar-dark">
-      <a class="navbar-brand abs" href="index">YoutubeDL</a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsingNavbar">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="navbar-collapse collapse" id="collapsingNavbar">
-        <ul class="navbar-nav">
-          <li class="nav-item">
-                <a class="nav-link" href="logs">Logs</a>
-          </li>
-        </ul>
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item">
-            <span class="navbar-text">
-              Stats:
-              <span data-toggle="tooltip" data-placement="bottom" title="Pending" id='queue_pending_size' class="badge badge-secondary">-</span>
-              <span data-toggle="tooltip" data-placement="bottom" title="Running" id='running_size' class="badge badge-info">-</span>
-              <span data-toggle="tooltip" data-placement="bottom" title="Completed" id='completed_size' class="badge badge-success">-</span>
-              <span data-toggle="tooltip" data-placement="bottom" title="Failed" id='failed_size' class="badge badge-danger">-</span>
-            </span>
-          </li>
-        </ul>
+  <body>
+    <header>
+      <nav class="navbar navbar-expand-md navbar-dark">
+        <a class="navbar-brand abs" href="index">YoutubeDL</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsingNavbar">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="navbar-collapse collapse" id="collapsingNavbar">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="logs">Logs</a>
+            </li>
+          </ul>
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <span class="navbar-text">
+                Stats:
+                <span data-toggle="tooltip" data-placement="bottom" title="Pending" id='queue_pending_size' class="badge badge-secondary">-</span>
+                <span data-toggle="tooltip" data-placement="bottom" title="Running" id='running_size' class="badge badge-info">-</span>
+                <span data-toggle="tooltip" data-placement="bottom" title="Completed" id='completed_size' class="badge badge-success">-</span>
+                <span data-toggle="tooltip" data-placement="bottom" title="Failed" id='failed_size' class="badge badge-danger">-</span>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </nav>
+    </header>
+
+    <div class="content">
+      <div class="container-fluid d-flex flex-column text-light text-center">
+        <div class="container-fluid flex-grow-1">
+          <h1 class="display-4">Download History</h1>
+          <button class="btn btn-dark" onclick="toggle_hide_logs_detail()">Show/Hide logs</button>
+          <button class="btn btn-dark" onclick="get_download_logs()">Refresh</button>
+          <button class="btn btn-dark" onclick="purge_download_logs()">Purge logs</button>
+          <br/>
+          <table class="col-md-16 table table-stripped table-md table-dark">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Last update</th>
+                <th>URL</th>
+                <th>Format</th>
+                <th>Status</th>
+                <th>Log</th>
+              </tr>
+              <tbody id="job_logs">
+              </tbody>
+            </thead>
+          </table>
+        </div>
       </div>
-    </nav>
-  </header>
-
-  <div class="container-fluid d-flex flex-column text-light text-center">
-    <div class="container-fluid flex-grow-1">
-      <h1 class="display-4">Download History</h1>
-      <button class="btn btn-dark" onclick="toggle_hide_logs_detail()">Show/Hide logs</button>
-      <button class="btn btn-dark" onclick="get_download_logs()">Refresh</button>
-      <button class="btn btn-dark" onclick="purge_download_logs()">Purge logs</button>
-      <br/>
-      <table class="col-md-16 table table-stripped table-md table-dark">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Last update</th>
-            <th>URL</th>
-            <th>Format</th>
-            <th>Status</th>
-            <th>Log</th>
-          </tr>
-          <tbody id="job_logs">
-          </tbody>
-        </thead>
-      </table>
     </div>
-  </div>
-  <div class="footer text-center">
-    <p class="text-muted">Web frontend for <a class="text-light" href="https://rg3.github.io/youtube-dl/">youtube-dl</a>,
-    code &amp; issues on <a class="text-light" href="https://github.com/nbr23/youtube-dl-server">GitHub</a>. Forked from <a class="text-light" href="https://github.com/manbearwiz/youtube-dl-server">@manbearwiz</a>.
-  </div>
+    <footer class="footer text-light text-center">
+      <p class="text-muted">Web frontend for <a class="text-light" href="https://rg3.github.io/youtube-dl/">youtube-dl</a>,
+      code &amp; issues on <a class="text-light" href="https://github.com/nbr23/youtube-dl-server">GitHub</a>. Forked from <a class="text-light" href="https://github.com/manbearwiz/youtube-dl-server">@manbearwiz</a>.
+      </p>
+    </footer>
 
-  <!-- Optional JavaScript -->
-  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-  <script src="static/js/jquery.min.js"></script>
-  <script src="static/js/popper.min.js"></script>
-  <script src="static/js/bootstrap.min.js"></script>
-  <script src="static/js/youtubedl.js"></script>
-  <script>
-    window.setInterval(update_stats, 5000);
-    update_stats();
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="static/js/jquery.min.js"></script>
+    <script src="static/js/popper.min.js"></script>
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/youtubedl.js"></script>
+    <script>
+      window.setInterval(update_stats, 5000);
+      update_stats();
 
-    window.setInterval(get_download_logs, 5000);
-    get_download_logs();
-  </script>
-</body>
+      window.setInterval(get_download_logs, 5000);
+      get_download_logs();
+    </script>
+  </body>
 
 </html>
