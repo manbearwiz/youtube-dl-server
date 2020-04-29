@@ -8,6 +8,7 @@ import youtube_dl
 from ydl_server.logdb import JobsDB, Job, Actions
 from ydl_server import jobshandler
 from ydl_server.config import app_defaults
+from time import sleep
 
 queue = Queue()
 thread = None
@@ -29,13 +30,18 @@ def worker():
         if action == Actions.DOWNLOAD:
             job.status = Job.RUNNING
             jobshandler.put((Actions.UPDATE, job))
+            output = io.StringIO()
+            stdout_thread = Thread(target=download_log_update,
+                    args=(job, output))
+            stdout_thread.start()
             try:
-                job.log = Job.clean_logs(download(job.name, {'format':  job.format}))
+                job.log = Job.clean_logs(download(job.name, {'format':  job.format}, output),)
                 job.status = Job.COMPLETED
             except Exception as e:
                 job.status = Job.FAILED
                 job.log += str(e)
                 print("Exception during download task:\n" + str(e))
+            stdout_thread.join()
             jobshandler.put((Actions.UPDATE, job))
         queue.task_done()
 
@@ -99,8 +105,13 @@ def get_ydl_options(request_options):
 
     return ydl_options
 
+def download_log_update(job, stringio):
+    while job.status == Job.RUNNING:
+        job.log = Job.clean_logs(stringio.getvalue())
+        jobshandler.put((Actions.UPDATE, job))
+        sleep(5)
 
-def download(url, request_options):
+def download(url, request_options, output):
     with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
         ydl.params['extract_flat']= 'in_playlist'
         info = ydl.extract_info(url, download=False)
@@ -110,7 +121,7 @@ def download(url, request_options):
         ydl.params['extract_flat']= False
 
         # Swap out sys.stdout as ydl's output so we can capture it
-        ydl._screen_file = io.StringIO()
+        ydl._screen_file = output
         ydl._err_file = ydl._screen_file
         ydl.download([url])
         return ydl._screen_file.getvalue()
