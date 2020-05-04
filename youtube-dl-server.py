@@ -116,5 +116,5 @@ app.run(host=app_vars['YDL_SERVER_HOST'],
         debug=app_vars['YDL_DEBUG'])
 ydlhandler.finish()
 jobshandler.finish()
-ydlhandler.thread.join()
-jobshandler.thread.join()
+ydlhandler.join()
+jobshandler.join()

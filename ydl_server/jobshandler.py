@@ -32,3 +32,6 @@ def worker(dl_queue):
             dl_queue.put((Actions.DOWNLOAD, job))
         queue.task_done()
 
+def join():
+    if thread is not None:
+        return thread.join()

@@ -135,4 +135,6 @@ def resume_pending():
         job.id = pending["id"]
         jobshandler.put((Actions.RESUME, job))
 
-
+def join():
+    if thread is not None:
+        return thread.join()
