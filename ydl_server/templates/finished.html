@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="static/css/bootstrap.min.css">
     <link href="static/css/style.css" rel="stylesheet">
 
-    <title>youtube-dl</title>
+    <title>youtube-dl - done</title>
   </head>
 
   <body>
@@ -48,22 +48,16 @@
     <div class="content">
       <div class="container-fluid d-flex flex-column text-light text-center">
         <div class="container-fluid flex-grow-1">
-          <h1 class="display-4">Download History</h1>
-          <button class="btn btn-dark" onclick="toggle_hide_logs_detail()">Show/Hide logs</button>
-          <button class="btn btn-dark" onclick="get_download_logs()">Refresh</button>
-          <button class="btn btn-dark" onclick="purge_download_logs()">Purge logs</button>
+          <h1 class="display-4">Finished Files</h1>
+          <button class="btn btn-dark" onclick="get_finished_files()">Refresh</button>
           <br/>
           <table class="col-md-16 table table-stripped table-md table-dark">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Last update</th>
-                <th>URL</th>
-                <th>Format</th>
-                <th>Status</th>
-                <th>Log</th>
+                <th>Name</th>
+                <th>Date</th>
               </tr>
-              <tbody id="job_logs">
+              <tbody id="finished_files">
               </tbody>
             </thead>
           </table>
@@ -86,8 +80,8 @@
       window.setInterval(update_stats, 5000);
       update_stats();
 
-      window.setInterval(get_download_logs, 5000);
-      get_download_logs();
+      window.setInterval(get_finished_files, 5000);
+      get_finished_files();
     </script>
   </body>
 

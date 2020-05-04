@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 import json
 import os
 from collections import ChainMap
+from itertools import chain
+from operator import itemgetter
 from queue import Queue
 from bottle import route, run, Bottle, request, static_file
 from threading import Thread
@@ -22,6 +24,28 @@ def front_index():
 def front_logs():
     return static_file('templates/logs.html', root='./ydl_server')
 
+@app.route('/finished')
+def front_finished():
+    return static_file('templates/finished.html', root='./ydl_server')
+
+@app.route('/api/finished')
+def api_list_finished():
+    root_dir = Path(app_vars['YDL_OUTPUT_TEMPLATE']).parent
+    matches = chain(root_dir.glob('*'), root_dir.glob('*/*'))
+    files = [{
+        'name': f.relative_to(root_dir).as_posix(),
+        'modified': f.stat().st_mtime * 1000,
+            } for f in matches if not f.name.startswith('.') and f.is_file()]
+    files = sorted(files, key=itemgetter('modified'), reverse=True)
+    return {
+        "success": True,
+        "files": files
+        }
+
+@app.route('/api/finished/:filename#.*#')
+def api_serve_finished_file(filename):
+    root_dir = Path(app_vars['YDL_OUTPUT_TEMPLATE']).parent
+    return static_file(filename, root=root_dir)
 
 @app.route('/static/:filename#.*#')
 def server_static(filename):

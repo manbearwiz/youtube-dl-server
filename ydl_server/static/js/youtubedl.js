@@ -88,6 +88,19 @@ function get_download_logs(){
   });
 }
 
+function get_finished_files(){
+  $.getJSON("api/finished", function (data) {
+    let finished_files = "";
+    $.each(data.files, function(key, file) {
+      finished_files += "<tr>";
+      finished_files += "<td><a href=\"api/finished/" + encodeURIComponent(file.name) + "\">" + file.name + "</a></td>";
+      finished_files += "<td>" + (new Date(file.modified)).toISOString() + "</td>";
+      finished_files += "</tr>";
+    });
+    $("#finished_files").html(finished_files);
+  });
+}
+
 function hide_logs_detail(){
   $('td:nth-child(6),th:nth-child(6)').hide();
 }
