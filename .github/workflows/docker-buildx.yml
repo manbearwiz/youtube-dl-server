@@ -1,4 +1,4 @@
-name: docker-buildx-manual
+name: docker-buildx
 
 on:
   watch:
@@ -44,3 +44,13 @@ jobs:
             --tag "${IMAGE_NAME}:${{ steps.vars.outputs.version }}" \
             --tag "${IMAGE_NAME}:latest" \
             --file Dockerfile .
+      -
+        name: Send Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always()
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          description: |
+            Image: ${{ steps.vars.outputs.dockerhub_user }}/${{ steps.vars.outputs.dockerhub_repo }}
+            Tags: latest, ${{ steps.vars.outputs.version }}
