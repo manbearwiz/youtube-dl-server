@@ -18,7 +18,7 @@ jobs:
           echo ::set-output name=buildx_platforms::linux/amd64,linux/arm/v7,linux/arm64
           echo ::set-output name=dockerhub_user::wiserain
           echo ::set-output name=dockerhub_repo::youtube-dl-server
-          echo ::set-output name=version::$(pip3 search youtube_dl | grep YouTube | awk '{print $2}' | tr -d '()')
+          echo ::set-output name=ydl_ver::$(pip3 search youtube_dl | grep YouTube | awk '{print $2}' | tr -d '()')
       -
         name: Checkout
         uses: actions/checkout@v2
@@ -41,7 +41,7 @@ jobs:
           docker buildx build \
             --output "type=image,push=true" \
             --platform ${{ steps.vars.outputs.buildx_platforms }} \
-            --tag "${IMAGE_NAME}:${{ steps.vars.outputs.version }}" \
+            --tag "${IMAGE_NAME}:${{ steps.vars.outputs.ydl_ver }}" \
             --tag "${IMAGE_NAME}:latest" \
             --file Dockerfile .
       -
@@ -53,4 +53,4 @@ jobs:
           status: ${{ job.status }}
           description: |
             Image: ${{ steps.vars.outputs.dockerhub_user }}/${{ steps.vars.outputs.dockerhub_repo }}
-            Tags: latest, ${{ steps.vars.outputs.version }}
+            Tags: latest, ${{ steps.vars.outputs.ydl_ver }}
