@@ -135,4 +135,5 @@ def resume_pending():
         job.id = pending["id"]
         jobshandler.put((Actions.RESUME, job))
 
-
+def get_ydl_version():
+    return youtube_dl.version.__version__

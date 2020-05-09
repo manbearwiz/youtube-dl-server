@@ -3,7 +3,7 @@ import json
 import os
 from collections import ChainMap
 from queue import Queue
-from bottle import route, run, Bottle, request, static_file
+from bottle import route, run, Bottle, request, static_file, template
 from threading import Thread
 from pathlib import Path
 from ydl_server.logdb import JobsDB, Job, Actions
@@ -15,13 +15,13 @@ app = Bottle()
 
 @app.route(['/', '/index'])
 def front_index():
-    return static_file('templates/index.html', root='./ydl_server')
-
+    return template('./ydl_server/templates/index.html',
+            ydl_version=ydlhandler.get_ydl_version())
 
 @app.route('/logs')
 def front_logs():
-    return static_file('templates/logs.html', root='./ydl_server')
-
+    return template('./ydl_server/templates/logs.html',
+            ydl_version=ydlhandler.get_ydl_version())
 
 @app.route('/static/:filename#.*#')
 def server_static(filename):
@@ -61,11 +61,15 @@ def api_queue_download():
     if not url:
         return {"success": False, "error": "'url' query parameter omitted"}
 
-    job = Job(url, 3, "", request.forms.get("format"))
+    job = Job(url, Job.PENDING, "", request.forms.get("format"))
     jobshandler.put((Actions.INSERT, job))
 
     print("Added url " + url + " to the download queue")
     return {"success": True, "url": url, "options": options}
+
+@app.route('/api/youtube-dl/version')
+def ydl_version():
+    return {'version': youtube_dl.version.__version__}
 
 @app.route("/youtube-dl/update", method="GET")
 def ydl_update():
