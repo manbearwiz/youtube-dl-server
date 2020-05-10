@@ -24,6 +24,15 @@ function set_dismissible_message(success, message){
   $("#message_list").html(message_list);
 }
 
+function retry_download(url, format){
+  data = {url: url,format: format};
+  $.post("api/downloads", data)
+    .done(function (data) {
+      get_download_logs();
+      update_stats();
+    });
+}
+
 function submit_video(){
   data = {url: $("#url").val(),format: $("#format").val()};
   $.post("api/downloads", data)
@@ -76,7 +85,7 @@ function get_download_logs(){
       download_logs += "<td>" + row.last_update + "</td>";
       download_logs += "<td>" + row.name + "</td>";
       download_logs += "<td>" + row.format + "</td>";
-      download_logs += "<td> <span class='" + statusToTrClass[row.status] + "'>" + row.status + "</span></td>";
+      download_logs += "<td> <span class='" + statusToTrClass[row.status] + "'>" + row.status + "</span>" + (row.status == 'Failed' ? ' <a href="" onclick="retry_download(\'' + row.name + '\', \'' + row.format + '\')" class="badge badge-success">Retry</a>' : '') + "</td>";
       download_logs += "<td style='text-align: left;'>" + row.log.replace(/\n|\r/g, '<br/>') + "</td>";
       download_logs += "</tr>";
     });
