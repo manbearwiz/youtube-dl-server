@@ -27,7 +27,9 @@ def front_logs():
 
 @app.route('/finished')
 def front_finished():
-    return static_file('templates/finished.html', root='./ydl_server')
+    return template('./ydl_server/templates/finished.html',
+            ydl_version=ydlhandler.get_ydl_version())
+
 
 @app.route('/api/finished')
 def api_list_finished():
