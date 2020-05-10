@@ -24,12 +24,12 @@ def worker(dl_queue):
             db.purge_jobs()
         elif action == Actions.INSERT:
             db.insert_job(job)
-            dl_queue.put((Actions.DOWNLOAD, job))
+            dl_queue.put(job)
         elif action == Actions.UPDATE:
             db.update_job(job)
         elif action == Actions.RESUME:
             db.update_job(job)
-            dl_queue.put((Actions.DOWNLOAD, job))
+            dl_queue.put(job)
         queue.task_done()
 
 def join():

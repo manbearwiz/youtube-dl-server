@@ -26,23 +26,22 @@ def finish():
 
 def worker():
     while not done:
-        action, job = queue.get()
-        if action == Actions.DOWNLOAD:
-            job.status = Job.RUNNING
-            jobshandler.put((Actions.UPDATE, job))
-            output = io.StringIO()
-            stdout_thread = Thread(target=download_log_update,
-                    args=(job, output))
-            stdout_thread.start()
-            try:
-                job.log = Job.clean_logs(download(job.name, {'format':  job.format}, output),)
-                job.status = Job.COMPLETED
-            except Exception as e:
-                job.status = Job.FAILED
-                job.log += str(e)
-                print("Exception during download task:\n" + str(e))
-            stdout_thread.join()
-            jobshandler.put((Actions.UPDATE, job))
+        job = queue.get()
+        job.status = Job.RUNNING
+        jobshandler.put((Actions.UPDATE, job))
+        output = io.StringIO() # FIXME intialize this ?
+        stdout_thread = Thread(target=download_log_update,
+                args=(job, output))
+        stdout_thread.start()
+        try:
+            job.log = Job.clean_logs(download(job.name, {'format':  job.format}, output),)
+            job.status = Job.COMPLETED
+        except Exception as e:
+            job.status = Job.FAILED
+            job.log += str(e)
+            print("Exception during download task:\n" + str(e))
+        stdout_thread.join()
+        jobshandler.put((Actions.UPDATE, job))
         queue.task_done()
 
 def update():
@@ -138,3 +137,6 @@ def resume_pending():
 def join():
     if thread is not None:
         return thread.join()
+
+def get_ydl_version():
+    return youtube_dl.version.__version__
