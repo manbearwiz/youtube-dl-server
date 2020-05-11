@@ -34,11 +34,16 @@ def front_finished():
 @app.route('/api/finished')
 def api_list_finished():
     root_dir = Path(app_vars['YDL_OUTPUT_TEMPLATE']).parent
-    matches = chain(root_dir.glob('*'), root_dir.glob('*/*'))
-    files = [{
-        'name': f.relative_to(root_dir).as_posix(),
-        'modified': f.stat().st_mtime * 1000,
-            } for f in matches if not f.name.startswith('.') and f.is_file()]
+    matches = root_dir.glob('*')
+
+    files = [{'name': f1.name,
+            'modified': f1.stat().st_mtime * 1000,
+            'children': sorted([{
+                'name': f2.name,
+                'modified': f2.stat().st_mtime * 1000
+                } for f2 in f1.iterdir() if not f2.name.startswith('.')] if f1.is_dir() else [], key=itemgetter('modified'), reverse=True)
+            } for f1 in matches if not f1.name.startswith('.')]
+
     files = sorted(files, key=itemgetter('modified'), reverse=True)
     return {
         "success": True,

@@ -102,7 +102,17 @@ function get_finished_files(){
     let finished_files = "";
     $.each(data.files, function(key, file) {
       finished_files += "<tr>";
-      finished_files += "<td><a href=\"api/finished/" + encodeURIComponent(file.name) + "\">" + file.name + "</a></td>";
+      if (file.children.length > 0) {
+        finished_files += "<td><a role=\"button\" href=\"#dir" + key + "\" data-toggle=\"collapse\" aria-expanded=\"false\" aria-controls=\"dir" + key + "\">" + file.name + "</a>";
+        finished_files += "<div class=\"collapse\" id=\"dir" + key + "\"><table class=\"col-md-16 table table-stripped table-md table-dark text-left\">";
+        $.each(file.children, function(child_key, child_file) {
+          finished_files += "<tr><td><a href=\"api/finished/" + encodeURIComponent(file.name + "/" + child_file.name)+ "\" >" + child_file.name + "</a></td><td>" + (new Date(child_file.modified)).toISOString() + "</td></tr>";
+        });
+        finished_files += "</table></div></td>";
+      }
+      else {
+        finished_files += "<td><a href=\"api/finished/" + encodeURIComponent(file.name) + "\">" + file.name + "</a></td>";
+      }
       finished_files += "<td>" + (new Date(file.modified)).toISOString() + "</td>";
       finished_files += "</tr>";
     });
