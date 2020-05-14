@@ -21,9 +21,9 @@ RUN \
 		flask-httpauth \
         youtube-dl && \
 	rm -rf \
-	    /root/.cache \
-	    /var/cache/apk/* \
-	    /tmp/*
+		/root/.cache \
+		/var/cache/apk/* \
+		/tmp/*
 
 COPY root/ /
 
