@@ -123,6 +123,10 @@ function get_finished_files(){
   });
 }
 
+function ydl_update(){
+  $.get("api/youtube-dl/update");
+}
+
 function hide_logs_detail(){
   $('td:nth-child(6),th:nth-child(6)').hide();
 }
