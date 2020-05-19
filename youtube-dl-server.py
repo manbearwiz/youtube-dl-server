@@ -8,7 +8,7 @@ from queue import Queue
 from bottle import route, run, Bottle, request, static_file, template
 from threading import Thread
 from pathlib import Path
-from ydl_server.logdb import JobsDB, Job, Actions
+from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from ydl_server import jobshandler, ydlhandler
 from ydl_server.config import app_defaults
 
@@ -93,20 +93,19 @@ def api_queue_download():
     if not url:
         return {"success": False, "error": "'url' query parameter omitted"}
 
-    job = Job(url, Job.PENDING, "", request.forms.get("format"))
+    job = Job(url, Job.PENDING, "", JobType.YDL_DOWNLOAD, request.forms.get("format"), url)
     jobshandler.put((Actions.INSERT, job))
 
     print("Added url " + url + " to the download queue")
     return {"success": True, "url": url, "options": options}
 
-@app.route('/api/youtube-dl/version')
-def ydl_version():
-    return {'version': youtube_dl.version.__version__}
-
-@app.route("/youtube-dl/update", method="GET")
+@app.route("/api/youtube-dl/update", method="GET")
 def ydl_update():
-    return ydlhandler.update()
+    job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
+    jobshandler.put((Actions.INSERT, job))
+    return {"success": True}
 
+JobsDB.check_db_latest()
 JobsDB.init_db()
 
 ydlhandler.start()

@@ -4,11 +4,15 @@ from threading import Thread
 import subprocess
 from collections import ChainMap
 import io
+import importlib
 import youtube_dl
-from ydl_server.logdb import JobsDB, Job, Actions
+import json
+from time import sleep
+import sys
+
+from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from ydl_server import jobshandler
 from ydl_server.config import app_defaults
-from time import sleep
 
 queue = Queue()
 thread = None
@@ -28,19 +32,20 @@ def worker():
     while not done:
         job = queue.get()
         job.status = Job.RUNNING
-        jobshandler.put((Actions.UPDATE, job))
-        output = io.StringIO() # FIXME intialize this ?
-        stdout_thread = Thread(target=download_log_update,
-                args=(job, output))
-        stdout_thread.start()
-        try:
-            job.log = Job.clean_logs(download(job.name, {'format':  job.format}, output),)
-            job.status = Job.COMPLETED
-        except Exception as e:
-            job.status = Job.FAILED
-            job.log += str(e)
-            print("Exception during download task:\n" + str(e))
-        stdout_thread.join()
+        jobshandler.put((Actions.SET_STATUS, (job.id, job.status)))
+        if job.type == JobType.YDL_DOWNLOAD:
+            output = io.StringIO() # FIXME intialize this ?
+            stdout_thread = Thread(target=download_log_update,
+                    args=(job, output))
+            stdout_thread.start()
+            try:
+                job.log = Job.clean_logs(download(job.url, {'format':  job.format}, output, job.id))
+                job.status = Job.COMPLETED
+            except Exception as e:
+                job.status = Job.FAILED
+                job.log += str(e)
+                print("Exception during download task:\n" + str(e))
+            stdout_thread.join()
         jobshandler.put((Actions.UPDATE, job))
         queue.task_done()
 
@@ -107,13 +112,15 @@ def get_ydl_options(request_options):
 def download_log_update(job, stringio):
     while job.status == Job.RUNNING:
         job.log = Job.clean_logs(stringio.getvalue())
-        jobshandler.put((Actions.UPDATE, job))
+        jobshandler.put((Actions.SET_LOG, (job.id, job.log)))
         sleep(5)
 
-def download(url, request_options, output):
+def download(url, request_options, output, job_id):
     with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
         ydl.params['extract_flat']= 'in_playlist'
         info = ydl.extract_info(url, download=False)
+        if 'title' in info and info['title']:
+            jobshandler.put((Actions.SET_NAME, (job_id, info['title'])))
         if '_type' in info and info['_type'] == 'playlist' \
                 and 'YDL_OUTPUT_TEMPLATE_PLAYLIST' in app_defaults:
             ydl.params['outtmpl'] = app_defaults['YDL_OUTPUT_TEMPLATE_PLAYLIST']
@@ -130,9 +137,13 @@ def resume_pending():
     jobs = db.get_all()
     not_endeds = [job for job in jobs if job['status'] == "Pending" or job['status'] == 'Running']
     for pending in not_endeds:
-        job = Job(pending["name"], Job.PENDING, "Queue stopped", pending["format"])
-        job.id = pending["id"]
-        jobshandler.put((Actions.RESUME, job))
+        if int(pending["type"]) == JobType.YDL_UPDATE:
+            jobshandler.put((Actions.SET_STATUS, (pending["id"], Job.FAILED)))
+        else:
+            job = Job(pending["name"], Job.PENDING, "Queue stopped",
+                    int(pending["type"]), pending["format"], pending["url"])
+            job.id = pending["id"]
+            jobshandler.put((Actions.RESUME, job))
 
 def join():
     if thread is not None:

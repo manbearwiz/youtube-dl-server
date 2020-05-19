@@ -30,6 +30,15 @@ def worker(dl_queue):
         elif action == Actions.RESUME:
             db.update_job(job)
             dl_queue.put(job)
+        elif action == Actions.SET_NAME:
+            job_id, name = job
+            db.set_job_name(job_id, name)
+        elif action == Actions.SET_LOG:
+            job_id, log = job
+            db.set_job_log(job_id, log)
+        elif action == Actions.SET_STATUS:
+            job_id, status = job
+            db.set_job_status(job_id, status)
         queue.task_done()
 
 def join():

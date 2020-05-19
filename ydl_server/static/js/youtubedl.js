@@ -84,8 +84,8 @@ function get_download_logs(){
       download_logs += "<td>" + row.id + "</td>";
       download_logs += "<td>" + row.last_update + "</td>";
       download_logs += "<td>" + row.name + "</td>";
-      download_logs += "<td>" + row.format + "</td>";
-      if (row.status == 'Failed')
+      download_logs += "<td>" + (row.format ? row.format : "") + "</td>";
+      if (row.status == 'Failed' && row.type != 1)
         download_logs += "<td> <a href=\"#\" onclick=\"retry_download('" + row.name + "','" + row.format + "')\" class='" + statusToTrClass[row.status] + "'>" + row.status + " / Retry</a></td>";
       else
         download_logs += "<td> <span class='" + statusToTrClass[row.status] + "'>" + row.status + "</span></td>";
