@@ -46,18 +46,25 @@ def worker():
                 job.log += str(e)
                 print("Exception during download task:\n" + str(e))
             stdout_thread.join()
+        elif job.type == JobType.YDL_UPDATE:
+            rc, log = update()
+            job.log = Job.clean_logs(log)
+            job.status = Job.COMPLETED if rc == 0 else Job.FAILED
         jobshandler.put((Actions.UPDATE, job))
         queue.task_done()
 
+def reload_youtube_dl():
+    for module in list(sys.modules.keys()):
+        if 'youtube' in module:
+            importlib.reload(sys.modules[module])
+
 def update():
     command = ["pip", "install", "--no-cache-dir", "--upgrade", "youtube-dl"]
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    output, error = proc.communicate()
-    return {
-        "output": output.decode('ascii'),
-        "error":  error.decode('ascii')
-    }
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    out, err = proc.communicate()
+    if proc.returncode == 0:
+        reload_youtube_dl()
+    return proc.returncode, str(out.decode('utf-8'))
 
 def get_ydl_options(request_options):
     request_vars = {

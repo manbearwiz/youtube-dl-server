@@ -116,9 +116,8 @@ print("Started jobs manager thread")
 ydlhandler.resume_pending()
 
 print("Updating youtube-dl to the newest version")
-updateResult = ydlhandler.update()
-print(updateResult["output"])
-print(updateResult["error"])
+job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
+jobshandler.put((Actions.INSERT, job))
 
 app_vars = ChainMap(os.environ, app_defaults)
 
