@@ -81,7 +81,6 @@ function get_download_logs(){
     var download_logs = "";
     $.each(data, function(key, row) {
       download_logs += "<tr>";
-      download_logs += "<td>" + row.id + "</td>";
       download_logs += "<td>" + row.last_update + "</td>";
       download_logs += "<td>" + row.name + "</td>";
       download_logs += "<td>" + (row.format ? row.format : "") + "</td>";
@@ -92,7 +91,7 @@ function get_download_logs(){
       download_logs += "<td style='text-align: left;'>" + row.log.replace(/\n|\r/g, '<br/>') + "</td>";
       download_logs += "</tr>";
     });
-    var visible = $("td:nth-child(6)").is(":visible");
+    var visible = $("td:nth-child(5)").is(":visible");
     $("#job_logs").html(download_logs);
     if (!visible) {
       hide_logs_detail();
@@ -128,15 +127,15 @@ function ydl_update(){
 }
 
 function hide_logs_detail(){
-  $('td:nth-child(6),th:nth-child(6)').hide();
+  $('td:nth-child(5),th:nth-child(5)').hide();
 }
 
 function show_logs_detail(){
-  $('td:nth-child(6),th:nth-child(6)').show();
+  $('td:nth-child(5),th:nth-child(5)').show();
 }
 
 function toggle_hide_logs_detail(){
-  if ($("th:nth-child(6)").is(":visible")) {
+  if ($("th:nth-child(5)").is(":visible")) {
     hide_logs_detail();
   }
   else {
