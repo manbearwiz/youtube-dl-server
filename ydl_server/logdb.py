@@ -61,7 +61,7 @@ class JobsDB:
         columns = [row[1] for row in cursor.fetchall()]
         if set(columns) != set(['id', 'name', 'status', 'format', 'log', 'last_update', 'type', 'url']):
             print("Outdated jbos table, cleaning up and recreating")
-            cursor.execute("DROP TABLE jobs;")
+            cursor.execute("DROP TABLE if exists jobs;")
         conn.close()
 
 
