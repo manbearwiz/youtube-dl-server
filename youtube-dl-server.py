@@ -20,7 +20,7 @@ app_defaults = {
     'YDL_OUTPUT_TEMPLATE': '/youtube-dl/%(title)s [%(id)s].%(ext)s',
     'YDL_ARCHIVE_FILE': None,
     'YDL_SERVER_HOST': '0.0.0.0',
-    'YDL_SERVER_PORT': 8080,
+    'YDL_SERVER_PORT': 8080
 }
 
 
@@ -43,7 +43,8 @@ def q_size():
 def q_put():
     url = request.forms.get("url")
     options = {
-        'format': request.forms.get("format")
+        'format': request.forms.get("format"),
+        'proxy': request.forms.get("proxy")
     }
 
     if not url:
@@ -79,6 +80,10 @@ def get_ydl_options(request_options):
 
     requested_format = request_options.get('format', 'bestvideo')
 
+    if 'proxy' in  request_options and request_options.get('proxy')!= None:
+        print('Proxy overridden by request with '+request_options.get('proxy'))
+        request_vars['YDL_PROXY_URI'] = request_options.get('proxy')
+
     if requested_format in ['aac', 'flac', 'mp3', 'm4a', 'opus', 'vorbis', 'wav']:
         request_vars['YDL_EXTRACT_AUDIO_FORMAT'] = requested_format
     elif requested_format == 'bestaudio':
@@ -102,14 +107,18 @@ def get_ydl_options(request_options):
             'key': 'FFmpegVideoConvertor',
             'preferedformat': ydl_vars['YDL_RECODE_VIDEO_FORMAT'],
         })
-
-    return {
+    effective_options = {
         'format': ydl_vars['YDL_FORMAT'],
         'postprocessors': postprocessors,
         'outtmpl': ydl_vars['YDL_OUTPUT_TEMPLATE'],
         'download_archive': ydl_vars['YDL_ARCHIVE_FILE']
     }
 
+    if('YDL_PROXY_URI' in ydl_vars and ydl_vars.get('YDL_PROXY_URI')!= None):
+        effective_options['proxy'] = ydl_vars['YDL_PROXY_URI']
+        print("Downloading using proxy: "+ydl_vars.get('YDL_PROXY_URI'))
+
+    return effective_options
 
 def download(url, request_options):
     with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
