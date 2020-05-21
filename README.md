@@ -67,6 +67,36 @@ fetch(`http://${host}:8080/youtube-dl/q`, {
 });
 ```
 
+#### Proxy ####
+One can configure a proxy to be used by default by setting the environment variable `YDL_PROXY_URI
+
+Alternatively, once can set a custom proxy per request:
+```javascript
+fetch(`http://${host}:8080/youtube-dl/q`, {
+  method: "POST",
+  body: new URLSearchParams({
+    url: url,
+    proxy: "web.proxy.example:4711",
+    format: "bestvideo"
+  }),
+});
+```
+
+### Make proxy selectable via UI
+Just re-wrrite your index.html and add another option like
+```
+            <select class="custom-select" name="proxy">
+                <option value="">No/default proxy</option>
+                <option value="proxy1.example.com:443">Proxy A</option>
+              <option value="proxy2.example.com:443">Proxy B</option>
+            </select>
+```
+and the user can dynamically select a proxy per request.
+Use bind mounts to override the index.html with your custom template
+```
+docker run -e YDL_PROXY_URI='default.proxy:443' -v /path/to/my/index.html:/usr/src/app/index.html -p "8080:8080" ytdl
+```
+
 #### Bookmarklet
 
 Add the following bookmarklet to your bookmark bar so you can conviently send the current page url to your youtube-dl-server instance.
