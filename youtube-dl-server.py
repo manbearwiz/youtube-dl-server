@@ -68,7 +68,10 @@ def update():
 def dl_worker():
     while not done:
         url, options = dl_q.get()
-        download(url, options)
+        try:
+            download(url, options)
+        except: # catch *all* exceptions
+            print("Error downloading "+url)
         dl_q.task_done()
 
 
@@ -80,7 +83,8 @@ def get_ydl_options(request_options):
 
     requested_format = request_options.get('format', 'bestvideo')
 
-    if 'proxy' in  request_options and request_options.get('proxy')!= None:
+    # The default proxy will be used if option proxy is missing or empty
+    if 'proxy' in  request_options and request_options.get('proxy')!= None and request_options.get('proxy')!="":
         print('Proxy overridden by request with '+request_options.get('proxy'))
         request_vars['YDL_PROXY_URI'] = request_options.get('proxy')
 
