@@ -113,11 +113,12 @@ print("Started download thread")
 jobshandler.start(ydlhandler.queue)
 print("Started jobs manager thread")
 
-ydlhandler.resume_pending()
 
 print("Updating youtube-dl to the newest version")
 job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
 jobshandler.put((Actions.INSERT, job))
+
+ydlhandler.resume_pending()
 
 app_vars = ChainMap(os.environ, app_defaults)
 
