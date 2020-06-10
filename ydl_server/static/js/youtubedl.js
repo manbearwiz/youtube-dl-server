@@ -50,17 +50,30 @@ function pretty_size(size_b) {
 }
 
 function metadata_show(metadata) {
+  var items = "";
   $('#metadata_title').text(metadata['title']);
   $('#md_title').text(metadata['title']);
   $('#md_uploader').text(metadata['uploader']);
   $('#md_webpage_url').text(metadata['webpage_url']);
   $('#md_webpage_url').attr('href', metadata['webpage_url']);
-  formats = "";
-  for (var i = 0; i < metadata['formats'].length; i++) {
-    fmt = metadata['formats'][i];
-    formats += '<a target="_blank" href="' + fmt['url'] + '">' + fmt['ext'] + ' ' + fmt['format'] + ' - (' + pretty_size(fmt['filesize']) + ')</a><br/>';
+  if ('_type' in metadata && metadata['_type'] === 'playlist') {
+    $('#md_dialog').attr('class', 'modal-dialog modal-lg')
+    $('#md_items_title').text("Playlist items:");
+    items = '<ul class="list-group">';
+    for (var i = 0; i < metadata['entries'].length; i++) {
+      items += '<li class="list-group-item">' + metadata['entries'][i]['title'] + '</li>';
+    }
+    items += '</ul>';
   }
-  $('#md_formats').html(formats);
+  else {
+    $('#md_dialog').attr('class', 'modal-dialog')
+    $('#md_items_title').text("Available formats:");
+    for (var i = 0; i < metadata['formats'].length; i++) {
+      fmt = metadata['formats'][i];
+      items += '<a target="_blank" href="' + fmt['url'] + '">' + fmt['ext'] + ' ' + fmt['format'] + ' - (' + pretty_size(fmt['filesize']) + ')</a><br/>';
+    }
+  }
+  $('#md_items').html(items);
   $('#metadata_modal').modal('show');
 }
 
