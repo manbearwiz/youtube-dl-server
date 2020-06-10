@@ -33,17 +33,60 @@ function retry_download(url, format){
     });
 }
 
+function pretty_size(size_b) {
+  if (size_b == null) {
+    return "NaN";
+  }
+  var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  var i = 0;
+  for (i = 0; i < sizes.length; i++) {
+    if (size_b < 1024) {
+      i++;
+      break
+    }
+    size_b = size_b / 1024;
+  }
+  return Number((size_b).toFixed(2)) + ' ' + sizes[i - 1];
+}
+
+function metadata_show(metadata) {
+  $('#metadata_title').text(metadata['title']);
+  $('#md_title').text(metadata['title']);
+  $('#md_uploader').text(metadata['uploader']);
+  $('#md_webpage_url').text(metadata['webpage_url']);
+  $('#md_webpage_url').attr('href', metadata['webpage_url']);
+  formats = "";
+  for (var i = 0; i < metadata['formats'].length; i++) {
+    fmt = metadata['formats'][i];
+    formats += '<a target="_blank" href="' + fmt['url'] + '">' + fmt['ext'] + ' ' + fmt['format'] + ' - (' + pretty_size(fmt['filesize']) + ')</a><br/>';
+  }
+  $('#md_formats').html(formats);
+  $('#metadata_modal').modal('show');
+}
+
 function submit_video(){
-  data = {url: $("#url").val(),format: $("#format").val()};
-  $.post("api/downloads", data)
-    .done(function (data) {
-      set_dismissible_message(data.success, data.success ? (escapeHtml($("#url").val()) + " added to the list.") : data.error);
-      $("#url").val("");
-      update_stats();
-    })
-    .fail(function() {
-      set_dismissible_message(false, 'Could not add the url to the queue.');
-  });
+  if ($('#format').val() != 'metadata'){
+    data = {url: $("#url").val(),format: $("#format").val()};
+    $.post("api/downloads", data)
+      .done(function (data) {
+        set_dismissible_message(data.success, data.success ? (escapeHtml($("#url").val()) + " added to the list.") : data.error);
+        $("#url").val("");
+        update_stats();
+      })
+      .fail(function() {
+        set_dismissible_message(false, 'Could not add the url to the queue.');
+      });
+  }
+  else {
+    data = {url: $("#url").val()};
+    $.post("api/metadata", data)
+      .done(function (data) {
+        metadata_show(data);
+      })
+      .fail(function() {
+        set_dismissible_message(false, 'Could gather metadata for this video.');
+      });
+  }
 }
 
 function update_stats(){

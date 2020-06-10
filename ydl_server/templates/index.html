@@ -31,6 +31,9 @@
                   <option value="vorbis">Vorbis</option>
                   <option value="wav">WAV</option>
                 </optgroup>
+                <optgroup label="Metadata only">
+                  <option value="metadata">Metadata</option>
+                </optgroup>
               </select>
               <div class="input-group-append">
                 <button class="btn btn-primary" id="button-submit" onclick="submit_video()">Submit</button>
@@ -38,6 +41,31 @@
             </div>
           </div>
           <br/>
+          <div class="modal fade text-dark" id="metadata_modal" role="dialog" aria-hidden="false" tabindex="-1" aria-labelledby="metadata_title">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content bg-light">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="metadata_title">Fake Title</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body text-left" id="metadata_body">
+                  <p>
+                  Title: <b><span id="md_title"></span></b><br/>
+                  Uploader: <b><span id="md_uploader"></span></b><br/>
+                  Url: <b><a href="" id="md_webpage_url" target="_blank"></a></b><br/>
+                  <br/>
+                  Available formats:<br/>
+                  <span id="md_formats"></span>
+                  </p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div id="message_list">
           </div>
         </div>
