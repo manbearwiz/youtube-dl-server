@@ -99,6 +99,11 @@ def api_queue_download():
     print("Added url " + url + " to the download queue")
     return {"success": True, "url": url, "options": options}
 
+@app.route('/api/metadata', method='POST')
+def api_metadata_fetch():
+    url = request.forms.get("url")
+    return ydlhandler.fetch_metadata(url)
+
 @app.route("/api/youtube-dl/update", method="GET")
 def ydl_update():
     job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)

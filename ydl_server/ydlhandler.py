@@ -122,9 +122,21 @@ def download_log_update(job, stringio):
         jobshandler.put((Actions.SET_LOG, (job.id, job.log)))
         sleep(5)
 
+def fetch_metadata(url):
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    with youtube_dl.YoutubeDL({'quiet': True, 'forcejson': True, 'skip_download': True}) as ydl:
+        ydl._screen_file = stdout
+        ydl._err_file = stderr
+        ydl.download([url])
+    s = stdout.getvalue()
+    metadata = json.loads(s)
+    metadata['error'] = stderr.getvalue()
+    return metadata
+
 def download(url, request_options, output, job_id):
     with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
-        ydl.params['extract_flat']= 'in_playlist'
+        ydl.params['extract_flat'] = 'in_playlist'
         info = ydl.extract_info(url, download=False)
         if 'title' in info and info['title']:
             jobshandler.put((Actions.SET_NAME, (job_id, info['title'])))
