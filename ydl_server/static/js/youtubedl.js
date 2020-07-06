@@ -97,7 +97,7 @@ function submit_video(){
         metadata_show(data);
       })
       .fail(function() {
-        set_dismissible_message(false, 'Could gather metadata for this video.');
+        set_dismissible_message(false, 'Could not gather metadata for this video.');
       });
   }
 }

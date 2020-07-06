@@ -34,7 +34,7 @@ def worker():
         job.status = Job.RUNNING
         jobshandler.put((Actions.SET_STATUS, (job.id, job.status)))
         if job.type == JobType.YDL_DOWNLOAD:
-            output = io.StringIO() # FIXME intialize this ?
+            output = io.StringIO()
             stdout_thread = Thread(target=download_log_update,
                     args=(job, output))
             stdout_thread.start()
