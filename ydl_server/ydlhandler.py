@@ -133,12 +133,13 @@ def fetch_metadata(url):
 def download(url, request_options, output, job_id):
     with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
         ydl.params['extract_flat'] = 'in_playlist'
+        ydl_opts = ChainMap(os.environ, app_defaults)
         info = ydl.extract_info(url, download=False)
         if 'title' in info and info['title']:
             jobshandler.put((Actions.SET_NAME, (job_id, info['title'])))
         if '_type' in info and info['_type'] == 'playlist' \
-                and 'YDL_OUTPUT_TEMPLATE_PLAYLIST' in app_defaults:
-            ydl.params['outtmpl'] = app_defaults['YDL_OUTPUT_TEMPLATE_PLAYLIST']
+                and 'YDL_OUTPUT_TEMPLATE_PLAYLIST' in ydl_opts:
+            ydl.params['outtmpl'] = ydl_opts['YDL_OUTPUT_TEMPLATE_PLAYLIST']
         ydl.params['extract_flat']= False
 
         # Swap out sys.stdout as ydl's output so we can capture it
