@@ -1,5 +1,5 @@
 app_defaults = {
-    'YDL_FORMAT': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
+    'YDL_FORMAT': 'bestvideo+bestaudio/best',
     'YDL_EXTRACT_AUDIO_FORMAT': None,
     'YDL_EXTRACT_AUDIO_QUALITY': '192',
     'YDL_RECODE_VIDEO_FORMAT': None,
