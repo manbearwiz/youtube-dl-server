@@ -11,5 +11,8 @@ app_defaults = {
     'YDL_CACHE_DIR': '/youtube-dl/.cache',
     'YDL_DB_PATH': '/youtube-dl/.ydl-metadata.db',
     'YDL_SUBTITLES_LANGUAGES': None,
-    'YDL_DEBUG': False
+    'YDL_DEBUG': False,
+    'YDL_RAW_OPTIONS': {
+        'ignoreerrors': True
+        },
 }
