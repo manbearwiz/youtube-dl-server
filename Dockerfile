@@ -12,6 +12,7 @@ RUN \
 	if [[ ! -e /usr/bin/python ]]; then ln -sf /usr/bin/python3 /usr/bin/python; fi && \
 	echo "**** install apk ****" && \
 	apk add --no-cache \
+		curl \
 		ffmpeg \
 		tzdata && \
 	echo "**** install python packages ****" && \
@@ -27,7 +28,11 @@ RUN \
 
 COPY root/ /
 
+RUN chmod a+x /healthcheck.sh
+
 # ports and volumes
 EXPOSE 8080
 VOLUME /youtube-dl
 WORKDIR /youtube-dl
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 CMD [ "/healthcheck.sh" ]
