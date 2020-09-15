@@ -62,7 +62,8 @@ fetch(`http://${host}:8080/youtube-dl/q`, {
   method: "POST",
   body: new URLSearchParams({
     url: url,
-    format: "bestvideo"
+    format: "bestvideo",
+    filename:"video1"
   }),
 });
 ```

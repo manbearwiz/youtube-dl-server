@@ -17,7 +17,7 @@ app_defaults = {
     'YDL_EXTRACT_AUDIO_FORMAT': None,
     'YDL_EXTRACT_AUDIO_QUALITY': '192',
     'YDL_RECODE_VIDEO_FORMAT': None,
-    'YDL_OUTPUT_TEMPLATE': '/youtube-dl/%(title)s [%(id)s].%(ext)s',
+    'YDL_OUTPUT_TEMPLATE': '/youtube-dl/%(title)s [%(id)s]',
     'YDL_ARCHIVE_FILE': None,
     'YDL_SERVER_HOST': '0.0.0.0',
     'YDL_SERVER_PORT': 8080,
@@ -43,7 +43,8 @@ def q_size():
 def q_put():
     url = request.forms.get("url")
     options = {
-        'format': request.forms.get("format")
+        'format': request.forms.get("format"),
+        'filename': request.forms.get("filename")
     }
 
     if not url:
@@ -87,6 +88,7 @@ def get_ydl_options(request_options):
         request_vars['YDL_RECODE_VIDEO_FORMAT'] = requested_format
 
     ydl_vars = ChainMap(request_vars, os.environ, app_defaults)
+    requested_outputname = request_options.get('filename', ydl_vars['YDL_OUTPUT_TEMPLATE'])
 
     postprocessors = []
 
@@ -106,7 +108,7 @@ def get_ydl_options(request_options):
     return {
         'format': ydl_vars['YDL_FORMAT'],
         'postprocessors': postprocessors,
-        'outtmpl': ydl_vars['YDL_OUTPUT_TEMPLATE'],
+        'outtmpl': requested_outputname + '.%(ext)s',
         'download_archive': ydl_vars['YDL_ARCHIVE_FILE']
     }
 
