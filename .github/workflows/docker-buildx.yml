@@ -20,6 +20,7 @@ jobs:
         id: vars
         run: |
           echo ::set-output name=ydl_ver::$(pip3 search youtube_dl | grep YouTube | awk '{print $2}' | tr -d '()')
+          echo ::set-output name=github_desc::$(curl -sX GET https://api.github.com/repos/wiserain/youtube-dl-server | jq -r .description)
       -
         name: Checkout
         uses: actions/checkout@v2
@@ -34,6 +35,17 @@ jobs:
           platform: linux/amd64,linux/arm/v7,linux/arm64
           dockerHubUser: ${{ env.DOCKERHUB_USER }}
           dockerHubPassword: ${{ secrets.DOCKERHUB_PASS }}
+      -
+        name: push README to Dockerhub
+        uses: christian-korneck/update-container-description-action@v1
+        env:
+          DOCKER_USER: ${{ env.DOCKERHUB_USER }}
+          DOCKER_PASS: ${{ secrets.DOCKERHUB_PASS }}
+        with:
+          destination_container_repo: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
+          provider: dockerhub
+          short_description: ${{ steps.vars.outputs.github_desc }}
+          readme_file: 'README.md'
       -
         name: Send Notification
         uses: sarisia/actions-status-discord@v1
