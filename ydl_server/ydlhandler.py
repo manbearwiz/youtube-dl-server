@@ -59,7 +59,10 @@ def reload_youtube_dl():
             importlib.reload(sys.modules[module])
 
 def update():
-    command = ["pip", "install", "--no-cache-dir", "--upgrade", "youtube-dl"]
+    if os.environ.get('YDL_PYTHONPATH'):
+        command = ["pip", "install", "--no-cache-dir", "-t", os.environ.get('YDL_PYTHONPATH'), "--upgrade", "youtube-dl"]
+    else:
+        command = ["pip", "install", "--no-cache-dir", "--upgrade", "youtube-dl"]
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     out, err = proc.communicate()
     if proc.returncode == 0:
