@@ -4,7 +4,9 @@
 
 # youtube-dl-server
 
-Simple Web and REST interface for downloading youtube videos onto a server. [`bottle`](https://github.com/bottlepy/bottle) + [`youtube-dl`](https://github.com/rg3/youtube-dl).
+Simple Web and REST interface for downloading youtube videos onto a server. [`bottle`](https://github.com/bottlepy/bottle) + [`youtube-dl`](https://github.com/rg3/youtube-dl) / [`youtube-dlc`](https://github.com/blackjack4494/yt-dlc)
+
+*Note:* The main branch and docker image are now using youtube-dlc, the development of which is more active. To use the original youtube-dl, use branch [youtube-dl](https://github.com/nbr23/youtube-dl-server/tree/youtube-dl).
 
 Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube-dl-server).
 
@@ -17,12 +19,20 @@ Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube
 
 For easier deployment, a docker image is available on [dockerhub](https://hub.docker.com/r/nbr23/youtube-dl-server).
 
+The `latest` image now uses youtube-dlc. For the original youtube-dl based image, use `nbr23/youtube-dl-server:youtube-dl`
+
 ### Docker CLI
 
 This example uses the docker run command to create the container to run the app. Note the `-v` argument to specify the volume and its binding on the host. This directory will be used to output the resulting videos.
 
 ```shell
-docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server
+docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:latest
+```
+
+For the original youtube-dl:
+
+```shell
+docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:youtube-dl
 ```
 
 ### Docker Compose
@@ -31,11 +41,13 @@ This is an example service definition that could be put in `docker-compose.yml`.
 
 ```yml
   youtube-dl:
-    image: "nbr23/youtube-dl-server"
+    image: "nbr23/youtube-dl-server:latest"
     volumes:
       - $HOME/youtube-dl:/youtube-dl
     restart: always
 ```
+
+The `latest` image now uses youtube-dlc. For the original youtube-dl based image, use `nbr23/youtube-dl-server:youtube-dl`
 
 #### Configuration
 For easier configuration management and edition, you can save your variables in an external file and source them in your docker-compose.yml like the following example.
