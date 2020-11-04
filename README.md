@@ -50,7 +50,7 @@ This is an example service definition that could be put in `docker-compose.yml`.
 The `latest` image now uses youtube-dlc. For the original youtube-dl based image, use `nbr23/youtube-dl-server:youtube-dl`
 
 #### Configuration
-For easier configuration management and edition, you can save your variables in an external file and source them in your docker-compose.yml like the following example.
+For easier configuration management and edition, you can save your variables in an external file and source them in your docker-compose.yml like the following example. [Config Defaults](https://github.com/ayfine/youtube-dl-server/blob/0fddeacf2812831e6ade629d9b53b0a5e78c7845/ydl_server/config.py#L2)
 
 Configuration file `config.env`:
 
