@@ -147,8 +147,8 @@ function get_download_logs(){
       download_logs += "<td style='text-align: left;'>" + row.log.replace(/\n|\r/g, '<br/>') + "</td>";
       download_logs += "</tr>";
     });
-    var visible = $("td:nth-child(5)").is(":visible");
     $("#job_logs").html(download_logs);
+    var visible = $("th:nth-child(5)").is(":visible");
     if (!visible) {
       hide_logs_detail();
     }
@@ -193,9 +193,11 @@ function show_logs_detail(){
 function toggle_hide_logs_detail(){
   if ($("th:nth-child(5)").is(":visible")) {
     hide_logs_detail();
+    $("#toggle_log_button").text("Show Logs");
   }
   else {
     show_logs_detail();
+    $("#toggle_log_button").text("Hide Logs");
   }
 }
 
