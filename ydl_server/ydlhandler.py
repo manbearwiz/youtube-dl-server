@@ -111,6 +111,9 @@ def get_ydl_options(request_options):
 
     ydl_options = {**ydl_vars['YDL_RAW_OPTIONS'], **ydl_options}
 
+    if 'addmetadata' in ydl_options:
+        ydl_options['postprocessors'].append({'key': 'FFmpegMetadata'})
+
     if ydl_vars['YDL_SUBTITLES_LANGUAGES']:
         ydl_options['writesubtitles'] = True
         if ydl_vars['YDL_SUBTITLES_LANGUAGES'] != 'all':
