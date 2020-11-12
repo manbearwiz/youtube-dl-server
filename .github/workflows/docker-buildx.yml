@@ -19,7 +19,7 @@ jobs:
         name: Load Variables
         id: vars
         run: |
-          echo ::set-output name=ydl_ver::$(pip3 search youtube_dl | grep YouTube | awk '{print $2}' | tr -d '()')
+          echo ::set-output name=ydl_ver::$(pip3 list | grep youtube-dl | awk '{print $2}' | tr -d '()')
           echo ::set-output name=github_desc::$(curl -sX GET https://api.github.com/repos/wiserain/youtube-dl-server | jq -r .description)
       -
         name: Checkout
