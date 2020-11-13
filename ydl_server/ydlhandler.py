@@ -5,7 +5,6 @@ import subprocess
 from collections import ChainMap
 import io
 import importlib
-import youtube_dlc
 import json
 from time import sleep
 import sys
@@ -13,6 +12,24 @@ import sys
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from ydl_server import jobshandler
 from ydl_server.config import app_defaults
+
+ydl_module = None
+ydl_module_name = None
+modules = ['youtube-dl', 'youtube-dlc']
+if os.environ.get('YOUTUBE_DL') in modules:
+    ydl_module = importlib.import_module(os.environ.get('YOUTUBE_DL').replace('-','_'))
+else:
+    for module in modules:
+        try:
+            ydl_module = importlib.import_module(module.replace('-', '_'))
+            break
+        except ImportError:
+            pass
+if ydl_module is None:
+    raise ImportError('No youtube_dl implementation found')
+ydl_module_name = ydl_module.__name__.replace('_', '-')
+
+print('Using {} module'.format(ydl_module_name))
 
 queue = Queue()
 thread = None
@@ -60,9 +77,9 @@ def reload_youtube_dl():
 
 def update():
     if os.environ.get('YDL_PYTHONPATH'):
-        command = ["pip", "install", "--no-cache-dir", "-t", os.environ.get('YDL_PYTHONPATH'), "--upgrade", "youtube-dlc"]
+        command = ["pip", "install", "--no-cache-dir", "-t", os.environ.get('YDL_PYTHONPATH'), "--upgrade", ydl_module_name]
     else:
-        command = ["pip", "install", "--no-cache-dir", "--upgrade", "youtube-dlc"]
+        command = ["pip", "install", "--no-cache-dir", "--upgrade", ydl_module_name]
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     out, err = proc.communicate()
     if proc.returncode == 0:
@@ -134,12 +151,12 @@ def fetch_metadata(url):
     stdout = io.StringIO()
     stderr = io.StringIO()
     info = None
-    with youtube_dlc.YoutubeDL({'extract_flat': 'in_playlist'}) as ydl:
+    with ydl_module.YoutubeDL({'extract_flat': 'in_playlist'}) as ydl:
         ydl.params['extract_flat'] = 'in_playlist'
         return ydl.extract_info(url, download=False)
 
 def download(url, request_options, output, job_id):
-    with youtube_dlc.YoutubeDL(get_ydl_options(request_options)) as ydl:
+    with ydl_module.YoutubeDL(get_ydl_options(request_options)) as ydl:
         ydl.params['extract_flat'] = 'in_playlist'
         ydl_opts = ChainMap(os.environ, app_defaults)
         info = ydl.extract_info(url, download=False)
@@ -173,5 +190,12 @@ def join():
     if thread is not None:
         return thread.join()
 
+def get_ydl_website():
+    import pip._internal.commands.show as pipshow
+    info = list(pipshow.search_packages_info([ydl_module_name]))
+    if len(info) < 1 or 'home-page' not in info[0]:
+        return ''
+    return info[0]['home-page']
+
 def get_ydl_version():
-    return youtube_dlc.version.__version__
+    return ydl_module.version.__version__
