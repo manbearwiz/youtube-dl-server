@@ -5,12 +5,11 @@
 #
 
 FROM python:alpine
-
+ARG YOUTUBE_DL=youtube_dl
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
-COPY ./requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir bottle ${YOUTUBE_DL}
 
 COPY ./ydl_server /usr/src/app/ydl_server
 COPY ./youtube-dl-server.py /usr/src/app/
@@ -33,5 +32,5 @@ WORKDIR /usr/src/app
 EXPOSE 8080
 
 VOLUME ["/youtube-dl"]
-
+ENV YOUTUBE_DL=$YOUTUBE_DL
 CMD [ "python", "-u", "./youtube-dl-server.py" ]
