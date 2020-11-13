@@ -6,8 +6,6 @@
 
 Simple Web and REST interface for downloading youtube videos onto a server. [`bottle`](https://github.com/bottlepy/bottle) + [`youtube-dl`](https://github.com/rg3/youtube-dl) / [`youtube-dlc`](https://github.com/blackjack4494/yt-dlc)
 
-*Note:* The main branch and docker image are now using youtube-dlc, the development of which is more active. To use the original youtube-dl, use branch [youtube-dl](https://github.com/nbr23/youtube-dl-server/tree/youtube-dl).
-
 Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube-dl-server).
 
 ![screenshot][1]
@@ -19,7 +17,9 @@ Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube
 
 For easier deployment, a docker image is available on [dockerhub](https://hub.docker.com/r/nbr23/youtube-dl-server).
 
-The `latest` image now uses youtube-dlc. For the original youtube-dl based image, use `nbr23/youtube-dl-server:youtube-dl`
+The `latest` tag uses `youtube-dl`.
+
+You can ensure you are using `youtube-dl` or `youtube-dlc` by using the tags of the same name, eg: `nbr23/youtube-dl-server:youtube-dl` and `nbr23/youtube-dl-server:youtube-dlc`.
 
 ### Docker CLI
 
@@ -27,12 +27,6 @@ This example uses the docker run command to create the container to run the app.
 
 ```shell
 docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:latest
-```
-
-For the original youtube-dl:
-
-```shell
-docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:youtube-dl
 ```
 
 ### Docker Compose
@@ -46,8 +40,6 @@ This is an example service definition that could be put in `docker-compose.yml`.
       - $HOME/youtube-dl:/youtube-dl
     restart: always
 ```
-
-The `latest` image now uses youtube-dlc. For the original youtube-dl based image, use `nbr23/youtube-dl-server:youtube-dl`
 
 #### Configuration
 For easier configuration management and edition, you can save your variables in an external file and source them in your docker-compose.yml like the following example.
@@ -76,8 +68,16 @@ docker-compose.yml:
 
 If you have python ^3.3.0 installed in your PATH you can simply run like this, providing optional environment variable overrides inline.
 
+You will need `bottle` and either `youtube-dl` or `youtube-dlc` installed locally.
+
 ```shell
 YDL_SERVER_PORT=8123 python3 -u ./youtube-dl-server.py
+```
+
+To force using `youtube-dl` or `youtube-dlc`, use the variable `YOUTUBE_DL`:
+
+```shell
+YOUTUBE_DL=youtube-dlc YDL_SERVER_PORT=8123 python3 -u ./youtube-dl-server.py
 ```
 
 ## Usage
@@ -129,7 +129,7 @@ javascript:(function(){document.body.innerHTML += '<form name="ydl_form" method=
 
 ## Implementation
 
-The server uses [`bottle`](https://github.com/bottlepy/bottle) for the web framework and [`youtube-dl`](https://github.com/rg3/youtube-dl) to handle the downloading. The integration with youtube-dl makes use of their [python api](https://github.com/rg3/youtube-dl#embedding-youtube-dl).
+The server uses [`bottle`](https://github.com/bottlepy/bottle) for the web framework and [`youtube-dl`](https://github.com/rg3/youtube-dl) / [`youtube-dlc`](https://github.com/blackjack4494/yt-dlc) to handle the downloading. The integration with youtube-dl makes use of their [python api](https://github.com/rg3/youtube-dl#embedding-youtube-dl).
 
 This docker image is based on [`python:alpine`](https://registry.hub.docker.com/_/python/) and consequently [`alpine:3.8`](https://hub.docker.com/_/alpine/).
 
