@@ -1,2 +1,2 @@
 bottle
-youtube-dlc
+youtube-dl
