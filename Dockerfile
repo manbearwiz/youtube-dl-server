@@ -9,7 +9,7 @@ ARG YOUTUBE_DL=youtube_dl
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
-RUN pip install --no-cache-dir bottle ${YOUTUBE_DL}
+RUN pip install --no-cache-dir bottle pyyaml ${YOUTUBE_DL}
 
 COPY ./ydl_server /usr/src/app/ydl_server
 COPY ./youtube-dl-server.py /usr/src/app/
