@@ -68,7 +68,7 @@ docker-compose.yml:
 
 If you have python ^3.3.0 installed in your PATH you can simply run like this, providing optional environment variable overrides inline.
 
-You will need `bottle` and either `youtube-dl` or `youtube-dlc` installed locally.
+You will need `bottle`, `pyyaml` and either `youtube-dl` or `youtube-dlc` installed locally.
 
 ```shell
 YDL_SERVER_PORT=8123 python3 -u ./youtube-dl-server.py
