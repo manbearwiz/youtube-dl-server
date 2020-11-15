@@ -10,7 +10,7 @@ from threading import Thread
 from pathlib import Path
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from ydl_server import jobshandler, ydlhandler
-from ydl_server.config import app_defaults
+from ydl_server.config import app_config
 
 app = Bottle()
 
