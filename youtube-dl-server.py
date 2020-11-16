@@ -63,6 +63,10 @@ def api_serve_finished_file(filename):
 def server_static(filename):
     return static_file(filename, root='./ydl_server/static')
 
+@app.route('/api/extractors')
+def api_list_extractors():
+    return json.dumps(ydlhandler.get_ydl_extractors())
+
 @app.route('/api/downloads/stats', method='GET')
 def api_queue_size():
     db = JobsDB(readonly=True)

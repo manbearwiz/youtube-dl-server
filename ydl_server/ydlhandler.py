@@ -186,3 +186,6 @@ def get_ydl_website():
 
 def get_ydl_version():
     return ydl_module.version.__version__
+
+def get_ydl_extractors():
+    return [ie.IE_NAME for ie in ydl_module.extractor.list_extractors(app_config['ydl_options'].get('age-limit')) if ie._WORKING]
