@@ -17,7 +17,7 @@ app_defaults = {
     'YDL_EXTRACT_AUDIO_FORMAT': None,
     'YDL_EXTRACT_AUDIO_QUALITY': '192',
     'YDL_RECODE_VIDEO_FORMAT': None,
-    'YDL_OUTPUT_TEMPLATE': '/youtube-dl/%(title)s [%(id)s]',
+    'YDL_OUTPUT_TEMPLATE': '%(title)s [%(id)s]',
     'YDL_ARCHIVE_FILE': None,
     'YDL_SERVER_HOST': '0.0.0.0',
     'YDL_SERVER_PORT': 8080,
@@ -108,15 +108,17 @@ def get_ydl_options(request_options):
     return {
         'format': ydl_vars['YDL_FORMAT'],
         'postprocessors': postprocessors,
-        'outtmpl': requested_outputname + '.%(ext)s',
+        'outtmpl': '/youtube-dl/' + requested_outputname + '.%(ext)s',
         'download_archive': ydl_vars['YDL_ARCHIVE_FILE']
     }
 
-
 def download(url, request_options):
     with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
-        ydl.download([url])
 
+        try:
+            ydl.download([url])
+        except:
+            print("Error for URL: ",url)
 
 dl_q = Queue()
 done = False
