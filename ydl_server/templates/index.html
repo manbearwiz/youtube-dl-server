@@ -6,7 +6,7 @@
         <div class="jumbotron bg-transparent flex-grow-1">
           <h1 class="display-4">youtube-dl</h1>
           <p class="lead">Enter a video url to download the video to the server. Url can be to YouTube or <a class="text-info"
-                                                                                                             href="https://rg3.github.io/youtube-dl/supportedsites.html">any
+                                                                                                             href="#" onclick="extractors_show()">any
                                                                                                              other supported site</a>. The server will automatically download the highest quality version available.</p>
           <div>
             <div class="input-group">
@@ -41,11 +41,31 @@
             </div>
           </div>
           <br/>
+
+          <div class="modal fade text-dark" id="extractors_modal" role="dialog" aria-hidden="false" tabindex="-1" aria-labelledby="extractors_title">
+            <div class="modal-dialog" id='extractors_dialog' role="document">
+              <div class="modal-content bg-light">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="extractors_title"></h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body text-left" id="extractors_body">
+                  <p><span id="extractors_items"></span></p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="modal fade text-dark" id="metadata_modal" role="dialog" aria-hidden="false" tabindex="-1" aria-labelledby="metadata_title">
             <div class="modal-dialog" id='md_dialog' role="document">
               <div class="modal-content bg-light">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="metadata_title">Fake Title</h5>
+                  <h5 class="modal-title" id="metadata_title"></h5>
                   <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                   </button>
