@@ -70,6 +70,8 @@ If you have python ^3.3.0 installed in your PATH you can simply run like this, p
 
 You will need `bottle` and either `youtube-dl` or `youtube-dlc` installed locally.
 
+You can run the [bootstrap.sh](https://github.com/nbr23/youtube-dl-server/blob/master/bootstrap.sh) to download the required front-end libraries (jquery, bootstrap).
+
 ```shell
 YDL_SERVER_PORT=8123 python3 -u ./youtube-dl-server.py
 ```
