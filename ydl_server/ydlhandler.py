@@ -115,11 +115,11 @@ def get_ydl_full_cmd(opt_dict, url):
     cmd = [ydl_module_name]
     if opt_dict is not None:
         for key, val in opt_dict.items():
-            if isinstance(val, bool) and val:
+            if isinstance(val, bool) and not val:
                 continue
             cmd.append('--{}'.format(key))
             if val is not None and not isinstance(val, bool):
-                cmd.append(val)
+                cmd.append(str(val))
     cmd.append(url)
     return cmd
 
