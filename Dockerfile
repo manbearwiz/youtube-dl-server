@@ -13,6 +13,7 @@ RUN mkdir -p /usr/src/app
 
 
 COPY ./bootstrap.sh /usr/src/app/
+COPY ./config.yml /usr/src/app/
 COPY ./ydl_server /usr/src/app/ydl_server
 COPY ./youtube-dl-server.py /usr/src/app/
 
