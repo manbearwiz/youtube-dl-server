@@ -1,0 +1,12 @@
+ydl_server:
+  port: 8080
+  host: 0.0.0.0
+  debug: False
+  metadata_db_path: '/youtube-dl/.ydl-metadata.db'
+  output_playlist: '/youtube-dl/%(title)s [%(id)s].%(ext)s'
+
+ydl_options:
+  output: '/youtube-dl/%(title)s [%(id)s].%(ext)s'
+  cache-dir: '/youtube-dl/.cache'
+  ignore-errors: True
+  age-limit: 6
