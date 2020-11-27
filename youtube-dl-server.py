@@ -1,8 +1,6 @@
 from __future__ import unicode_literals
 import json
 import os
-from collections import ChainMap
-from itertools import chain
 from operator import itemgetter
 from queue import Queue
 from bottle import route, run, Bottle, request, static_file, template
@@ -10,7 +8,7 @@ from threading import Thread
 from pathlib import Path
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from ydl_server import jobshandler, ydlhandler
-from ydl_server.config import app_defaults
+from ydl_server.config import app_config
 
 app = Bottle()
 
@@ -39,7 +37,7 @@ def front_finished():
 
 @app.route('/api/finished')
 def api_list_finished():
-    root_dir = Path(app_vars['YDL_OUTPUT_TEMPLATE']).parent
+    root_dir = Path(app_config['ydl_options'].get('output')).parent
     matches = root_dir.glob('*')
 
     files = [{'name': f1.name,
@@ -58,12 +56,16 @@ def api_list_finished():
 
 @app.route('/api/finished/:filename#.*#')
 def api_serve_finished_file(filename):
-    root_dir = Path(app_vars['YDL_OUTPUT_TEMPLATE']).parent
+    root_dir = Path(app_config['ydl_options'].get('output')).parent
     return static_file(filename, root=root_dir)
 
 @app.route('/static/:filename#.*#')
 def server_static(filename):
     return static_file(filename, root='./ydl_server/static')
+
+@app.route('/api/extractors')
+def api_list_extractors():
+    return json.dumps(ydlhandler.get_ydl_extractors())
 
 @app.route('/api/downloads/stats', method='GET')
 def api_queue_size():
@@ -131,11 +133,9 @@ jobshandler.put((Actions.INSERT, job))
 
 ydlhandler.resume_pending()
 
-app_vars = ChainMap(os.environ, app_defaults)
-
-app.run(host=app_vars['YDL_SERVER_HOST'],
-        port=app_vars['YDL_SERVER_PORT'],
-        debug=app_vars['YDL_DEBUG'])
+app.run(host=app_config['ydl_server'].get('host'),
+        port=app_config['ydl_server'].get('port'),
+        debug=app_config['ydl_server'].get('debug', False))
 ydlhandler.finish()
 jobshandler.finish()
 ydlhandler.join()

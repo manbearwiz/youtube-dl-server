@@ -49,6 +49,19 @@ function pretty_size(size_b) {
   return Number((size_b).toFixed(2)) + ' ' + sizes[i - 1];
 }
 
+function extractors_show() {
+  $.getJSON("api/extractors", function (data) {
+    var items = '<ul>';
+    $('#extractors_title').text('Available extrators');
+    for (var i = 0; i < data.length; i++) {
+      items += '<li>' + data[i] + '</li>';
+    }
+    items += '</ul>';
+    $('#extractors_items').html(items);
+    $('#extractors_modal').modal('show');
+  });
+}
+
 function metadata_show(metadata) {
   var items = "";
   $('#metadata_title').text(metadata['title']);

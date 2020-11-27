@@ -3,7 +3,7 @@ import sqlite3
 import re
 from queue import Queue
 from threading import Thread
-from ydl_server.config import app_defaults
+from ydl_server.config import app_config
 
 STATUS_NAME =["Running",
         "Completed",
@@ -55,7 +55,7 @@ class JobsDB:
 
     @staticmethod
     def check_db_latest():
-        conn = sqlite3.connect("file://%s" % app_defaults['YDL_DB_PATH'], uri=True)
+        conn = sqlite3.connect("file://%s" % app_config['ydl_server'].get('metadata_db_path'), uri=True)
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info('jobs')")
         columns = [row[1] for row in cursor.fetchall()]
@@ -67,7 +67,7 @@ class JobsDB:
 
     @staticmethod
     def init_db():
-        conn = sqlite3.connect("file://%s" % app_defaults['YDL_DB_PATH'], uri=True)
+        conn = sqlite3.connect("file://%s" % app_config['ydl_server'].get('metadata_db_path'), uri=True)
         cursor = conn.cursor()
         cursor.execute("CREATE TABLE if not exists jobs \
                 (id INTEGER PRIMARY KEY AUTOINCREMENT, \
@@ -82,7 +82,7 @@ class JobsDB:
         conn.close()
 
     def __init__(self, readonly=True):
-        self.conn = sqlite3.connect("file://%s%s" % (app_defaults['YDL_DB_PATH'],
+        self.conn = sqlite3.connect("file://%s%s" % (app_config['ydl_server'].get('metadata_db_path'),
                                             "?mode=ro" if readonly else ""),
                                     uri=True)
 

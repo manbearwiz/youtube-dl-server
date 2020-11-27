@@ -2,16 +2,16 @@ import os
 from queue import Queue
 from threading import Thread
 import subprocess
-from collections import ChainMap
 import io
 import importlib
 import json
 from time import sleep
 import sys
+from subprocess import Popen, PIPE, STDOUT
 
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from ydl_server import jobshandler
-from ydl_server.config import app_defaults
+from ydl_server.config import app_config
 
 ydl_module = None
 ydl_module_name = None
@@ -45,6 +45,9 @@ def put(obj):
 def finish():
     done = True
 
+def read_proc_stdout(proc, strio):
+    strio.write(proc.stdout.read1().decode())
+
 def worker():
     while not done:
         job = queue.get()
@@ -52,17 +55,12 @@ def worker():
         jobshandler.put((Actions.SET_STATUS, (job.id, job.status)))
         if job.type == JobType.YDL_DOWNLOAD:
             output = io.StringIO()
-            stdout_thread = Thread(target=download_log_update,
-                    args=(job, output))
-            stdout_thread.start()
             try:
-                job.log = Job.clean_logs(download(job.url, {'format':  job.format}, output, job.id))
-                job.status = Job.COMPLETED
+                download(job, {'format': job.format}, output)
             except Exception as e:
                 job.status = Job.FAILED
-                job.log += str(e)
-                print("Exception during download task:\n" + str(e))
-            stdout_thread.join()
+                job.log = "Error during download task"
+                print("Error during download task:\n{}\n{}".format(type(e).__name__, str(e)))
         elif job.type == JobType.YDL_UPDATE:
             rc, log = update()
             job.log = Job.clean_logs(log)
@@ -82,70 +80,28 @@ def update():
         command = ["pip", "install", "--no-cache-dir", "--upgrade", ydl_module_name]
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     out, err = proc.communicate()
-    if proc.returncode == 0:
+    if proc.wait() == 0:
         reload_youtube_dl()
     return proc.returncode, str(out.decode('utf-8'))
 
-def get_ydl_options(request_options):
-    request_vars = {
-        'YDL_EXTRACT_AUDIO_FORMAT': None,
-        'YDL_RECODE_VIDEO_FORMAT': None,
-    }
+def get_ydl_options(app_config, request_options):
+    req_format = request_options.get('format', 'best')
+    print(request_options)
+    if req_format.startswith('audio/'):
+        app_config.update({'extract-audio': None})
+        app_config.update({'audio-format': req_format.split('/')[-1]})
+    elif req_format.startswith('video/'):
+        app_config.update({'format': req_format.split('/')[-1]})
+    else:
+        app_config.update({'format': req_format})
+    return app_config
 
-    requested_format = request_options.get('format', 'bestvideo')
-
-    if requested_format in ['aac', 'flac', 'mp3', 'm4a', 'opus', 'vorbis', 'wav']:
-        request_vars['YDL_EXTRACT_AUDIO_FORMAT'] = requested_format
-    elif requested_format == 'bestaudio':
-        request_vars['YDL_EXTRACT_AUDIO_FORMAT'] = 'best'
-    elif requested_format in ['mp4', 'flv', 'webm', 'ogg', 'mkv', 'avi']:
-        request_vars['YDL_RECODE_VIDEO_FORMAT'] = requested_format
-
-    ydl_vars = ChainMap(request_vars, os.environ, app_defaults)
-
-    postprocessors = []
-
-    if(ydl_vars['YDL_EXTRACT_AUDIO_FORMAT']):
-        postprocessors.append({
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': ydl_vars['YDL_EXTRACT_AUDIO_FORMAT'],
-            'preferredquality': ydl_vars['YDL_EXTRACT_AUDIO_QUALITY'],
-        })
-
-    if(ydl_vars['YDL_RECODE_VIDEO_FORMAT']):
-        postprocessors.append({
-            'key': 'FFmpegVideoConvertor',
-            'preferedformat': ydl_vars['YDL_RECODE_VIDEO_FORMAT'],
-        })
-
-    ydl_options = {
-        'format': ydl_vars['YDL_FORMAT'],
-        'postprocessors': postprocessors,
-        'outtmpl': ydl_vars['YDL_OUTPUT_TEMPLATE'],
-        'download_archive': ydl_vars['YDL_ARCHIVE_FILE'],
-        'cachedir': ydl_vars['YDL_CACHE_DIR']
-    }
-
-    ydl_options = {**ydl_vars['YDL_RAW_OPTIONS'], **ydl_options}
-
-    if 'addmetadata' in ydl_options:
-        ydl_options['postprocessors'].append({'key': 'FFmpegMetadata'})
-
-    if ydl_vars['YDL_SUBTITLES_LANGUAGES']:
-        ydl_options['writesubtitles'] = True
-        if ydl_vars['YDL_SUBTITLES_LANGUAGES'] != 'all':
-            ydl_options['subtitleslangs'] = \
-                    ydl_vars['YDL_SUBTITLES_LANGUAGES'].split(',')
-        else:
-            ydl_options['allsubtitles'] = True
-
-    return ydl_options
-
-def download_log_update(job, stringio):
+def download_log_update(job, proc, strio):
     while job.status == Job.RUNNING:
-        job.log = Job.clean_logs(stringio.getvalue())
+        read_proc_stdout(proc, strio)
+        job.log = Job.clean_logs(strio.getvalue())
         jobshandler.put((Actions.SET_LOG, (job.id, job.log)))
-        sleep(5)
+        sleep(3)
 
 def fetch_metadata(url):
     stdout = io.StringIO()
@@ -155,23 +111,54 @@ def fetch_metadata(url):
         ydl.params['extract_flat'] = 'in_playlist'
         return ydl.extract_info(url, download=False)
 
-def download(url, request_options, output, job_id):
-    with ydl_module.YoutubeDL(get_ydl_options(request_options)) as ydl:
-        ydl.params['extract_flat'] = 'in_playlist'
-        ydl_opts = ChainMap(os.environ, app_defaults)
-        info = ydl.extract_info(url, download=False)
-        if 'title' in info and info['title']:
-            jobshandler.put((Actions.SET_NAME, (job_id, info['title'])))
-        if '_type' in info and info['_type'] == 'playlist' \
-                and 'YDL_OUTPUT_TEMPLATE_PLAYLIST' in ydl_opts:
-            ydl.params['outtmpl'] = ydl_opts['YDL_OUTPUT_TEMPLATE_PLAYLIST']
-        ydl.params['extract_flat']= False
+def get_ydl_full_cmd(opt_dict, url):
+    cmd = [ydl_module_name]
+    if opt_dict is not None:
+        for key, val in opt_dict.items():
+            if isinstance(val, bool) and not val:
+                continue
+            cmd.append('--{}'.format(key))
+            if val is not None and not isinstance(val, bool):
+                cmd.append(str(val))
+    cmd.append(url)
+    return cmd
 
-        # Swap out sys.stdout as ydl's output so we can capture it
-        ydl._screen_file = output
-        ydl._err_file = ydl._screen_file
-        ydl.download([url])
-        return ydl._screen_file.getvalue()
+def download(job, request_options, output):
+    ydl_opts = get_ydl_options(app_config.get('ydl_options', {}), request_options)
+    cmd = get_ydl_full_cmd(ydl_opts, job.url)
+    cmd.extend(['-J', '--flat-playlist'])
+
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = proc.communicate()
+
+    if proc.wait() != 0:
+        job.log = Job.clean_logs(stderr)
+        job.status = Job.FAILED
+        print("Error during download task:\n" + job.log)
+        return
+
+    metadata = json.loads(stdout)
+    jobshandler.put((Actions.SET_NAME, (job.id, metadata.get('title', job.url))))
+
+    if metadata.get('_type') == 'playlist':
+        ydl_opts.update({'output': app_config['ydl_server'].get('output_playlist', ydl_opts.get('output'))})
+
+    cmd = get_ydl_full_cmd(ydl_opts, job.url)
+    proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+    stdout_thread = Thread(target=download_log_update,
+            args=(job, proc, output))
+    stdout_thread.start()
+
+    if proc.wait() == 0:
+        read_proc_stdout(proc, output)
+        job.log = Job.clean_logs(output.getvalue())
+        job.status = Job.COMPLETED
+    else:
+        read_proc_stdout(proc, output)
+        job.log = Job.clean_logs(output.getvalue())
+        job.status = Job.FAILED
+        print("Error during download task:\n" + output.getvalue())
+    stdout_thread.join()
 
 def resume_pending():
     db = JobsDB(readonly=False)
@@ -199,3 +186,6 @@ def get_ydl_website():
 
 def get_ydl_version():
     return ydl_module.version.__version__
+
+def get_ydl_extractors():
+    return [ie.IE_NAME for ie in ydl_module.extractor.list_extractors(app_config['ydl_options'].get('age-limit')) if ie._WORKING]

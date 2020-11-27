@@ -1,18 +1,19 @@
-app_defaults = {
-    'YDL_FORMAT': 'bestvideo+bestaudio/best',
-    'YDL_EXTRACT_AUDIO_FORMAT': None,
-    'YDL_EXTRACT_AUDIO_QUALITY': '192',
-    'YDL_RECODE_VIDEO_FORMAT': None,
-    'YDL_OUTPUT_TEMPLATE': '/youtube-dl/%(title)s [%(id)s].%(ext)s',
-    'YDL_OUTPUT_TEMPLATE_PLAYLIST': '/youtube-dl/%(playlist_title)s/%(title)s [%(id)s].%(ext)s',
-    'YDL_ARCHIVE_FILE': None,
-    'YDL_SERVER_HOST': '0.0.0.0',
-    'YDL_SERVER_PORT': 8080,
-    'YDL_CACHE_DIR': '/youtube-dl/.cache',
-    'YDL_DB_PATH': '/youtube-dl/.ydl-metadata.db',
-    'YDL_SUBTITLES_LANGUAGES': None,
-    'YDL_DEBUG': False,
-    'YDL_RAW_OPTIONS': {
-        'ignoreerrors': True
-        },
-}
+import os
+import yaml
+
+def load_config(config_path):
+    config = None
+    if not os.path.isfile(config_path):
+        print("Config file `{}` not found.".format(config_path))
+        return None
+    with open(config_path) as configfile:
+        config = yaml.load(configfile, Loader=yaml.SafeLoader)
+    return config
+
+config_path = os.environ.get('YDL_CONFIG_PATH', 'config.yml')
+app_config = load_config(config_path)
+
+if app_config is None or app_config.get('ydl_server') is None or \
+        app_config.get('ydl_options') is None or \
+        app_config['ydl_options'].get('output') is None:
+    raise Exception('Invalid configuration file `{}`'.format(config_path))
