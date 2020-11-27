@@ -103,11 +103,9 @@ providing optional environment variable overrides inline.
 You will need `bottle`, `pyyaml` and either `youtube-dl` or `youtube-dlc`
 installed locally.
 
-You can run the
+You can run
 [bootstrap.sh](https://github.com/nbr23/youtube-dl-server/blob/master/bootstrap.sh)
 to download the required front-end libraries (jquery, bootstrap).
-
-You can run the [bootstrap.sh](https://github.com/nbr23/youtube-dl-server/blob/master/bootstrap.sh) to download the required front-end libraries (jquery, bootstrap).
 
 ```shell
 python3 -u ./youtube-dl-server.py
@@ -179,8 +177,10 @@ javascript:(function(){document.body.innerHTML += '<form name="ydl_form" method=
 The server uses [`bottle`](https://github.com/bottlepy/bottle) for the web
 framework and [`youtube-dl`](https://github.com/rg3/youtube-dl) /
 [`youtube-dlc`](https://github.com/blackjack4494/yt-dlc) to handle the
-downloading. The integration with youtube-dl makes use of their [python
-api](https://github.com/rg3/youtube-dl#embedding-youtube-dl).
+downloading. The integration with youtube-dl does NOT use their [python
+api](https://github.com/rg3/youtube-dl#embedding-youtube-dl) anymore, but calls
+the youtube-dl binary directly as the API doesn't provide easy ways to handle
+common arguments.
 
 This docker image is based on
 [`python:alpine`](https://registry.hub.docker.com/_/python/) and consequently
