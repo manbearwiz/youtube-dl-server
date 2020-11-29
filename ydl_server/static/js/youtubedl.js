@@ -170,7 +170,7 @@ function get_download_logs(){
 
 function get_finished_files(){
   $.getJSON("api/finished", function (data) {
-    let finished_files = "";
+    var finished_files = "";
     $.each(data.files, function(key, file) {
       finished_files += "<tr>";
       if (file.children.length > 0) {
