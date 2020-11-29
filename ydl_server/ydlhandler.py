@@ -86,7 +86,6 @@ def update():
 
 def get_ydl_options(app_config, request_options):
     req_format = request_options.get('format', 'best')
-    print(request_options)
     if req_format.startswith('audio/'):
         app_config.update({'extract-audio': None})
         app_config.update({'audio-format': req_format.split('/')[-1]})
