@@ -132,7 +132,7 @@ def download(job, request_options, output):
     stdout, stderr = proc.communicate()
 
     if proc.wait() != 0:
-        job.log = Job.clean_logs(stderr)
+        job.log = Job.clean_logs(stderr.decode())
         job.status = Job.FAILED
         print("Error during download task:\n" + job.log)
         return
