@@ -172,6 +172,13 @@ Instead, you can use the following bookmarklet:
 javascript:(function(){document.body.innerHTML += '<form name="ydl_form" method="POST" action="http://${host}/api/downloads"><input name="url" type="url" value="'+window.location.href+'"/></form>';document.ydl_form.submit()})();
 ```
 
+## Notes
+
+#### Support extra formats
+
+`ffmpeg` is required for format conversion and audio extraction in some
+scenarios.
+
 ## Implementation
 
 The server uses [`bottle`](https://github.com/bottlepy/bottle) for the web
