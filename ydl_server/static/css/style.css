@@ -1,0 +1,29 @@
+html, body {
+  height: 100%;
+  background-color: #002b36;
+  margin: 0;
+}
+
+.content {
+  min-height: 100%;
+  margin-top: -50px;
+  padding-top: 70px;
+  margin-bottom: -50px;
+  padding-bottom: 50px;
+}
+
+nav {
+  background-color: #001b26;
+}
+
+div.input-group>select.custom-select {
+  flex: 0.1 1 100px;
+}
+
+.nav-item .badge {
+  margin-right: 2px;
+}
+
+.footer{
+  height: 50px;
+}

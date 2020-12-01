@@ -1,0 +1,30 @@
+%include('ydl_server/templates/header.html')
+
+    <div class="content">
+      <div class="container-fluid d-flex flex-column text-light text-center">
+        <div class="container-fluid flex-grow-1">
+          <h1 class="display-4">Finished Files</h1>
+          <button class="btn btn-dark" onclick="get_finished_files()">Refresh</button>
+          <br/>
+          <table class="col-md-16 table table-stripped table-md table-dark text-left">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Date</th>
+              </tr>
+              <tbody id="finished_files">
+              </tbody>
+            </thead>
+          </table>
+        </div>
+      </div>
+    </div>
+% include('ydl_server/templates/footer.html', ydl_version=ydl_version, ydl_website=ydl_website, ydl_name=ydl_name)
+    <script>
+      window.setInterval(update_stats, 5000);
+      update_stats();
+      get_finished_files();
+    </script>
+  </body>
+
+</html>

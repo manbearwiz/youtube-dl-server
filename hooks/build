@@ -1,0 +1,7 @@
+#!/bin/bash
+
+YOUTUBE_DL="youtube-dl"
+if [ "$DOCKER_TAG" == "youtube-dl" ] || [ "$DOCKER_TAG" == "youtube-dlc" ]; then
+  YOUTUBE_DL="$DOCKER_TAG"
+fi
+docker build --build-arg YOUTUBE_DL=$YOUTUBE_DL -f $DOCKERFILE_PATH -t $IMAGE_NAME .

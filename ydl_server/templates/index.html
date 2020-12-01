@@ -1,0 +1,102 @@
+% include('ydl_server/templates/header.html')
+
+    <div class="content">
+      <div class="container d-flex flex-column text-light text-center">
+        <div class="flex-grow-1"></div>
+        <div class="jumbotron bg-transparent flex-grow-1">
+          <h1 class="display-4">youtube-dl</h1>
+          <p class="lead">Enter a video url to download the video to the server. Url can be to YouTube or <a class="text-info"
+                                                                                                             href="#" onclick="extractors_show()">any
+                                                                                                             other supported site</a>. The server will automatically download the highest quality version available.</p>
+          <div>
+            <div class="input-group">
+              <input name="url" type="url" class="form-control" placeholder="URL" aria-label="URL" aria-describedby="button-submit" id="url" autofocus>
+              <select class="custom-select" name="format" id="format">
+                <optgroup label="Video">
+                  <option value="video/best">Best</option>
+                  <option value="video/bestvideo">Best Video</option>
+                  <option value="video/mp4">MP4</option>
+                  <option value="video/flv">Flash Video (FLV)</option>
+                  <option value="video/webm">WebM</option>
+                  <option value="video/ogg">Ogg</option>
+                  <option value="video/mkv">Matroska (MKV)</option>
+                  <option value="video/avi">AVI</option>
+                </optgroup>
+                <optgroup label="Audio">
+                  <option value="audio/bestaudio">Best Audio</option>
+                  <option value="audio/aac">AAC</option>
+                  <option value="audio/flac">FLAC</option>
+                  <option value="audio/mp3">MP3</option>
+                  <option value="audio/m4a">M4A</option>
+                  <option value="audio/opus">Opus</option>
+                  <option value="audio/vorbis">Vorbis</option>
+                  <option value="audio/wav">WAV</option>
+                </optgroup>
+                <optgroup label="Metadata only">
+                  <option value="metadata">Metadata</option>
+                </optgroup>
+              </select>
+              <div class="input-group-append">
+                <button class="btn btn-primary" id="button-submit" onclick="submit_video()">Submit</button>
+              </div>
+            </div>
+          </div>
+          <br/>
+
+          <div class="modal fade text-dark" id="extractors_modal" role="dialog" aria-hidden="false" tabindex="-1" aria-labelledby="extractors_title">
+            <div class="modal-dialog" id='extractors_dialog' role="document">
+              <div class="modal-content bg-light">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="extractors_title"></h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body text-left" id="extractors_body">
+                  <p><span id="extractors_items"></span></p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal fade text-dark" id="metadata_modal" role="dialog" aria-hidden="false" tabindex="-1" aria-labelledby="metadata_title">
+            <div class="modal-dialog" id='md_dialog' role="document">
+              <div class="modal-content bg-light">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="metadata_title"></h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body text-left" id="metadata_body">
+                  <p>
+                  Title: <b><span id="md_title"></span></b><br/>
+                  Uploader: <b><span id="md_uploader"></span></b><br/>
+                  Url: <b><a href="" id="md_webpage_url" target="_blank"></a></b><br/>
+                  <br/>
+                  <span id="md_items_title"></span><br/>
+                  <span id="md_items"></span>
+                  </p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="message_list">
+          </div>
+        </div>
+      </div>
+    </div>
+% include('ydl_server/templates/footer.html', ydl_version=ydl_version, ydl_website=ydl_website, ydl_name=ydl_name)
+    <script>
+      window.setInterval(update_stats, 5000);
+      update_stats();
+    </script>
+  </body>
+
+</html>
