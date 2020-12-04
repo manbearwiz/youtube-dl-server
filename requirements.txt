@@ -2,5 +2,5 @@ aiofiles
 jinja2
 python-multipart
 starlette
-uvicorn
+uvicorn[standard]
 youtube-dl
