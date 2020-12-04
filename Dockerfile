@@ -12,7 +12,7 @@ RUN apk add --no-cache --virtual \
       libc-dev \
       make \
       ffmpeg \	
-      tzdata
+      tzdata \
     && pip install --no-cache-dir uvicorn[standard] \
     && apk del .build-deps gcc libc-dev make
 
