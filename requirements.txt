@@ -1,2 +1,6 @@
-bottle
+aiofiles
+jinja2
+python-multipart
+starlette
+uvicorn
 youtube-dl

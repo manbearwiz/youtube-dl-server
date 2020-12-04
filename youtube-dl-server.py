@@ -1,113 +1,109 @@
-from __future__ import unicode_literals
-import json
-import os
-import subprocess
-from queue import Queue
-from bottle import route, run, Bottle, request, static_file
-from threading import Thread
+import os, sys, subprocess
+
+from starlette.applications import Starlette
+from starlette.staticfiles import StaticFiles
+from starlette.responses import JSONResponse
+from starlette.routing import Mount, Route
+from starlette.templating import Jinja2Templates
+from starlette.background import BackgroundTask
+
+import uvicorn
 import youtube_dl
-from pathlib import Path
 from collections import ChainMap
 
-app = Bottle()
-
+templates = Jinja2Templates(directory="")
 
 app_defaults = {
-    'YDL_FORMAT': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]',
-    'YDL_EXTRACT_AUDIO_FORMAT': None,
-    'YDL_EXTRACT_AUDIO_QUALITY': '192',
-    'YDL_RECODE_VIDEO_FORMAT': None,
-    'YDL_OUTPUT_TEMPLATE': '/youtube-dl/%(title)s [%(id)s].%(ext)s',
-    'YDL_ARCHIVE_FILE': None,
-    'YDL_SERVER_HOST': '0.0.0.0',
-    'YDL_SERVER_PORT': 8080,
+    "YDL_FORMAT": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]",
+    "YDL_EXTRACT_AUDIO_FORMAT": None,
+    "YDL_EXTRACT_AUDIO_QUALITY": "192",
+    "YDL_RECODE_VIDEO_FORMAT": None,
+    "YDL_OUTPUT_TEMPLATE": "/youtube-dl/%(title)s [%(id)s].%(ext)s",
+    "YDL_ARCHIVE_FILE": None,
+    "YDL_SERVER_HOST": "0.0.0.0",
+    "YDL_SERVER_PORT": 8080,
 }
 
 
-@app.route('/youtube-dl')
-def dl_queue_list():
-    return static_file('index.html', root='./')
+async def dl_queue_list(request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.route('/youtube-dl/static/:filename#.*#')
-def server_static(filename):
-    return static_file(filename, root='./static')
-
-
-@app.route('/youtube-dl/q', method='GET')
-def q_size():
-    return {"success": True, "size": json.dumps(list(dl_q.queue))}
-
-
-@app.route('/youtube-dl/q', method='POST')
-def q_put():
-    url = request.forms.get("url").strip()
-    options = {
-        'format': request.forms.get("format")
-    }
+async def q_put(request):
+    form = await request.form()
+    url = form.get("url").strip()
+    options = {"format": form.get("format")}
 
     if not url:
-        return {"success": False, "error": "/q called without a 'url' in form data"}
+        return JSONResponse(
+            {"success": False, "error": "/q called without a 'url' in form data"}
+        )
 
-    dl_q.put((url, options))
+    task = BackgroundTask(download, url, options)
+
     print("Added url " + url + " to the download queue")
-    return {"success": True, "url": url, "options": options}
+    return JSONResponse(
+        {"success": True, "url": url, "options": options}, background=task
+    )
 
-@app.route("/youtube-dl/update", method="GET")
+
+async def update_route(scope, receive, send):
+    task = BackgroundTask(update)
+
+    return JSONResponse({"output": "Initiated package update"}, background=task)
+
+
 def update():
-    command = ["pip", "install", "--upgrade", "youtube-dl"]
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        output = subprocess.check_output(
+            [sys.executable, "-m", "pip", "install", "--upgrade", "youtube-dl"]
+        )
 
-    output, error = proc.communicate()
-    return {
-        "output": output.decode('ascii'),
-        "error":  error.decode('ascii')
-    }
-
-def dl_worker():
-    while not done:
-        url, options = dl_q.get()
-        download(url, options)
-        dl_q.task_done()
-
+        print(output.decode("ascii"))
+    except subprocess.CalledProcessError as e:
+        print(e.output)
 
 def get_ydl_options(request_options):
     request_vars = {
-        'YDL_EXTRACT_AUDIO_FORMAT': None,
-        'YDL_RECODE_VIDEO_FORMAT': None,
+        "YDL_EXTRACT_AUDIO_FORMAT": None,
+        "YDL_RECODE_VIDEO_FORMAT": None,
     }
 
-    requested_format = request_options.get('format', 'bestvideo')
+    requested_format = request_options.get("format", "bestvideo")
 
-    if requested_format in ['aac', 'flac', 'mp3', 'm4a', 'opus', 'vorbis', 'wav']:
-        request_vars['YDL_EXTRACT_AUDIO_FORMAT'] = requested_format
-    elif requested_format == 'bestaudio':
-        request_vars['YDL_EXTRACT_AUDIO_FORMAT'] = 'best'
-    elif requested_format in ['mp4', 'flv', 'webm', 'ogg', 'mkv', 'avi']:
-        request_vars['YDL_RECODE_VIDEO_FORMAT'] = requested_format
+    if requested_format in ["aac", "flac", "mp3", "m4a", "opus", "vorbis", "wav"]:
+        request_vars["YDL_EXTRACT_AUDIO_FORMAT"] = requested_format
+    elif requested_format == "bestaudio":
+        request_vars["YDL_EXTRACT_AUDIO_FORMAT"] = "best"
+    elif requested_format in ["mp4", "flv", "webm", "ogg", "mkv", "avi"]:
+        request_vars["YDL_RECODE_VIDEO_FORMAT"] = requested_format
 
     ydl_vars = ChainMap(request_vars, os.environ, app_defaults)
 
     postprocessors = []
 
-    if(ydl_vars['YDL_EXTRACT_AUDIO_FORMAT']):
-        postprocessors.append({
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': ydl_vars['YDL_EXTRACT_AUDIO_FORMAT'],
-            'preferredquality': ydl_vars['YDL_EXTRACT_AUDIO_QUALITY'],
-        })
+    if ydl_vars["YDL_EXTRACT_AUDIO_FORMAT"]:
+        postprocessors.append(
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": ydl_vars["YDL_EXTRACT_AUDIO_FORMAT"],
+                "preferredquality": ydl_vars["YDL_EXTRACT_AUDIO_QUALITY"],
+            }
+        )
 
-    if(ydl_vars['YDL_RECODE_VIDEO_FORMAT']):
-        postprocessors.append({
-            'key': 'FFmpegVideoConvertor',
-            'preferedformat': ydl_vars['YDL_RECODE_VIDEO_FORMAT'],
-        })
+    if ydl_vars["YDL_RECODE_VIDEO_FORMAT"]:
+        postprocessors.append(
+            {
+                "key": "FFmpegVideoConvertor",
+                "preferedformat": ydl_vars["YDL_RECODE_VIDEO_FORMAT"],
+            }
+        )
 
     return {
-        'format': ydl_vars['YDL_FORMAT'],
-        'postprocessors': postprocessors,
-        'outtmpl': ydl_vars['YDL_OUTPUT_TEMPLATE'],
-        'download_archive': ydl_vars['YDL_ARCHIVE_FILE']
+        "format": ydl_vars["YDL_FORMAT"],
+        "postprocessors": postprocessors,
+        "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
+        "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
     }
 
 
@@ -116,20 +112,19 @@ def download(url, request_options):
         ydl.download([url])
 
 
-dl_q = Queue()
-done = False
-dl_thread = Thread(target=dl_worker)
-dl_thread.start()
+routes = [
+    Route("/youtube-dl", endpoint=dl_queue_list),
+    Route("/youtube-dl/q", endpoint=q_put, methods=["POST"]),
+    Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
+    Mount("/static", app=StaticFiles(directory="static"), name="static"),
+]
+
+app = Starlette(debug=True, routes=routes)
 
 print("Updating youtube-dl to the newest version")
-updateResult = update()
-print(updateResult["output"])
-print(updateResult["error"])
-
-print("Started download thread")
+update()
 
 app_vars = ChainMap(os.environ, app_defaults)
 
-app.run(host=app_vars['YDL_SERVER_HOST'], port=app_vars['YDL_SERVER_PORT'], debug=True)
-done = True
-dl_thread.join()
+if __name__ == "__main__":
+    uvicorn.run(app, host=app_vars["YDL_SERVER_HOST"], port=int(app_vars["YDL_SERVER_PORT"]))
