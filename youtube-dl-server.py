@@ -41,7 +41,7 @@ def q_size():
 
 @app.route('/youtube-dl/q', method='POST')
 def q_put():
-    url = request.forms.get("url")
+    url = request.forms.get("url").strip()
     options = {
         'format': request.forms.get("format")
     }
