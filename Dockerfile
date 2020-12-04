@@ -6,8 +6,8 @@
 
 FROM python:alpine
 
-RUN apk add --no-cache --virtual
-      .build-deps\
+RUN apk add --no-cache --virtual \
+      .build-deps \
       gcc \
       libc-dev \
       make \
