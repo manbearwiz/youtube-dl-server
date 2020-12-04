@@ -6,9 +6,15 @@
 
 FROM python:alpine
 
-RUN apk add --no-cache \
-  ffmpeg \
-  tzdata
+RUN apk add --no-cache --virtual
+      .build-deps\
+      gcc \
+      libc-dev \
+      make \
+      ffmpeg \	
+      tzdata
+    && pip install --no-cache-dir uvicorn[standard] \
+    && apk del .build-deps gcc libc-dev make
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
