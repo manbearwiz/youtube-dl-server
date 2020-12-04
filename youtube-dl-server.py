@@ -116,7 +116,7 @@ routes = [
     Route("/youtube-dl", endpoint=dl_queue_list),
     Route("/youtube-dl/q", endpoint=q_put, methods=["POST"]),
     Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
-    Mount("/static", app=StaticFiles(directory="static"), name="static"),
+    Mount("/youtube-dl/static", app=StaticFiles(directory="static"), name="static"),
 ]
 
 app = Starlette(debug=True, routes=routes)
