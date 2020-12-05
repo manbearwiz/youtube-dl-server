@@ -33,11 +33,13 @@ This is an example service definition that could be put in `docker-compose.yml`.
 
 ### Python
 
-If you have python ^3.3.0 installed in your PATH you can simply run like this, providing optional environment variable overrides inline.
+If you have python ^3.6.0 installed in your PATH you can simply run like this, providing optional environment variable overrides inline.
 
 ```shell
-sudo YDL_SERVER_PORT=8123 python3 -u ./youtube-dl-server.py
+YDL_SERVER_PORT=8123 YDL_UPDATE_TIME=False YDL_UPDATE_TIME=python3 -u ./youtube-dl-server.py
 ```
+
+In this example, `YDL_UPDATE_TIME=False` is the same as the command line option `--no-mtime`.
 
 ## Usage
 

@@ -8,7 +8,7 @@ from starlette.templating import Jinja2Templates
 from starlette.background import BackgroundTask
 
 import uvicorn
-import youtube_dl
+from youtube_dl import YoutubeDL
 from collections import ChainMap
 
 templates = Jinja2Templates(directory="")
@@ -22,6 +22,7 @@ app_defaults = {
     "YDL_ARCHIVE_FILE": None,
     "YDL_SERVER_HOST": "0.0.0.0",
     "YDL_SERVER_PORT": 8080,
+    "YDL_UPDATE_TIME": "True",
 }
 
 
@@ -104,11 +105,12 @@ def get_ydl_options(request_options):
         "postprocessors": postprocessors,
         "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
         "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
+        "updatetime": ydl_vars["YDL_UPDATE_TIME"] == "True",
     }
 
 
 def download(url, request_options):
-    with youtube_dl.YoutubeDL(get_ydl_options(request_options)) as ydl:
+    with YoutubeDL(get_ydl_options(request_options)) as ydl:
         ydl.download([url])
 
 
@@ -127,4 +129,6 @@ update()
 app_vars = ChainMap(os.environ, app_defaults)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=app_vars["YDL_SERVER_HOST"], port=int(app_vars["YDL_SERVER_PORT"]))
+    uvicorn.run(
+        app, host=app_vars["YDL_SERVER_HOST"], port=int(app_vars["YDL_SERVER_PORT"])
+    )
