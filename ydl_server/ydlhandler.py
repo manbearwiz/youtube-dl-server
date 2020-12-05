@@ -6,6 +6,7 @@ import io
 import importlib
 import json
 from time import sleep
+from datetime import datetime
 import sys
 from subprocess import Popen, PIPE, STDOUT
 
@@ -15,7 +16,10 @@ from ydl_server.config import app_config
 
 ydl_module = None
 ydl_module_name = None
+ydl_last_update = datetime.now()
+
 modules = ['youtube-dl', 'youtube-dlc']
+
 if os.environ.get('YOUTUBE_DL') in modules:
     ydl_module = importlib.import_module(os.environ.get('YOUTUBE_DL').replace('-','_'))
 else:
@@ -81,6 +85,7 @@ def update():
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     out, err = proc.communicate()
     if proc.wait() == 0:
+        ydl_last_update = datetime.now()
         reload_youtube_dl()
     return proc.returncode, str(out.decode('utf-8'))
 

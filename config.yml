@@ -4,6 +4,7 @@ ydl_server:
   debug: False
   metadata_db_path: '/youtube-dl/.ydl-metadata.db'
   output_playlist: '/youtube-dl/%(title)s [%(id)s].%(ext)s'
+  update_poll_delay_min: 15
 
 ydl_options:
   output: '/youtube-dl/%(title)s [%(id)s].%(ext)s'

@@ -6,6 +6,7 @@ from queue import Queue
 from bottle import route, run, Bottle, request, static_file, template
 from threading import Thread
 from pathlib import Path
+from datetime import datetime
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from ydl_server import jobshandler, ydlhandler
 from ydl_server.config import app_config
@@ -95,6 +96,12 @@ def api_logs_purge():
 
 @app.route('/api/downloads', method='POST')
 def api_queue_download():
+    if (app_config['ydl_server'].get('update_poll_delay_min') and
+            (datetime.now() - ydlhandler.ydl_last_update).seconds >
+            app_config['ydl_server'].get('update_poll_delay_min')):
+        job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
+        jobshandler.put((Actions.INSERT, job))
+
     url = request.forms.get("url")
     options = {'format': request.forms.get("format")}
 
