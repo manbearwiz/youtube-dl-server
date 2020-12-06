@@ -95,7 +95,9 @@ def get_ydl_options(app_config, request_options):
         app_config.update({'extract-audio': None})
         app_config.update({'audio-format': req_format.split('/')[-1]})
     elif req_format.startswith('video/'):
-        app_config.update({'format': req_format.split('/')[-1]})
+        # youtube-dl will download BEST video and audio by default, so just don't pass in "format".
+        if req_format != 'video/best':
+            app_config.update({'format': req_format.split('/')[-1]})
     else:
         app_config.update({'format': req_format})
     return app_config
