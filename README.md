@@ -31,6 +31,12 @@ eg: `nbr23/youtube-dl-server:youtube-dl` and
 [legacy](https://github.com/nbr23/youtube-dl-server/tree/legacy) branch,
 and through the `legacy` tag on docker.*
 
+### Ansible
+
+The ansible role
+[ansible-role-youtubedl-server](https://github.com/nbr23/ansible-role-youtubedl-server)
+deploys `youtube-dl-server` using `docker` and `nginx`.
+
 ### Docker CLI
 
 This example uses the docker run command to create the container to run the
