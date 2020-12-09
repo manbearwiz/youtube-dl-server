@@ -197,7 +197,7 @@ common arguments.
 
 This docker image is based on
 [`python:alpine`](https://registry.hub.docker.com/_/python/) and consequently
-[`alpine:3.8`](https://hub.docker.com/_/alpine/).
+[`alpine`](https://hub.docker.com/_/alpine/).
 
 [1]:youtube-dl-server.png
 [2]:youtube-dl-server-logs.png
