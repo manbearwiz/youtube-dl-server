@@ -3,7 +3,7 @@ import json
 import os
 from operator import itemgetter
 from queue import Queue
-from bottle import route, run, Bottle, request, static_file, template
+from bottle import route, run, Bottle, request, static_file, template, response
 from threading import Thread
 from pathlib import Path
 from datetime import datetime
@@ -117,7 +117,10 @@ def api_queue_download():
 @app.route('/api/metadata', method='POST')
 def api_metadata_fetch():
     url = request.forms.get("url")
-    return ydlhandler.fetch_metadata(url)
+    rc, stdout = ydlhandler.fetch_metadata(url)
+    if rc == 0:
+        return stdout
+    response.status = 404
 
 @app.route("/api/youtube-dl/update", method="GET")
 def ydl_update():

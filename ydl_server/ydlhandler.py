@@ -108,12 +108,17 @@ def download_log_update(job, proc, strio):
         sleep(3)
 
 def fetch_metadata(url):
-    stdout = io.StringIO()
-    stderr = io.StringIO()
-    info = None
-    with ydl_module.YoutubeDL({'extract_flat': 'in_playlist'}) as ydl:
-        ydl.params['extract_flat'] = 'in_playlist'
-        return ydl.extract_info(url, download=False)
+    ydl_opts = app_config.get('ydl_options', {})
+    cmd = get_ydl_full_cmd(ydl_opts, url)
+    cmd.extend(['-J', '--flat-playlist'])
+
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = proc.communicate()
+
+    if proc.wait() != 0:
+        return -1, stderr.decode()
+
+    return 0, json.loads(stdout)
 
 def get_ydl_full_cmd(opt_dict, url):
     cmd = [ydl_module_name]
@@ -130,18 +135,14 @@ def get_ydl_full_cmd(opt_dict, url):
 def download(job, request_options, output):
     ydl_opts = get_ydl_options(app_config.get('ydl_options', {}), request_options)
     cmd = get_ydl_full_cmd(ydl_opts, job.url)
-    cmd.extend(['-J', '--flat-playlist'])
 
-    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = proc.communicate()
-
-    if proc.wait() != 0:
-        job.log = Job.clean_logs(stderr.decode())
+    rc, metadata = fetch_metadata(job.url)
+    if rc != 0:
+        job.log = Job.clean_logs(metadata)
         job.status = Job.FAILED
         print("Error during download task:\n" + job.log)
         return
 
-    metadata = json.loads(stdout)
     jobshandler.put((Actions.SET_NAME, (job.id, metadata.get('title', job.url))))
 
     if metadata.get('_type') == 'playlist':
