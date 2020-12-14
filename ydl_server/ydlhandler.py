@@ -73,7 +73,12 @@ def worker():
         queue.task_done()
 
 def reload_youtube_dl():
-    importlib.reload(ydl_module)
+    for module in list(sys.modules.keys()):
+        if 'youtube' in module:
+            try:
+                importlib.reload(sys.modules[module])
+            except ModuleNotFoundError:
+                print("ModuleNotFoundError:\n" + sys.modules[module])
 
 def update():
     if os.environ.get('YDL_PYTHONPATH'):
