@@ -5,6 +5,10 @@ on:
     types: [started]
   schedule:
     - cron: "0 21 * * 5"
+  push:
+    branches:
+      - '*'
+  pull_request:
 
 env:
   DOCKERHUB_USER: wiserain
@@ -12,47 +16,115 @@ env:
 
 jobs:
   docker-buildx:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     if: (github.event_name != 'watch') || (github.actor == github.event.repository.owner.login)
     steps:
-      - 
-        name: Load Variables
-        id: vars
-        run: |
-          echo ::set-output name=ydl_ver::$(pip3 list | grep youtube-dl | awk '{print $2}' | tr -d '()')
-          echo ::set-output name=github_desc::$(curl -sX GET https://api.github.com/repos/wiserain/youtube-dl-server | jq -r .description)
       -
         name: Checkout
         uses: actions/checkout@v2
       - 
-        name: Run Buildx
+        name: Initial Buildx
         uses: ilteoood/docker_buildx@1.1.0
         with:
           imageName: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
-          tag: latest,${{ steps.vars.outputs.ydl_ver }}
+          tag: testing
+          dockerFile: Dockerfile
+          platform: linux/amd64,linux/arm/v7,linux/arm64
+          dockerUser: ${{ env.DOCKERHUB_USER }}
+          dockerPassword: ${{ secrets.DOCKERHUB_PASS }}
+      - 
+        name: Load Built Image and Get Variables
+        id: vars
+        run: |
+          docker buildx build \
+            -t ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}:testing \
+            --platform=linux/amd64 \
+            --load \
+            .
+          CID=$(docker run -d ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}:testing)
+          VER=$(docker exec $CID youtube-dl --version)
+          docker rm -f $CID
+          echo ::set-output name=app_ver::${VER}
+          echo ::set-output name=github_desc::$(curl -sX GET https://api.github.com/repos/${GITHUB_REPOSITORY} | jq -r .description)
+          echo ::set-output name=github_branch::${GITHUB_REF#refs/heads/}
+      - 
+        name: Buildx for PR
+        if: github.event_name == 'pull_request'
+        uses: ilteoood/docker_buildx@1.1.0
+        with:
+          imageName: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
+          tag: testing,testing-pr-${{ github.event.pull_request.number }}
           dockerFile: Dockerfile
           publish: true
           platform: linux/amd64,linux/arm/v7,linux/arm64
           dockerUser: ${{ env.DOCKERHUB_USER }}
           dockerPassword: ${{ secrets.DOCKERHUB_PASS }}
       -
-        name: push README to Dockerhub
-        uses: christian-korneck/update-container-description-action@v1
-        env:
-          DOCKER_USER: ${{ env.DOCKERHUB_USER }}
-          DOCKER_PASS: ${{ secrets.DOCKERHUB_PASS }}
-        with:
-          destination_container_repo: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
-          provider: dockerhub
-          short_description: ${{ steps.vars.outputs.github_desc }}
-          readme_file: 'README.md'
-      -
-        name: Send Notification
+        name: Notification for PR
         uses: sarisia/actions-status-discord@v1
-        if: always()
+        if: always() && (github.event_name == 'pull_request')
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           status: ${{ job.status }}
           description: |
             Image: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
-            Tags: latest, ${{ steps.vars.outputs.ydl_ver }}
+            Tags:
+              - testing
+              - testing-pr-${{ github.event.pull_request.number }}
+      - 
+        name: Buildx for push
+        if: github.event_name == 'push' && !(github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        uses: ilteoood/docker_buildx@1.1.0
+        with:
+          imageName: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
+          tag: testing,testing-br-${{ steps.vars.outputs.github_branch }}
+          dockerFile: Dockerfile
+          publish: true
+          platform: linux/amd64,linux/arm/v7,linux/arm64
+          dockerUser: ${{ env.DOCKERHUB_USER }}
+          dockerPassword: ${{ secrets.DOCKERHUB_PASS }}
+      -
+        name: Notification for push
+        uses: sarisia/actions-status-discord@v1
+        if: always() && github.event_name == 'push' && !(github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          description: |
+            Image: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
+            Tags:
+              - testing
+              - testing-br-${{ steps.vars.outputs.github_branch }}
+      - 
+        name: Buildx
+        if: (github.event_name != 'push' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && (github.event_name != 'pull_request')
+        uses: ilteoood/docker_buildx@1.1.0
+        with:
+          imageName: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
+          tag: latest,${{ steps.vars.outputs.app_ver }}
+          dockerFile: Dockerfile
+          publish: true
+          platform: linux/amd64,linux/arm/v7,linux/arm64
+          dockerUser: ${{ env.DOCKERHUB_USER }}
+          dockerPassword: ${{ secrets.DOCKERHUB_PASS }}
+      -
+        name: Update Dockerhub description
+        if: (github.event_name != 'push' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && (github.event_name != 'pull_request')
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ env.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_PASS }}
+          repository: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
+          short-description: ${{ steps.vars.outputs.github_desc }}
+      -
+        name: Notification
+        uses: sarisia/actions-status-discord@v1
+        if: always() && (github.event_name != 'push' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && (github.event_name != 'pull_request')
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          description: |
+            Image: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
+            Tags:
+              - latest
+              - ${{ steps.vars.outputs.app_ver }}
