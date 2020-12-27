@@ -98,7 +98,7 @@ def api_logs_purge():
 def api_queue_download():
     if (app_config['ydl_server'].get('update_poll_delay_min') and
             (datetime.now() - ydlhandler.ydl_last_update).seconds >
-            app_config['ydl_server'].get('update_poll_delay_min')):
+            app_config['ydl_server'].get('update_poll_delay_min') * 60):
         job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
         jobshandler.put((Actions.INSERT, job))
 
