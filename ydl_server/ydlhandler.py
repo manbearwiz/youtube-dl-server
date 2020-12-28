@@ -78,7 +78,7 @@ def reload_youtube_dl():
             try:
                 importlib.reload(sys.modules[module])
             except ModuleNotFoundError:
-                print("ModuleNotFoundError:\n" + sys.modules[module])
+                print("ModuleNotFoundError:\n" + module)
 
 def update():
     if os.environ.get('YDL_PYTHONPATH'):
