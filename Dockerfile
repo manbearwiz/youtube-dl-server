@@ -1,4 +1,4 @@
-FROM lsiobase/alpine:3.12
+FROM ghcr.io/linuxserver/baseimage-alpine:3.12
 
 ENV XDG_CACHE_HOME /tmp
 
