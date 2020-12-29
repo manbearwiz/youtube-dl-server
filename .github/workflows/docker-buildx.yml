@@ -7,7 +7,7 @@ on:
     - cron: "0 21 * * 5"
   push:
     branches:
-      - '*'
+      - 'main'
   pull_request:
 
 env:
@@ -72,32 +72,8 @@ jobs:
               - testing
               - testing-pr-${{ github.event.pull_request.number }}
       - 
-        name: Buildx for push
-        if: github.event_name == 'push' && !(github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
-        uses: ilteoood/docker_buildx@1.1.0
-        with:
-          imageName: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
-          tag: testing,testing-br-${{ steps.vars.outputs.github_branch }}
-          dockerFile: Dockerfile
-          publish: true
-          platform: linux/amd64,linux/arm/v7,linux/arm64
-          dockerUser: ${{ env.DOCKERHUB_USER }}
-          dockerPassword: ${{ secrets.DOCKERHUB_PASS }}
-      -
-        name: Notification for push
-        uses: sarisia/actions-status-discord@v1
-        if: always() && github.event_name == 'push' && !(github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          status: ${{ job.status }}
-          description: |
-            Image: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
-            Tags:
-              - testing
-              - testing-br-${{ steps.vars.outputs.github_branch }}
-      - 
         name: Buildx
-        if: (github.event_name != 'push' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && (github.event_name != 'pull_request')
+        if: (github.event_name != 'pull_request')
         uses: ilteoood/docker_buildx@1.1.0
         with:
           imageName: ${{ env.DOCKERHUB_USER }}/${{ env.DOCKERHUB_REPO }}
@@ -109,7 +85,7 @@ jobs:
           dockerPassword: ${{ secrets.DOCKERHUB_PASS }}
       -
         name: Update Dockerhub description
-        if: (github.event_name != 'push' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && (github.event_name != 'pull_request')
+        if: (github.event_name != 'pull_request')
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ env.DOCKERHUB_USER }}
@@ -119,7 +95,7 @@ jobs:
       -
         name: Notification
         uses: sarisia/actions-status-discord@v1
-        if: always() && (github.event_name != 'push' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && (github.event_name != 'pull_request')
+        if: always() && (github.event_name != 'pull_request')
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           status: ${{ job.status }}
