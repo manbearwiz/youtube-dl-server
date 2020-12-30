@@ -14,6 +14,13 @@ from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from ydl_server import jobshandler
 from ydl_server.config import app_config
 
+def get_ydl_website():
+    import pip._internal.commands.show as pipshow
+    info = list(pipshow.search_packages_info([ydl_module_name]))
+    if len(info) < 1 or 'home-page' not in info[0]:
+        return ''
+    return info[0]['home-page']
+
 ydl_module = None
 ydl_module_name = None
 ydl_last_update = datetime.now()
@@ -32,6 +39,8 @@ else:
 if ydl_module is None:
     raise ImportError('No youtube_dl implementation found')
 ydl_module_name = ydl_module.__name__.replace('_', '-')
+
+ydl_website = get_ydl_website()
 
 print('Using {} module'.format(ydl_module_name))
 
@@ -186,13 +195,6 @@ def resume_pending():
 def join():
     if thread is not None:
         return thread.join()
-
-def get_ydl_website():
-    import pip._internal.commands.show as pipshow
-    info = list(pipshow.search_packages_info([ydl_module_name]))
-    if len(info) < 1 or 'home-page' not in info[0]:
-        return ''
-    return info[0]['home-page']
 
 def get_ydl_version():
     return ydl_module.version.__version__

@@ -13,21 +13,21 @@ def front_index():
     return template('./ydl_server/templates/index.html',
             ydl_version=ydlhandler.get_ydl_version(),
             ydl_name=ydlhandler.ydl_module_name,
-            ydl_website=ydlhandler.get_ydl_website())
+            ydl_website=ydlhandler.ydl_website)
 
 @app.route('/logs')
 def front_logs():
     return template('./ydl_server/templates/logs.html',
             ydl_version=ydlhandler.get_ydl_version(),
             ydl_name=ydlhandler.ydl_module_name,
-            ydl_website=ydlhandler.get_ydl_website())
+            ydl_website=ydlhandler.ydl_website)
 
 @app.route('/finished')
 def front_finished():
     return template('./ydl_server/templates/finished.html',
             ydl_version=ydlhandler.get_ydl_version(),
             ydl_name=ydlhandler.ydl_module_name,
-            ydl_website=ydlhandler.get_ydl_website())
+            ydl_website=ydlhandler.ydl_website)
 
 
 @app.route('/api/finished')
