@@ -127,6 +127,7 @@ class JobsDB:
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM jobs;")
         self.conn.commit()
+        self.conn.execute("VACUUM")
 
     def get_all(self, limit=50):
         cursor = self.conn.cursor()
