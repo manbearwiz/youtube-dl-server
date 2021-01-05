@@ -13,7 +13,7 @@ RUN mkdir -p /usr/src/app
 
 
 COPY ./bootstrap.sh /usr/src/app/
-COPY ./config.yml /usr/src/app/
+COPY ./config.yml /usr/src/app/default_config.yml
 COPY ./ydl_server /usr/src/app/ydl_server
 COPY ./youtube-dl-server.py /usr/src/app/
 
@@ -24,6 +24,8 @@ RUN apk add --no-cache wget && ./bootstrap.sh && apk del wget
 
 EXPOSE 8080
 
-VOLUME ["/youtube-dl"]
+VOLUME "/youtube-dl"
+VOLUME "/app_config"
+
 ENV YOUTUBE_DL=$YOUTUBE_DL
 CMD [ "python", "-u", "./youtube-dl-server.py" ]
