@@ -21,9 +21,10 @@ def get_ydl_website():
         return ''
     return info[0]['home-page']
 
+
 ydl_module = None
 ydl_module_name = None
-ydl_last_update = datetime.now()
+app_config['ydl_last_update'] = datetime.now()
 
 modules = ['youtube-dl', 'youtube-dlc']
 
@@ -48,18 +49,23 @@ queue = Queue()
 thread = None
 done = False
 
+
 def start():
     thread = Thread(target=worker)
     thread.start()
 
+
 def put(obj):
     queue.put(obj)
+
 
 def finish():
     done = True
 
+
 def read_proc_stdout(proc, strio):
     strio.write(proc.stdout.read1().decode())
+
 
 def worker():
     while not done:
@@ -81,6 +87,7 @@ def worker():
         jobshandler.put((Actions.UPDATE, job))
         queue.task_done()
 
+
 def reload_youtube_dl():
     for module in list(sys.modules.keys()):
         if 'youtube' in module:
@@ -88,6 +95,7 @@ def reload_youtube_dl():
                 importlib.reload(sys.modules[module])
             except ModuleNotFoundError:
                 print("ModuleNotFoundError:\n" + module)
+
 
 def update():
     if os.environ.get('YDL_PYTHONPATH'):
@@ -97,9 +105,10 @@ def update():
     proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     out, err = proc.communicate()
     if proc.wait() == 0:
-        ydl_last_update = datetime.now()
+        app_config['ydl_last_update'] = datetime.now()
         reload_youtube_dl()
     return proc.returncode, str(out.decode('utf-8'))
+
 
 def get_ydl_options(app_config, request_options):
     req_format = request_options.get('format', 'best')
@@ -114,12 +123,14 @@ def get_ydl_options(app_config, request_options):
         app_config.update({'format': req_format})
     return app_config
 
+
 def download_log_update(job, proc, strio):
     while job.status == Job.RUNNING:
         read_proc_stdout(proc, strio)
         job.log = Job.clean_logs(strio.getvalue())
         jobshandler.put((Actions.SET_LOG, (job.id, job.log)))
         sleep(3)
+
 
 def fetch_metadata(url):
     ydl_opts = app_config.get('ydl_options', {})
@@ -134,6 +145,7 @@ def fetch_metadata(url):
 
     return 0, json.loads(stdout)
 
+
 def get_ydl_full_cmd(opt_dict, url):
     cmd = [ydl_module_name]
     if opt_dict is not None:
@@ -145,6 +157,7 @@ def get_ydl_full_cmd(opt_dict, url):
                 cmd.append(str(val))
     cmd.append(url)
     return cmd
+
 
 def download(job, request_options, output):
     ydl_opts = get_ydl_options(app_config.get('ydl_options', {}), request_options)
@@ -179,6 +192,7 @@ def download(job, request_options, output):
         print("Error during download task:\n" + output.getvalue())
     stdout_thread.join()
 
+
 def resume_pending():
     db = JobsDB(readonly=False)
     jobs = db.get_all()
@@ -192,12 +206,15 @@ def resume_pending():
             job.id = pending["id"]
             jobshandler.put((Actions.RESUME, job))
 
+
 def join():
     if thread is not None:
         return thread.join()
 
+
 def get_ydl_version():
     return ydl_module.version.__version__
+
 
 def get_ydl_extractors():
     return [ie.IE_NAME for ie in ydl_module.extractor.list_extractors(app_config['ydl_options'].get('age-limit')) if ie._WORKING]
