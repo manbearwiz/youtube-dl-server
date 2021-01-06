@@ -64,12 +64,20 @@ This is an example service definition that could be put in `docker-compose.yml`.
 
 Configuration is done through the config.yml file at the root of the project.
 
-An alternate configuration file path can be forced by setting the environment
+An alternate configuration path or file path can be forced by setting the environment
 variable `YDL_CONFIG_PATH`:
 
 ```shell
 export YDL_CONFIG_PATH=/var/local/youtube-dl-server/config.yml
 ```
+
+In the above case, if `/var/local/youtube-dl-server/config.yml` does not exist, it will be created with the default options.
+
+```shell
+export YDL_CONFIG_PATH=/var/local/youtube-dl-server/
+```
+
+In the above case, if `/var/local/youtube-dl-server/config.yml` does not exist, it will be created with the default options as well.
 
 The configuration file must contain at least the following variables:
 
