@@ -13,7 +13,7 @@ def copy_default_config(config_file_path):
 
 def get_config_file_path():
     config_path = os.environ.get(
-        'YDL_CONFIG_PATH', '/app_config')
+        'YDL_CONFIG_PATH', os.getcwd())
     if '.' in os.path.basename(config_path):
         return config_path
     return os.path.join(config_path, 'config.yml')
