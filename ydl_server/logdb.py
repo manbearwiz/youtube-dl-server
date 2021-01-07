@@ -1,14 +1,9 @@
-import os
 import sqlite3
 import re
-from queue import Queue
-from threading import Thread
 from ydl_server.config import app_config
 
-STATUS_NAME =["Running",
-        "Completed",
-        "Failed",
-        "Pending"]
+STATUS_NAME = ["Running", "Completed", "Failed", "Pending"]
+
 
 class Actions:
     DOWNLOAD = 1
@@ -20,9 +15,11 @@ class Actions:
     SET_STATUS = 7
     SET_LOG = 8
 
+
 class JobType:
     YDL_DOWNLOAD = 0
     YDL_UPDATE = 1
+
 
 class Job:
     RUNNING = 0
@@ -50,6 +47,7 @@ class Job:
             if len(line) > 0:
                 clean = '%s%s\n' % (clean, line)
         return clean
+
 
 class JobsDB:
 
@@ -85,7 +83,6 @@ class JobsDB:
         self.conn = sqlite3.connect("file://%s%s" % (app_config['ydl_server'].get('metadata_db_path'),
                                             "?mode=ro" if readonly else ""),
                                     uri=True)
-
 
     def close(self):
         self.conn.close()

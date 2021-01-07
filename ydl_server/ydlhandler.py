@@ -14,6 +14,7 @@ from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from ydl_server import jobshandler
 from ydl_server.config import app_config
 
+
 def get_ydl_website():
     import pip._internal.commands.show as pipshow
     info = list(pipshow.search_packages_info([ydl_module_name]))
@@ -116,7 +117,7 @@ def get_ydl_options(app_config, request_options):
         app_config.update({'extract-audio': None})
         app_config.update({'audio-format': req_format.split('/')[-1]})
     elif req_format.startswith('video/'):
-        # youtube-dl will download BEST video and audio by default, so just don't pass in "format".
+        # youtube-dl downloads BEST video and audio by default
         if req_format != 'video/best':
             app_config.update({'format': req_format.split('/')[-1]})
     else:
@@ -160,7 +161,8 @@ def get_ydl_full_cmd(opt_dict, url):
 
 
 def download(job, request_options, output):
-    ydl_opts = get_ydl_options(app_config.get('ydl_options', {}), request_options)
+    ydl_opts = get_ydl_options(app_config.get('ydl_options', {}),
+                               request_options)
     cmd = get_ydl_full_cmd(ydl_opts, job.url)
 
     rc, metadata = fetch_metadata(job.url)
@@ -178,7 +180,7 @@ def download(job, request_options, output):
     cmd = get_ydl_full_cmd(ydl_opts, job.url)
     proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
     stdout_thread = Thread(target=download_log_update,
-            args=(job, proc, output))
+                           args=(job, proc, output))
     stdout_thread.start()
 
     if proc.wait() == 0:

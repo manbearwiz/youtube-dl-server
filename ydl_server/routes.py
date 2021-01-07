@@ -1,4 +1,4 @@
-from bottle import route, run, request, static_file, template, response
+from bottle import request, static_file, template, response
 import json
 from datetime import datetime
 from operator import itemgetter
@@ -11,23 +11,25 @@ from ydl_server.logdb import JobsDB, Job, Actions, JobType
 @app.route(['/', '/index'])
 def front_index():
     return template('./ydl_server/templates/index.html',
-            ydl_version=ydlhandler.get_ydl_version(),
-            ydl_name=ydlhandler.ydl_module_name,
-            ydl_website=ydlhandler.ydl_website)
+                    ydl_version=ydlhandler.get_ydl_version(),
+                    ydl_name=ydlhandler.ydl_module_name,
+                    ydl_website=ydlhandler.ydl_website)
+
 
 @app.route('/logs')
 def front_logs():
     return template('./ydl_server/templates/logs.html',
-            ydl_version=ydlhandler.get_ydl_version(),
-            ydl_name=ydlhandler.ydl_module_name,
-            ydl_website=ydlhandler.ydl_website)
+                    ydl_version=ydlhandler.get_ydl_version(),
+                    ydl_name=ydlhandler.ydl_module_name,
+                    ydl_website=ydlhandler.ydl_website)
+
 
 @app.route('/finished')
 def front_finished():
     return template('./ydl_server/templates/finished.html',
-            ydl_version=ydlhandler.get_ydl_version(),
-            ydl_name=ydlhandler.ydl_module_name,
-            ydl_website=ydlhandler.ydl_website)
+                    ydl_version=ydlhandler.get_ydl_version(),
+                    ydl_name=ydlhandler.ydl_module_name,
+                    ydl_website=ydlhandler.ydl_website)
 
 
 @app.route('/api/finished')
@@ -49,18 +51,22 @@ def api_list_finished():
         "files": files
         }
 
+
 @app.route('/api/finished/:filename#.*#')
 def api_serve_finished_file(filename):
     root_dir = Path(app_config['ydl_options'].get('output')).parent
     return static_file(filename, root=root_dir)
 
+
 @app.route('/static/:filename#.*#')
 def server_static(filename):
     return static_file(filename, root='./ydl_server/static')
 
+
 @app.route('/api/extractors')
 def api_list_extractors():
     return json.dumps(ydlhandler.get_ydl_extractors())
+
 
 @app.route('/api/downloads/stats', method='GET')
 def api_queue_size():
@@ -77,10 +83,12 @@ def api_queue_size():
         }
     }
 
+
 @app.route('/api/downloads', method='GET')
 def api_logs():
     db = JobsDB(readonly=True)
     return json.dumps(db.get_all())
+
 
 @app.route('/api/downloads', method='DELETE')
 def api_logs_purge():
@@ -102,11 +110,13 @@ def api_queue_download():
     if not url:
         return {"success": False, "error": "'url' query parameter omitted"}
 
-    job = Job(url, Job.PENDING, "", JobType.YDL_DOWNLOAD, request.forms.get("format"), url)
+    job = Job(url, Job.PENDING, "", JobType.YDL_DOWNLOAD,
+              request.forms.get("format"), url)
     jobshandler.put((Actions.INSERT, job))
 
     print("Added url " + url + " to the download queue")
     return {"success": True, "url": url, "options": options}
+
 
 @app.route('/api/metadata', method='POST')
 def api_metadata_fetch():
@@ -116,8 +126,10 @@ def api_metadata_fetch():
         return stdout
     response.status = 404
 
+
 @app.route("/api/youtube-dl/update", method="GET")
 def ydl_update():
-    job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
+    job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None,
+              None)
     jobshandler.put((Actions.INSERT, job))
     return {"success": True}
