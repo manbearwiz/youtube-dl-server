@@ -8,7 +8,7 @@ FROM python:alpine
 ARG YOUTUBE_DL=youtube_dl
 
 RUN apk add --no-cache ffmpeg tzdata
-RUN pip install --no-cache-dir bottle pyyaml ${YOUTUBE_DL}
+RUN pip install --no-cache-dir starlette uvicorn aiofiles jinja2 python-multipart pyyaml ${YOUTUBE_DL}
 RUN mkdir -p /usr/src/app
 
 
