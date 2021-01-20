@@ -1,10 +1,15 @@
 from __future__ import unicode_literals
+from starlette.applications import Starlette
+from starlette.staticfiles import StaticFiles
+from starlette.responses import HTMLResponse
+from starlette.templating import Jinja2Templates
+import uvicorn
 
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
-from ydl_server import jobshandler, ydlhandler, app
+from ydl_server import jobshandler, ydlhandler
 from ydl_server.config import app_config
 
-from ydl_server import routes
+from ydl_server.routes import routes
 
 
 JobsDB.check_db_latest()
@@ -22,11 +27,16 @@ jobshandler.put((Actions.INSERT, job))
 
 ydlhandler.resume_pending()
 
-app.run(host=app_config['ydl_server'].get('host'),
-        port=app_config['ydl_server'].get('port'),
-        debug=app_config['ydl_server'].get('debug', False))
+app = Starlette(routes=routes, debug=app_config['ydl_server'].get('debug', False))
 
 ydlhandler.finish()
 jobshandler.finish()
 ydlhandler.join()
 jobshandler.join()
+
+if __name__ == "__main__":
+    uvicorn.run(app,
+                host=app_config['ydl_server'].get('host'),
+                port=app_config['ydl_server'].get('port'),
+                log_level=('debug' if app_config['ydl_server'].get(
+                    'debug', False) else 'info'))
