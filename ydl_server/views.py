@@ -4,7 +4,6 @@ from starlette.templating import Jinja2Templates
 from operator import itemgetter
 from pathlib import Path
 from ydl_server.config import app_config
-from ydl_server import jobshandler, ydlhandler
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from datetime import datetime
 
@@ -37,9 +36,9 @@ async def front_logs(request):
 async def front_finished(request):
     context = {
         'request': request,
-        'ydl_version': ydlhandler.get_ydl_version(),
-        'ydl_name': ydlhandler.ydl_module_name,
-        'ydl_website': ydlhandler.ydl_website
+        'ydl_version': request.app.state.ydlhandler.get_ydl_version(),
+        'ydl_name': request.app.state.ydlhandler.ydl_module_name,
+        'ydl_website': request.app.state.ydlhandler.ydl_website
     }
     return templates.TemplateResponse('finished.html',
                                       context=context)
