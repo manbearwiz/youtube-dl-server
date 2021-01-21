@@ -49,11 +49,13 @@ class YdlHandler:
         modules = ['youtube-dl', 'youtube-dlc']
 
         if os.environ.get('YOUTUBE_DL') in modules:
-            self.ydl_module = importlib.import_module(os.environ.get('YOUTUBE_DL').replace('-','_'))
+            self.ydl_module = importlib.import_module(
+                os.environ.get('YOUTUBE_DL').replace('-', '_'))
         else:
             for module in modules:
                 try:
-                    self.ydl_module = importlib.import_module(module.replace('-', '_'))
+                    self.ydl_module = importlib.import_module(
+                        module.replace('-', '_'))
                     break
                 except ImportError:
                     pass
@@ -86,8 +88,10 @@ class YdlHandler:
                     self.download(job, {'format': job.format}, output)
                 except Exception as e:
                     job.status = Job.FAILED
-                    job.log = "Error during download task:\n{}:\n\t{}".format(type(e).__name__, str(e))
-                    print("Error during download task:\n{}:\n\t{}".format(type(e).__name__, str(e)))
+                    job.log = "Error during download task:\n{}:\n\t{}"\
+                        .format(type(e).__name__, str(e))
+                    print("Error during download task:\n{}:\n\t{}"\
+                        .format(type(e).__name__, str(e)))
             elif job.type == JobType.YDL_UPDATE:
                 rc, log = self.update()
                 job.log = Job.clean_logs(log)
@@ -97,10 +101,20 @@ class YdlHandler:
 
     def update(self):
         if os.environ.get('YDL_PYTHONPATH'):
-            command = ["pip", "install", "--no-cache-dir", "-t", os.environ.get('YDL_PYTHONPATH'), "--upgrade", self.ydl_module_name]
+            command = [
+                "pip", "install", "--no-cache-dir",
+                "-t", os.environ.get('YDL_PYTHONPATH'),
+                "--upgrade", self.ydl_module_name
+                ]
         else:
-            command = ["pip", "install", "--no-cache-dir", "--upgrade", self.ydl_module_name]
-        proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            command = [
+                "pip", "install", "--no-cache-dir",
+                "--upgrade", self.ydl_module_name
+                ]
+        proc = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT)
         out, err = proc.communicate()
         if proc.wait() == 0:
             self.app_config['ydl_last_update'] = datetime.now()
@@ -154,7 +168,7 @@ class YdlHandler:
 
     def download(self, job, request_options, output):
         ydl_opts = self.get_ydl_options(self.app_config.get('ydl_options', {}),
-                                request_options)
+                                        request_options)
         cmd = self.get_ydl_full_cmd(ydl_opts, job.url)
 
         rc, metadata = self.fetch_metadata(job.url)
@@ -163,10 +177,14 @@ class YdlHandler:
             job.status = Job.FAILED
             raise Exception(job.log)
 
-        self.jobshandler.put((Actions.SET_NAME, (job.id, metadata.get('title', job.url))))
+        self.jobshandler.put((Actions.SET_NAME,
+                             (job.id, metadata.get('title', job.url))))
 
         if metadata.get('_type') == 'playlist':
-            ydl_opts.update({'output': self.app_config['ydl_server'].get('output_playlist', ydl_opts.get('output'))})
+            ydl_opts.update({
+                'output': self.app_config['ydl_server']
+                    .get('output_playlist', ydl_opts.get('output'))
+                })
 
         cmd = self.get_ydl_full_cmd(ydl_opts, job.url)
 
@@ -189,13 +207,17 @@ class YdlHandler:
     def resume_pending(self):
         db = JobsDB(readonly=False)
         jobs = db.get_all()
-        not_endeds = [job for job in jobs if job['status'] == "Pending" or job['status'] == 'Running']
+        not_endeds = [job for job in jobs if job['status'] == "Pending"
+                      or job['status'] == 'Running']
         for pending in not_endeds:
             if int(pending["type"]) == JobType.YDL_UPDATE:
-                self.jobshandler.put((Actions.SET_STATUS, (pending["id"], Job.FAILED)))
+                self.jobshandler.put((Actions.SET_STATUS,
+                                     (pending["id"], Job.FAILED)))
             else:
-                job = Job(pending["name"], Job.PENDING, "Queue stopped",
-                        int(pending["type"]), pending["format"], pending["url"])
+                job = Job(pending["name"],
+                          Job.PENDING, "Queue stopped",
+                          int(pending["type"]),
+                          pending["format"], pending["url"])
                 job.id = pending["id"]
                 self.jobshandler.put((Actions.RESUME, job))
 
@@ -207,4 +229,7 @@ class YdlHandler:
         return self.ydl_module.version.__version__
 
     def get_ydl_extractors(self):
-        return [ie.IE_NAME for ie in self.ydl_module.extractor.list_extractors(self.app_config['ydl_options'].get('age-limit')) if ie._WORKING]
+        return [ie.IE_NAME for ie in self.ydl_module.extractor
+                .list_extractors(
+                    self.app_config['ydl_options'].get('age-limit')
+                    ) if ie._WORKING]
