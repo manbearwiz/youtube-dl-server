@@ -119,8 +119,7 @@ async def api_queue_download(request):
 
 async def api_metadata_fetch(request):
     data = await request.form()
-    url = data.get("url")
-    rc, stdout = request.app.state.ydlhandler.fetch_metadata(url)
+    rc, stdout = request.app.state.ydlhandler.fetch_metadata(data.get("url"))
     if rc == 0:
         return JSONResponse(stdout)
     return JSONResponse({}, status_code=404)
