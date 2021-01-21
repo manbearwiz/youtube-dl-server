@@ -15,9 +15,9 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 async def front_index(request):
     context = {
         'request': request,
-        'ydl_version': ydlhandler.get_ydl_version(),
-        'ydl_name': ydlhandler.ydl_module_name,
-        'ydl_website': ydlhandler.ydl_website
+        'ydl_version': request.app.state.ydlhandler.get_ydl_version(),
+        'ydl_name': request.app.state.ydlhandler.ydl_module_name,
+        'ydl_website': request.app.state.ydlhandler.ydl_website
     }
     return templates.TemplateResponse('index.html',
                                       context=context)
@@ -26,9 +26,9 @@ async def front_index(request):
 async def front_logs(request):
     context = {
         'request': request,
-        'ydl_version': ydlhandler.get_ydl_version(),
-        'ydl_name': ydlhandler.ydl_module_name,
-        'ydl_website': ydlhandler.ydl_website
+        'ydl_version': request.app.state.ydlhandler.get_ydl_version(),
+        'ydl_name': request.app.state.ydlhandler.ydl_module_name,
+        'ydl_website': request.app.state.ydlhandler.ydl_website
     }
     return templates.TemplateResponse('logs.html',
                                       context=context)
@@ -65,7 +65,7 @@ async def api_list_finished(request):
 
 
 async def api_list_extractors(request):
-    return JSONResponse(ydlhandler.get_ydl_extractors())
+    return JSONResponse(request.app.state.ydlhandler.get_ydl_extractors())
 
 
 async def api_queue_size(request):
@@ -74,7 +74,7 @@ async def api_queue_size(request):
     return JSONResponse({
         "success": True,
         "stats": {
-            "queue": ydlhandler.queue.qsize(),
+            "queue": request.app.state.ydlhandler.queue.qsize(),
             "pending": len([job for job in jobs if job['status'] == "Pending"]),
             "running": len([job for job in jobs if job['status'] == "Running"]),
             "completed": len([job for job in jobs if job['status'] == "Completed"]),
@@ -121,7 +121,7 @@ async def api_queue_download(request):
 async def api_metadata_fetch(request):
     data = await request.form()
     url = data.get("url")
-    rc, stdout = ydlhandler.fetch_metadata(url)
+    rc, stdout = request.app.state.ydlhandler.fetch_metadata(url)
     if rc == 0:
         return JSONResponse(stdout)
     return JSONResponse({}, status_code=404)
