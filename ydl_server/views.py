@@ -89,7 +89,7 @@ async def api_logs(request):
 
 
 async def api_logs_purge(request):
-    jobshandler.put((Actions.PURGE_LOGS, None))
+    request.app.state.jobshandler.put((Actions.PURGE_LOGS, None))
     return JSONResponse({"success": True})
 
 
@@ -99,7 +99,7 @@ async def api_queue_download(request):
             (datetime.now() - app_config['ydl_last_update']).seconds >
             app_config['ydl_server'].get('update_poll_delay_min') * 60):
         job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
-        jobshandler.put((Actions.INSERT, job))
+        request.app.state.jobshandler.put((Actions.INSERT, job))
 
     url = data.get("url")
     options = {'format': data.get("format")}
@@ -112,7 +112,7 @@ async def api_queue_download(request):
 
     job = Job(url, Job.PENDING, "", JobType.YDL_DOWNLOAD,
               data.get("format"), url)
-    jobshandler.put((Actions.INSERT, job))
+    request.app.state.jobshandler.put((Actions.INSERT, job))
 
     print("Added url " + url + " to the download queue")
     return JSONResponse({"success": True, "url": url, "options": options})
@@ -130,7 +130,7 @@ async def api_metadata_fetch(request):
 async def ydl_update(request):
     job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None,
               None)
-    jobshandler.put((Actions.INSERT, job))
+    request.app.state.jobshandler.put((Actions.INSERT, job))
     return JSONResponse({
         "success": True,
         })
