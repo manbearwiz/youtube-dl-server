@@ -12,31 +12,31 @@ from ydl_server.config import app_config
 from ydl_server.routes import routes
 
 
-JobsDB.check_db_latest()
-JobsDB.init_db()
-
-ydlhandler.start()
-print("Started download thread")
-jobshandler.start(ydlhandler.queue)
-print("Started jobs manager thread")
-
-
-print("Updating youtube-dl to the newest version")
-job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
-jobshandler.put((Actions.INSERT, job))
-
-ydlhandler.resume_pending()
-
-app = Starlette(routes=routes, debug=app_config['ydl_server'].get('debug', False))
-
-ydlhandler.finish()
-jobshandler.finish()
-ydlhandler.join()
-jobshandler.join()
-
 if __name__ == "__main__":
+
+    JobsDB.check_db_latest()
+    JobsDB.init_db()
+
+    ydlhandler.start()
+    print("Started download thread")
+    jobshandler.start(ydlhandler.queue)
+    print("Started jobs manager thread")
+
+
+    print("Updating youtube-dl to the newest version")
+    job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
+    jobshandler.put((Actions.INSERT, job))
+
+    ydlhandler.resume_pending()
+
+    app = Starlette(routes=routes, debug=app_config['ydl_server'].get('debug', False))
     uvicorn.run(app,
                 host=app_config['ydl_server'].get('host'),
                 port=app_config['ydl_server'].get('port'),
                 log_level=('debug' if app_config['ydl_server'].get(
                     'debug', False) else 'info'))
+
+    ydlhandler.finish()
+    jobshandler.finish()
+    ydlhandler.join()
+    jobshandler.join()

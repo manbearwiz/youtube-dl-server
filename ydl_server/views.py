@@ -90,7 +90,7 @@ async def api_logs(request):
 
 async def api_logs_purge(request):
     jobshandler.put((Actions.PURGE_LOGS, None))
-    JSONResponse({"success": True})
+    return JSONResponse({"success": True})
 
 
 async def api_queue_download(request):
@@ -105,7 +105,10 @@ async def api_queue_download(request):
     options = {'format': data.get("format")}
 
     if not url:
-        return JSONResponse({"success": False, "error": "'url' query parameter omitted"})
+        return JSONResponse({
+            "success": False,
+            "error": "'url' query parameter omitted"
+            })
 
     job = Job(url, Job.PENDING, "", JobType.YDL_DOWNLOAD,
               data.get("format"), url)
