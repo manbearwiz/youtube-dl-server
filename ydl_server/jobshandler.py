@@ -1,6 +1,6 @@
 from queue import Queue
 from threading import Thread
-from ydl_server.logdb import JobsDB, Job, Actions
+from ydl_server.logdb import JobsDB, Actions
 
 
 class JobsHandler:
@@ -9,23 +9,18 @@ class JobsHandler:
         self.thread = None
         self.done = False
 
-
     def start(self, dl_queue):
         self.thread = Thread(target=self.worker, args=(dl_queue,))
         self.thread.start()
 
-
     def stop(self):
         self.done = True
-
 
     def put(self, obj):
         self.queue.put(obj)
 
-
     def finish(self):
         self.done = True
-
 
     def worker(self, dl_queue):
         db = JobsDB(readonly=False)
@@ -53,7 +48,6 @@ class JobsHandler:
             elif action == Actions.CLEAN_LOGS:
                 db.clean_old_jobs()
             self.queue.task_done()
-
 
     def join(self):
         if self.thread is not None:
