@@ -7,10 +7,10 @@
 FROM python:alpine
 ARG YOUTUBE_DL=youtube_dl
 
-RUN apk add --no-cache ffmpeg tzdata
-RUN pip install --no-cache-dir starlette uvicorn aiofiles jinja2 python-multipart pyyaml ${YOUTUBE_DL}
 RUN mkdir -p /usr/src/app
-
+RUN apk add --no-cache ffmpeg tzdata
+COPY ./requirements.txt /usr/src/app/
+RUN sed -i s/youtube-dl/${YOUTUBE_DL}/ /usr/src/app/requirements.txt && pip install --no-cache-dir -r /usr/src/app/requirements.txt
 
 COPY ./bootstrap.sh /usr/src/app/
 COPY ./config.yml /usr/src/app/default_config.yml
