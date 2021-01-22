@@ -5,7 +5,7 @@
 # youtube-dl-server
 
 Simple Web and REST interface for downloading youtube videos onto a server.
-[`bottle`](https://github.com/bottlepy/bottle) +
+[`starlette`](https://www.starlette.io/) +
 [`youtube-dl`](https://github.com/rg3/youtube-dl) /
 [`youtube-dlc`](https://github.com/blackjack4494/yt-dlc)
 
@@ -114,8 +114,11 @@ ydl_options:
 If you have python ^3.3.0 installed in your PATH you can simply run like this,
 providing optional environment variable overrides inline.
 
-You will need `bottle`, `pyyaml` and either `youtube-dl` or `youtube-dlc`
-installed locally.
+Install the python dependencies from `requirements.txt`:
+
+```shell
+pip install -r requirements.txt
+```
 
 You can run
 [bootstrap.sh](https://github.com/nbr23/youtube-dl-server/blob/master/bootstrap.sh)
@@ -195,7 +198,7 @@ scenarios.
 
 ## Implementation
 
-The server uses [`bottle`](https://github.com/bottlepy/bottle) for the web
+The server uses [`starlette`](https://www.starlette.io/) for the web
 framework and [`youtube-dl`](https://github.com/rg3/youtube-dl) /
 [`youtube-dlc`](https://github.com/blackjack4494/yt-dlc) to handle the
 downloading. The integration with youtube-dl does NOT use their [python
