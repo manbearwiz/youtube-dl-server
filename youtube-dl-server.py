@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     app = Starlette(routes=routes, debug=app_config['ydl_server'].get('debug', False))
 
-    app.state.jobshandler = JobsHandler()
+    app.state.jobshandler = JobsHandler(app_config)
     app.state.ydlhandler = YdlHandler(app_config, app.state.jobshandler)
 
     app.state.ydlhandler.start()

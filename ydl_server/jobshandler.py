@@ -4,10 +4,11 @@ from ydl_server.logdb import JobsDB, Actions
 
 
 class JobsHandler:
-    def __init__(self):
+    def __init__(self, app_config):
         self.queue = Queue()
         self.thread = None
         self.done = False
+        self.app_config = app_config
 
     def start(self, dl_queue):
         self.thread = Thread(target=self.worker, args=(dl_queue,))
@@ -29,6 +30,8 @@ class JobsHandler:
             if action == Actions.PURGE_LOGS:
                 db.purge_jobs()
             elif action == Actions.INSERT:
+                db.clean_old_jobs(self.app_config['ydl_server']
+                                  .get('max_log_entries', 100))
                 db.insert_job(job)
                 dl_queue.put(job)
             elif action == Actions.UPDATE:

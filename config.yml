@@ -5,6 +5,7 @@ ydl_server:   # youtube-dl-server specific settings
   metadata_db_path: '/youtube-dl/.ydl-metadata.db' # Path to metadata DB
   output_playlist: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # Playlist output directory
   update_poll_delay_min: 1440 # Automatically check for updates every 24h
+  max_log_entries: 100 # Maximum number of job log history to keep
 
 ydl_options:  # youtube-dl options
   output: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # output directory
