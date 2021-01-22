@@ -92,6 +92,11 @@ async def api_logs_purge(request):
     return JSONResponse({"success": True})
 
 
+async def api_logs_clean(request):
+    request.app.state.jobshandler.put((Actions.CLEAN_LOGS, None))
+    return JSONResponse({"success": True})
+
+
 async def api_queue_download(request):
     data = await request.form()
     if (app_config['ydl_server'].get('update_poll_delay_min') and

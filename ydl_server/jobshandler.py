@@ -50,6 +50,8 @@ class JobsHandler:
             elif action == Actions.SET_STATUS:
                 job_id, status = job
                 db.set_job_status(job_id, status)
+            elif action == Actions.CLEAN_LOGS:
+                db.clean_old_jobs()
             self.queue.task_done()
 
 

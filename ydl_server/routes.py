@@ -21,6 +21,7 @@ routes = [
     Route("/api/youtube-dl/update", views.ydl_update, name="api_update"),
     Route("/api/downloads/stats", views.api_queue_size, name="api_queue_size"),
     Route("/api/downloads", views.api_logs, name="api_logs"),
+    Route("/api/downloads/clean", views.api_logs_clean, name="api_logs_clean"),
     Route("/api/downloads",
           views.api_logs_purge,
           name="api_logs_purge",

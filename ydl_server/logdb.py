@@ -14,6 +14,7 @@ class Actions:
     SET_NAME = 6
     SET_STATUS = 7
     SET_LOG = 8
+    CLEAN_LOGS = 9
 
 
 class JobType:
@@ -123,6 +124,14 @@ class JobsDB:
     def purge_jobs(self):
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM jobs;")
+        self.conn.commit()
+        self.conn.execute("VACUUM")
+
+    def clean_old_jobs(self, limit=10):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT last_update from jobs ORDER BY last_update DESC LIMIT ?;", (str(limit),))
+        oldest = list(cursor.fetchall())[-1][0]
+        cursor.execute("DELETE FROM jobs WHERE last_update < ? AND status != ? and status != ?;", (oldest, Job.PENDING, Job.RUNNING))
         self.conn.commit()
         self.conn.execute("VACUUM")
 
