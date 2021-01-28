@@ -130,8 +130,9 @@ class JobsDB:
     def clean_old_jobs(self, limit=10):
         cursor = self.conn.cursor()
         cursor.execute("SELECT last_update from jobs ORDER BY last_update DESC LIMIT ?;", (str(limit),))
-        oldest = list(cursor.fetchall())[-1][0]
-        cursor.execute("DELETE FROM jobs WHERE last_update < ? AND status != ? and status != ?;", (oldest, Job.PENDING, Job.RUNNING))
+        rows = list(cursor.fetchall())
+        if len(rows) > 0:
+            cursor.execute("DELETE FROM jobs WHERE last_update < ? AND status != ? and status != ?;", (rows[-1][0], Job.PENDING, Job.RUNNING))
         self.conn.commit()
         self.conn.execute("VACUUM")
 
