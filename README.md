@@ -27,9 +27,11 @@ Force using `youtube-dl` or `youtube-dlc` by using the tags of the same name,
 eg: `nbr23/youtube-dl-server:youtube-dl` and
 `nbr23/youtube-dl-server:youtube-dlc`.
 
-*Note: the legacy version using `config.py` is available on the
-[legacy](https://github.com/nbr23/youtube-dl-server/tree/legacy) branch,
-and through the `legacy` tag on docker.*
+If you plan on using the `--embed-thumbnail` flag in youtube-dl,
+you will need `atomicparsley` embedded in the container.
+
+Use the tags `nbr23/youtube-dl-server:youtube-dl_atomicparsley`
+or `nbr23/youtube-dl-server:youtube-dlc_atomicparsley` to achieve this.
 
 ### Ansible
 
