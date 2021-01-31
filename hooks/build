@@ -1,7 +1,16 @@
 #!/bin/bash
 
+
 YOUTUBE_DL="youtube-dl"
-if [ "$DOCKER_TAG" == "youtube-dl" ] || [ "$DOCKER_TAG" == "youtube-dlc" ]; then
-  YOUTUBE_DL="$DOCKER_TAG"
+ATOMICPARSLEY=0
+
+IFS='_' read -ra DOCKER_TAGS <<< "$DOCKER_TAG"
+
+if [ "${DOCKER_TAGS[0]}" == "youtube-dl" ] || [ "${DOCKER_TAGS[0]}" == "youtube-dlc" ]; then
+  YOUTUBE_DL="${DOCKER_TAGS[0]}"
 fi
-docker build --build-arg YOUTUBE_DL=$YOUTUBE_DL -f $DOCKERFILE_PATH -t $IMAGE_NAME .
+if [ "${#DOCKER_TAGS[1]}"  -gt 0 ] && [ "${DOCKER_TAGS[1]}" == "atomicparsley" ]; then
+  ATOMICPARSLEY=1
+fi
+
+docker build --build-arg YOUTUBE_DL=$YOUTUBE_DL --build-arg ATOMICPARSLEY=$ATOMICPARSLEY -f $DOCKERFILE_PATH -t $IMAGE_NAME .
