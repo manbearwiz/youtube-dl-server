@@ -53,7 +53,7 @@ async def api_list_finished(request):
             'children': sorted([{
                 'name': f2.name,
                 'modified': f2.stat().st_mtime * 1000
-                } for f2 in f1.iterdir() if not f2.name.startswith('.')] if f1.is_dir() else [], key=itemgetter('modified'), reverse=True)
+                } for f2 in f1.iterdir() if not f2.name.startswith('.')], key=itemgetter('modified'), reverse=True) if f1.is_dir() else None
             } for f1 in matches if not f1.name.startswith('.')]
 
     files = sorted(files, key=itemgetter('modified'), reverse=True)

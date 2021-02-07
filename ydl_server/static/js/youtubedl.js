@@ -173,7 +173,7 @@ function get_finished_files(){
     var finished_files = "";
     $.each(data.files, function(key, file) {
       finished_files += "<tr>";
-      if (file.children.length > 0) {
+      if (file.children != null) {
         finished_files += "<td><a role=\"button\" href=\"#dir" + key + "\" data-toggle=\"collapse\" aria-expanded=\"false\" aria-controls=\"dir" + key + "\">" + file.name + "</a>";
         finished_files += "<div class=\"collapse\" id=\"dir" + key + "\"><table class=\"col-md-16 table table-stripped table-md table-dark text-left\">";
         $.each(file.children, function(child_key, child_file) {
