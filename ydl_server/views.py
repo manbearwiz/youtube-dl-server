@@ -3,7 +3,7 @@ from starlette.templating import Jinja2Templates
 
 from operator import itemgetter
 from pathlib import Path
-from ydl_server.config import app_config
+from ydl_server.config import app_config, get_finished_path
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from datetime import datetime
 
@@ -45,7 +45,7 @@ async def front_finished(request):
 
 
 async def api_list_finished(request):
-    root_dir = Path(app_config['ydl_options'].get('output')).parent
+    root_dir = Path(get_finished_path())
     matches = root_dir.glob('*')
 
     files = [{'name': f1.name,

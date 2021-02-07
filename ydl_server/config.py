@@ -34,6 +34,18 @@ def load_config():
     return config
 
 
+def get_finished_path():
+    finished_path = []
+    for s in app_config['ydl_options'].get('output').split('/'):
+        if '%' in s and '%%' not in s:
+            break
+        finished_path.append(s)
+    finished_path = '/'.join(finished_path)
+    if not os.path.isdir(finished_path):
+        os.mkdir(finished_path, 0o755)
+    return finished_path
+
+
 app_config = load_config()
 
 if app_config is None or app_config.get('ydl_server') is None or \

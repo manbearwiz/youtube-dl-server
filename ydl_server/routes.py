@@ -1,13 +1,14 @@
 from pathlib import Path
 
 from ydl_server import views
-from ydl_server.config import app_config
+from ydl_server.config import app_config, get_finished_path
 
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles
 
 static = StaticFiles(directory=str(Path(__file__).parent / "static"))
-finished_files = StaticFiles(directory=Path(app_config['ydl_options'].get('output')).parent)
+
+finished_files = StaticFiles(directory=get_finished_path())
 
 routes = [
     Route("/", views.front_index, name="index"),
