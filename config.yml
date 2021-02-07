@@ -3,12 +3,12 @@ ydl_server:   # youtube-dl-server specific settings
   host: 0.0.0.0   # IP youtube-dl-server should bind to
   debug: False    # Enable/Disable debug mode
   metadata_db_path: '/youtube-dl/.ydl-metadata.db' # Path to metadata DB
-  output_playlist: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # Playlist output directory
+  output_playlist: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # Playlist output directory template
   update_poll_delay_min: 1440 # Automatically check for updates every 24h
   max_log_entries: 100 # Maximum number of job log history to keep
 
 ydl_options:  # youtube-dl options
-  output: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # output directory
+  output: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # output directory template
   cache-dir: '/youtube-dl/.cache' # youtube-dl cache directory
   ignore-errors: True # instruct youtube-dl to skip errors
   age-limit: 6 # minimal age requirement / parental control setting
