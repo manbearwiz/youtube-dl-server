@@ -6,6 +6,8 @@ ydl_server:   # youtube-dl-server specific settings
   output_playlist: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # Playlist output directory template
   update_poll_delay_min: 1440 # Automatically check for updates every 24h
   max_log_entries: 100 # Maximum number of job log history to keep
+  forwarded_allow_ips: None # uvicorn Comma seperated list of IPs to trust with proxy headers.
+  proxy_headers: True # uvicorn flag Enable/Disable X-Forwarded-Proto, X-Forwarded-For, X-Forwarded-Port to populate remote address info.
 
 ydl_options:  # youtube-dl options
   output: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # output directory template

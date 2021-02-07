@@ -40,7 +40,9 @@ if __name__ == "__main__":
                 host=app_config['ydl_server'].get('host'),
                 port=app_config['ydl_server'].get('port'),
                 log_level=('debug' if app_config['ydl_server'].get(
-                    'debug', False) else 'info'))
+                    'debug', False) else 'info'),
+                forwarded_allow_ips=app_config['ydl_server'].get('forwarded_allow_ips', None),
+                proxy_headers=app_config['ydl_server'].get('proxy_headers', True))
 
     app.state.ydlhandler.finish()
     app.state.jobshandler.finish()
