@@ -115,6 +115,7 @@ def download(url, request_options):
 
 
 routes = [
+    Route("/", endpoint=dl_queue_list),
     Route("/youtube-dl", endpoint=dl_queue_list),
     Route("/youtube-dl/q", endpoint=q_put, methods=["POST"]),
     Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
