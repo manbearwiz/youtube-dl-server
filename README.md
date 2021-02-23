@@ -41,6 +41,22 @@ YDL_SERVER_PORT=8123 YDL_UPDATE_TIME=False python3 -u ./youtube-dl-server.py
 
 In this example, `YDL_UPDATE_TIME=False` is the same as the command line option `--no-mtime`.
 
+
+## Options
+
+You can override some of the `youtube-dl` options via environment variables, e.g. by prepending them in Python CLI calls, or by defining them as Docker container parameters. The default options:
+
+- `"YDL_FORMAT": "bestvideo+bestaudio/best"`
+- `"YDL_EXTRACT_AUDIO_FORMAT": None`
+- `"YDL_EXTRACT_AUDIO_QUALITY": "192"`
+- `"YDL_RECODE_VIDEO_FORMAT": None`
+- `"YDL_OUTPUT_TEMPLATE": "/youtube-dl/%(title).200s [%(id)s].%(ext)s"` (see [available parameters](https://github.com/ytdl-org/youtube-dl#output-template))
+- `"YDL_ARCHIVE_FILE": None`
+- `"YDL_SERVER_HOST": "0.0.0.0"`
+- `"YDL_SERVER_PORT": 8080`
+- `"YDL_UPDATE_TIME": "True"`
+
+
 ## Usage
 
 ### Start a download remotely
