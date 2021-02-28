@@ -25,7 +25,7 @@ function set_dismissible_message(success, message){
 }
 
 function retry_download(url, format){
-  data = {url: url,format: format};
+  data = format != null ? {url: url, format: format} : {url: url};
   $.post("api/downloads", data)
     .done(function (data) {
       get_download_logs();
@@ -152,9 +152,11 @@ function get_download_logs(){
       download_logs += "<tr>";
       download_logs += "<td>" + row.last_update + "</td>";
       download_logs += "<td>" + row.name + "</td>";
-      download_logs += "<td>" + (row.format ? row.format : "") + "</td>";
-      if (row.status == 'Failed' && row.type != 1)
-        download_logs += "<td> <a href=\"#\" onclick=\"retry_download('" + row.url + "','" + row.format + "')\" class='" + statusToTrClass[row.status] + "'>" + row.status + " / Retry</a></td>";
+      download_logs += "<td>" + (row.format != null ? row.format : "") + "</td>";
+      if (row.status == 'Failed' && row.type != 1) {
+        format = row.format != null ? "'" + row.format +"'" : "null";
+        download_logs += "<td> <a href=\"#\" onclick=\"retry_download('" + row.url + "'," + format + ")\" class='" + statusToTrClass[row.status] + "'>" + row.status + " / Retry</a></td>";
+      }
       else
         download_logs += "<td> <span class='" + statusToTrClass[row.status] + "'>" + row.status + "</span></td>";
       download_logs += "<td style='text-align: left;'>" + row.log.replace(/\n|\r/g, '<br/>') + "</td>";
