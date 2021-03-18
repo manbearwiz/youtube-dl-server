@@ -171,6 +171,7 @@ function get_download_logs(){
 }
 
 function get_finished_files(){
+  download_svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-download\" viewBox=\"0 0 16 16\"><path d=\"M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z\"/><path d=\"M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z\"/></svg>";
   $.getJSON("api/finished", function (data) {
     var finished_files = "";
     $.each(data.files, function(key, file) {
@@ -179,12 +180,18 @@ function get_finished_files(){
         finished_files += "<td><a role=\"button\" href=\"#dir" + key + "\" data-toggle=\"collapse\" aria-expanded=\"false\" aria-controls=\"dir" + key + "\">" + file.name + "</a>";
         finished_files += "<div class=\"collapse\" id=\"dir" + key + "\"><table class=\"col-md-16 table table-stripped table-md table-dark text-left\">";
         $.each(file.children, function(child_key, child_file) {
-          finished_files += "<tr><td><a href=\"api/finished/" + encodeURIComponent(file.name + "/" + child_file.name)+ "\" >" + child_file.name + "</a></td><td>" + (new Date(child_file.modified)).toISOString() + "</td></tr>";
+          finished_files += "<tr><td><a class=\"btn btn-sm btn-secondary\" href=\"api/finished/" + encodeURIComponent(file.name + "/" + child_file.name)
+            + "\" download>"+ download_svg +"</a>&nbsp;&nbsp;<a href=\"api/finished/" 
+            + encodeURIComponent(file.name + "/" + child_file.name)
+            + "\">" + child_file.name + "</a></td><td>" + (new Date(child_file.modified)).toISOString() + "</td></tr>";
         });
         finished_files += "</table></div></td>";
       }
       else {
-        finished_files += "<td><a href=\"api/finished/" + encodeURIComponent(file.name) + "\">" + file.name + "</a></td>";
+        finished_files += "<td><a class=\"btn btn-sm btn-secondary\" href=\"api/finished/" + encodeURIComponent(file.name)
+        + "\" download>"+ download_svg +"</a>&nbsp;&nbsp;<a href=\"api/finished/" 
+            + encodeURIComponent(file.name)
+            + "\">" + file.name + "</a> </td>";
       }
       finished_files += "<td>" + (new Date(file.modified)).toISOString() + "</td>";
       finished_files += "</tr>";
