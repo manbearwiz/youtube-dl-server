@@ -9,7 +9,7 @@ ARG YOUTUBE_DL=youtube_dl
 ARG ATOMICPARSLEY=0
 
 RUN mkdir -p /usr/src/app
-RUN apk add --no-cache ffmpeg tzdata
+RUN apk add --no-cache ffmpeg tzdata mailcap
 RUN if [ $ATOMICPARSLEY == 1 ]; then apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing atomicparsley; ln /usr/bin/atomicparsley /usr/bin/AtomicParsley; fi
 COPY ./requirements.txt /usr/src/app/
 RUN sed -i s/youtube-dl/${YOUTUBE_DL}/ /usr/src/app/requirements.txt && pip install --no-cache-dir -r /usr/src/app/requirements.txt
