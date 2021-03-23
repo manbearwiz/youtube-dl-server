@@ -6,8 +6,7 @@
 
 Simple Web and REST interface for downloading youtube videos onto a server.
 [`starlette`](https://www.starlette.io/) +
-[`youtube-dl`](https://github.com/rg3/youtube-dl) /
-[`youtube-dlc`](https://github.com/blackjack4494/yt-dlc)
+[`youtube-dl`](https://github.com/rg3/youtube-dl)
 
 Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube-dl-server).
 
@@ -21,17 +20,11 @@ Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube
 For easier deployment, a docker image is available on
 [dockerhub](https://hub.docker.com/r/nbr23/youtube-dl-server).
 
-The `latest` tag uses `youtube-dl`.
-
-Force using `youtube-dl` or `youtube-dlc` by using the tags of the same name,
-eg: `nbr23/youtube-dl-server:youtube-dl` and
-`nbr23/youtube-dl-server:youtube-dlc`.
-
 If you plan on using the `--embed-thumbnail` flag in youtube-dl,
 you will need `atomicparsley` embedded in the container.
 
-Use the tags `nbr23/youtube-dl-server:youtube-dl_atomicparsley`
-or `nbr23/youtube-dl-server:youtube-dlc_atomicparsley` to achieve this.
+Use the tags `nbr23/youtube-dl-server:youtube-dl_atomicparsley` to achieve
+this.
 
 ### Ansible
 
@@ -130,7 +123,8 @@ to download the required front-end libraries (jquery, bootstrap).
 python3 -u ./youtube-dl-server.py
 ```
 
-To force using `youtube-dl` or `youtube-dlc`, use the variable `YOUTUBE_DL`:
+To force a specific `youtube-dl` version/fork  (eg `youtube-dlc`), use the
+variable `YOUTUBE_DL`:
 
 ```shell
 YOUTUBE_DL=youtube-dlc python3 -u ./youtube-dl-server.py
@@ -200,9 +194,8 @@ scenarios.
 
 ## Implementation
 
-The server uses [`starlette`](https://www.starlette.io/) for the web
-framework and [`youtube-dl`](https://github.com/rg3/youtube-dl) /
-[`youtube-dlc`](https://github.com/blackjack4494/yt-dlc) to handle the
+The server uses [`starlette`](https://www.starlette.io/) for the web framework
+and [`youtube-dl`](https://github.com/rg3/youtube-dl) to handle the
 downloading. The integration with youtube-dl does NOT use their [python
 api](https://github.com/rg3/youtube-dl#embedding-youtube-dl) anymore, but calls
 the youtube-dl binary directly as the API doesn't provide easy ways to handle
