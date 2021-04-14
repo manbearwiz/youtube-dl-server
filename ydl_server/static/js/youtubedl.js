@@ -189,7 +189,7 @@ function get_finished_files(){
       }
       else {
         finished_files += "<td><a class=\"btn btn-sm btn-secondary\" href=\"api/finished/" + encodeURIComponent(file.name)
-        + "\" download>"+ download_svg +"</a>&nbsp;&nbsp;<a href=\"api/finished/" 
+            + "\" download>"+ download_svg +"</a>&nbsp;&nbsp;<a href=\"api/finished/" 
             + encodeURIComponent(file.name)
             + "\">" + file.name + "</a> </td>";
       }
