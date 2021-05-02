@@ -51,7 +51,7 @@ This is an example service definition that could be put in `docker-compose.yml`.
     image: "nbr23/youtube-dl-server:latest"
     volumes:
       - $HOME/youtube-dl:/youtube-dl
-      - ./config.yml:/usr/src/app/config.yml:ro # Overwrite the container's config file with your own configuration
+      - ./config.yml:/app_config/config.yml:ro # Overwrite the container's config file with your own configuration
     restart: always
 ```
 
