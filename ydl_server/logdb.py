@@ -1,5 +1,7 @@
 import sqlite3
 import re
+from markupsafe import Markup, escape
+
 from ydl_server.config import app_config
 
 STATUS_NAME = ["Running", "Completed", "Failed", "Pending"]
@@ -142,11 +144,11 @@ class JobsDB:
         rows = []
         for job_id, name, status, log, last_update, format, jobtype, url in cursor.fetchall():
             rows.append({'id': job_id,
-                        'name': name,
-                        'status': STATUS_NAME[status],
-                        'log': log,
-                        'format': format,
-                        'last_update': last_update,
-                        'type': jobtype,
-                        'url': url})
+                         'name': escape(name),
+                         'status': STATUS_NAME[status],
+                         'log': escape(log),
+                         'format': escape(format),
+                         'last_update': last_update,
+                         'type': jobtype,
+                         'url': escape(url)})
         return rows
