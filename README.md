@@ -23,8 +23,7 @@ For easier deployment, a docker image is available on
 If you plan on using the `--embed-thumbnail` flag in youtube-dl,
 you will need `atomicparsley` embedded in the container.
 
-Use the tags `nbr23/youtube-dl-server:youtube-dl_atomicparsley` to achieve
-this.
+Use the tags `nbr23/youtube-dl-server:atomicparsley` to achieve this.
 
 ### Ansible
 
