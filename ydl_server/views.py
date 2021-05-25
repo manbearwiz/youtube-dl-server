@@ -16,7 +16,7 @@ async def front_index(request):
         'request': request,
         'ydl_version': request.app.state.ydlhandler.get_ydl_version(),
         'ydl_name': request.app.state.ydlhandler.ydl_module_name,
-        'ydl_website': request.app.state.ydlhandler.ydl_website
+        'ydl_website': request.app.state.ydlhandler.ydl_website,
     }
     return templates.TemplateResponse('index.html',
                                       context=context)
@@ -27,7 +27,7 @@ async def front_logs(request):
         'request': request,
         'ydl_version': request.app.state.ydlhandler.get_ydl_version(),
         'ydl_name': request.app.state.ydlhandler.ydl_module_name,
-        'ydl_website': request.app.state.ydlhandler.ydl_website
+        'ydl_website': request.app.state.ydlhandler.ydl_website,
     }
     return templates.TemplateResponse('logs.html',
                                       context=context)
@@ -38,7 +38,7 @@ async def front_finished(request):
         'request': request,
         'ydl_version': request.app.state.ydlhandler.get_ydl_version(),
         'ydl_name': request.app.state.ydlhandler.ydl_module_name,
-        'ydl_website': request.app.state.ydlhandler.ydl_website
+        'ydl_website': request.app.state.ydlhandler.ydl_website,
     }
     return templates.TemplateResponse('finished.html',
                                       context=context)

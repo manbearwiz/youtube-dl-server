@@ -223,6 +223,22 @@ function toggle_hide_logs_detail(){
   }
 }
 
+function bookmarklet(){
+  url = window.location.protocol + '//' + window.location.hostname
+  if (window.location.port != '') {
+    url = url + ':' + window.location.port;
+  }
+  if (window.location.protocol == 'https:') {
+    $("#bookmarklet").attr("href", "javascript:fetch(\"" + url
+      + "/api/downloads\",{body:new URLSearchParams({url:window.location.href}),method:\"POST\"});");
+  }
+  else {
+    $("#bookmarklet").attr("href", "javascript:(function(){document.body.innerHTML += '<form name=\"ydl_form\" method=\"POST\" action=\""
+      + url
+      + "/api/downloads\"><input name=\"url\" type=\"url\" value=\"'+window.location.href+'\"/></form>';document.ydl_form.submit()})();");
+  }
+}
+
 $('#url').keypress(function (e) {
   if (e.which == 13) {
     submit_video();
@@ -230,3 +246,5 @@ $('#url').keypress(function (e) {
     return false;
   }
 });
+
+bookmarklet();

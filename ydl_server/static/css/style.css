@@ -8,8 +8,8 @@ html, body {
   min-height: 100%;
   margin-top: -50px;
   padding-top: 70px;
-  margin-bottom: -50px;
-  padding-bottom: 50px;
+  margin-bottom: -70px;
+  padding-bottom: 70px;
 }
 
 nav {
@@ -25,5 +25,5 @@ div.input-group>select.custom-select {
 }
 
 .footer{
-  height: 50px;
+  height: 70px;
 }
