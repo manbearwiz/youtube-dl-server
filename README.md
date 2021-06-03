@@ -53,6 +53,11 @@ This is an example service definition that could be put in `docker-compose.yml`.
       - ./config.yml:/app_config/config.yml:ro # Overwrite the container's config file with your own configuration
     restart: always
 ```
+### HomeAssistant Addon
+
+In the addons store add the repository (https://github.com/unofficial-skills/addons) or click the buton [![adds addon repo.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Funofficial-skills%2Faddons).
+
+Once the addon repository has been added, you should be able to install (YouTube Dl Server) from the Unofficial-skills section.
 
 #### Configuration
 
