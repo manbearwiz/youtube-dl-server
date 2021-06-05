@@ -77,6 +77,12 @@ Add the following bookmarklet to your bookmark bar so you can conviently send th
 javascript:!function(){fetch("http://${host}:8080/youtube-dl/q",{body:new URLSearchParams({url:window.location.href,format:"bestvideo"}),method:"POST"})}();
 ```
 
+#### Apple Shortcuts
+
+Add the following Shortcut so you can conviently send compatible URLs from clipboard or sharesheet to your youtube-dl-server instance.
+
+https://routinehub.co/shortcut/9321/
+
 ## Implementation
 
 The server uses [`starlette`](https://github.com/encode/starlette) for the web framework and [`youtube-dl`](https://github.com/rg3/youtube-dl) to handle the downloading. The integration with youtube-dl makes use of their [python api](https://github.com/rg3/youtube-dl#embedding-youtube-dl).
