@@ -31,7 +31,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm,linux/arm64
           push: true
-          tags: nbr23/youtube-dl-server:latest
+          tags: nbr23/youtube-dl-server:latest,nbr23/youtube-dl-server:youtube-dl
       -
         name: Build and push
         uses: docker/build-push-action@v2
@@ -41,4 +41,4 @@ jobs:
             ATOMICPARSLEY=1
           platforms: linux/amd64,linux/arm,linux/arm64
           push: true
-          tags: nbr23/youtube-dl-server:atomicparsley
+          tags: nbr23/youtube-dl-server:atomicparsley,nbr23/youtube-dl-server:youtube-dl_atomicparsley
