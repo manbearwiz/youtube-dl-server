@@ -16,9 +16,9 @@ function escapeHtml(string) {
 }
 
 function set_dismissible_message(success, message){
-  message_list = "<div class=\"alert alert-" + (success ? "success" : "danger")+ " alert-dismissible fade show\" role=\"alert\">";
+  message_list = "<div class=\"alert alert-dismissible alert-" + (success ? "success" : "danger")+ " alert-dismissible fade show\" role=\"alert\">";
   message_list += "<strong>" + (success ? "Success" : "Error") + "</strong>: " + message;
-  message_list += "<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"><span aria-hidden=\"true\">&times;</span></button>";
+  message_list += "<button type=\"button\" class=\"btn-close\" data-dismiss=\"alert\" aria-label=\"Close\" data-bs-dismiss=\"alert\"></button>";
   message_list += "</div>";
   message_list += $('#message_list').html();
   $("#message_list").html(message_list);
@@ -140,9 +140,9 @@ function purge_download_logs(){
 
 var statusToTrClass = {
   Pending: 'badge',
-  Failed: 'badge badge-danger',
-  Running: 'badge badge-info',
-  Completed: 'badge badge-success'
+  Failed: 'badge bg-danger',
+  Running: 'badge bg-info',
+  Completed: 'badge bg-success'
 }
 
 function get_download_logs(){
@@ -177,7 +177,7 @@ function get_finished_files(){
     $.each(data.files, function(key, file) {
       finished_files += "<tr>";
       if (file.children != null) {
-        finished_files += "<td><a role=\"button\" href=\"#dir" + key + "\" data-toggle=\"collapse\" aria-expanded=\"false\" aria-controls=\"dir" + key + "\">" + file.name + "</a>";
+        finished_files += "<td><a role=\"button\" href=\"#dir" + key + "\" data-bs-toggle=\"collapse\" aria-expanded=\"false\" aria-controls=\"dir" + key + "\">" + file.name + "</a>";
         finished_files += "<div class=\"collapse\" id=\"dir" + key + "\"><table class=\"col-md-16 table table-stripped table-md table-dark text-left\">";
         $.each(file.children, function(child_key, child_file) {
           finished_files += "<tr><td><a class=\"btn btn-sm btn-secondary\" href=\"api/finished/" + encodeURIComponent(file.name + "/" + child_file.name)
