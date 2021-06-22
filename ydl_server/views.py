@@ -6,6 +6,8 @@ from pathlib import Path
 from ydl_server.config import app_config, get_finished_path
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from datetime import datetime
+import os
+import shutil
 
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -34,32 +36,58 @@ async def front_logs(request):
 
 
 async def front_finished(request):
+    root_dir = Path(get_finished_path())
+    matches = root_dir.glob('*')
+
+    files = [{'name': f1.name,
+            'modified': datetime.fromtimestamp(f1.stat().st_mtime).strftime('%H:%m %D'),
+            'directory': f1.is_dir(),
+            'children': sorted([{
+                'name': f2.name,
+                'modified': datetime.fromtimestamp(f2.stat().st_mtime).strftime('%H:%m %D')
+                } for f2 in f1.iterdir() if not f2.name.startswith('.')], key=itemgetter('modified'), reverse=True) if f1.is_dir() else None
+            } for f1 in matches if not f1.name.startswith('.')]
+
     context = {
         'request': request,
         'ydl_version': request.app.state.ydlhandler.get_ydl_version(),
         'ydl_name': request.app.state.ydlhandler.ydl_module_name,
         'ydl_website': request.app.state.ydlhandler.ydl_website,
+        'finished_files': sorted(files, key=itemgetter('modified'), reverse=True)
     }
     return templates.TemplateResponse('finished.html',
                                       context=context)
 
 
-async def api_list_finished(request):
-    root_dir = Path(get_finished_path())
-    matches = root_dir.glob('*')
-
-    files = [{'name': f1.name,
-            'modified': f1.stat().st_mtime * 1000,
-            'children': sorted([{
-                'name': f2.name,
-                'modified': f2.stat().st_mtime * 1000
-                } for f2 in f1.iterdir() if not f2.name.startswith('.')], key=itemgetter('modified'), reverse=True) if f1.is_dir() else None
-            } for f1 in matches if not f1.name.startswith('.')]
-
-    files = sorted(files, key=itemgetter('modified'), reverse=True)
+async def api_delete_file(request):
+    fname = request.path_params['fname']
+    if not fname:
+        return JSONResponse({
+            "success": False,
+            "message": "No filename specified"
+            })
+    fname = os.path.realpath(os.path.join(get_finished_path(), fname))
+    if os.path.commonprefix((fname, get_finished_path())) != get_finished_path():
+        return JSONResponse({
+            "success": False,
+            "message": "Invalid filename"
+            })
+    fname = Path(fname)
+    try:
+        if fname.is_dir():
+            shutil.rmtree(fname)
+        else:
+            fname.unlink()
+    except OSError as e:
+        print(e)
+        return JSONResponse({
+            "success": False,
+            "message": "Could not delete the specified file"
+            })
+    
     return JSONResponse({
         "success": True,
-        "files": files
+        "message": "File deleted"
         })
 
 
@@ -102,7 +130,7 @@ async def api_queue_download(request):
     if (app_config['ydl_server'].get('update_poll_delay_min') and
             (datetime.now() - app_config['ydl_last_update']).seconds >
             app_config['ydl_server'].get('update_poll_delay_min') * 60):
-        job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
+        job = Job("Youtube-dl Auto-Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
         request.app.state.jobshandler.put((Actions.INSERT, job))
 
     url = data.get("url")
@@ -131,8 +159,8 @@ async def api_metadata_fetch(request):
 
 
 async def ydl_update(request):
-    job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None,
-              None)
+    job = Job("Youtube-dl Manual Update", Job.PENDING, "", JobType.YDL_UPDATE,
+              None, None)
     request.app.state.jobshandler.put((Actions.INSERT, job))
     return JSONResponse({
         "success": True,

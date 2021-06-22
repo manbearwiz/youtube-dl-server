@@ -40,7 +40,7 @@ def get_finished_path():
         if '%' in s and '%%' not in s:
             break
         finished_path.append(s)
-    finished_path = '/'.join(finished_path)
+    finished_path = '/'.join(finished_path) + '/'
     if not os.path.isdir(finished_path):
         os.mkdir(finished_path, 0o755)
     return finished_path

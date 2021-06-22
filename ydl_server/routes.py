@@ -35,6 +35,7 @@ routes = [
           views.api_metadata_fetch,
           name="api_metadata_fetch",
           methods=['POST']),
+    Route("/api/finished/{fname:path}", views.api_delete_file, name="api_delete_file", methods=['DELETE']),
     Mount("/static", static, name="static"),
     Mount("/api/finished/", finished_files, name="api_finished"),
 ]
