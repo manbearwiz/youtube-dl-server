@@ -59,7 +59,7 @@ In the addons store add the repository (https://github.com/unofficial-skills/add
 
 Once the addon repository has been added, you should be able to install (YouTube Dl Server) from the Unofficial-skills section.
 
-#### Configuration
+## Configuration
 
 Configuration is done through the config.yml file at the root of the project.
 
@@ -108,7 +108,7 @@ ydl_options:
   sub-lang: es
 ```
 
-### Python
+## Python
 
 If you have python ^3.3.0 installed in your PATH you can simply run like this,
 providing optional environment variable overrides inline.
@@ -141,17 +141,17 @@ YOUTUBE_DL=youtube-dlc python3 -u ./youtube-dl-server.py
 Downloads can be triggered by supplying the `{{url}}` of the requested video
 through the Web UI or through the REST interface via curl, etc.
 
-#### HTML
+### HTML
 
 Just navigate to `http://{{host}}:8080/` and enter the requested `{{url}}`.
 
-#### Curl
+### Curl
 
 ```shell
 curl -X POST --data-urlencode "url={{url}}" http://{{host}}:8080/api/downloads
 ```
 
-#### Fetch
+### Fetch
 
 ```javascript
 fetch(`http://${host}:8080/api/downloads`, {
@@ -163,12 +163,12 @@ fetch(`http://${host}:8080/api/downloads`, {
 });
 ```
 
-#### Bookmarklet
+### Bookmarklet
 
 Add the following bookmarklet to your bookmark bar so you can conviently send
 the current page url to your youtube-dl-server instance.
 
-##### HTTPS
+#### HTTPS
 
 If your youtube-dl-server is served through https (behind a reverse proxy
 handling https for example), you can use the following bookmarklet:
@@ -177,7 +177,7 @@ handling https for example), you can use the following bookmarklet:
 javascript:fetch("https://${host}/api/downloads",{body:new URLSearchParams({url:window.location.href,format:"bestvideo"}),method:"POST"});
 ```
 
-##### Plain text
+#### Plain text
 
 If you are hosting it without HTTPS, the previous bookmarklet will likely be
 blocked by your browser (as it will generate mixed content when used on HTTPS
@@ -191,7 +191,7 @@ javascript:(function(){document.body.innerHTML += '<form name="ydl_form" method=
 
 ## Notes
 
-#### Support extra formats
+### Support extra formats
 
 `ffmpeg` is required for format conversion and audio extraction in some
 scenarios.
