@@ -15,7 +15,6 @@ routes = [
     Route("/index", views.front_index, name="index"),
     Route("/logs", views.front_logs, name="logs"),
     Route("/finished", views.front_finished, name="finished"),
-    Route("/api/finished", views.api_list_finished, name="api_list_finished"),
     Route("/api/extractors",
           views.api_list_extractors,
           name="api_list_extractors"),
