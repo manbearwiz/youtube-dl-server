@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
 
     print("Updating youtube-dl to the newest version")
-    job = Job("Youtube-dl Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
+    job = Job("Youtube-dl at Boot Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
     app.state.jobshandler.put((Actions.INSERT, job))
 
     app.state.ydlhandler.resume_pending()

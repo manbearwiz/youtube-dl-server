@@ -128,7 +128,7 @@ async def api_logs_clean(request):
 async def api_queue_download(request):
     data = await request.form()
     if (app_config['ydl_server'].get('update_poll_delay_min') and
-            (datetime.now() - app_config['ydl_last_update']).seconds >
+            (datetime.now() - app_config['ydl_last_update']).total_seconds() >
             app_config['ydl_server'].get('update_poll_delay_min') * 60):
         job = Job("Youtube-dl Auto-Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
         request.app.state.jobshandler.put((Actions.INSERT, job))
