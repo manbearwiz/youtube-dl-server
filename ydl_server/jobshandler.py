@@ -31,7 +31,7 @@ class JobsHandler:
                 db.purge_jobs()
             elif action == Actions.INSERT:
                 db.clean_old_jobs(self.app_config['ydl_server']
-                                  .get('max_log_entries', 100))
+                                  .get('max_log_entries', 100) - 1)
                 db.insert_job(job)
                 dl_queue.put(job)
             elif action == Actions.UPDATE:

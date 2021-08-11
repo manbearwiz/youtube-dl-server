@@ -208,7 +208,7 @@ class YdlHandler:
 
     def resume_pending(self):
         db = JobsDB(readonly=False)
-        jobs = db.get_all()
+        jobs = db.get_all(self.app_config['ydl_server'].get('max_log_entries', 100))
         not_endeds = [job for job in jobs if job['status'] == "Pending"
                       or job['status'] == 'Running']
         for pending in not_endeds:

@@ -97,7 +97,7 @@ async def api_list_extractors(request):
 
 async def api_queue_size(request):
     db = JobsDB(readonly=True)
-    jobs = db.get_all()
+    jobs = db.get_all(app_config['ydl_server'].get('max_log_entries', 100))
     return JSONResponse({
         "success": True,
         "stats": {
@@ -112,7 +112,7 @@ async def api_queue_size(request):
 
 async def api_logs(request):
     db = JobsDB(readonly=True)
-    return JSONResponse(db.get_all())
+    return JSONResponse(db.get_all(app_config['ydl_server'].get('max_log_entries', 100)))
 
 
 async def api_logs_purge(request):
