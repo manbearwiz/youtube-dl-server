@@ -45,18 +45,17 @@ class Job:
         if not logs:
             return logs
         clean = ""
-        for line in logs.split('\n'):
-            line = re.sub('.*\r', '', line)
+        for line in logs.split("\n"):
+            line = re.sub(".*\r", "", line)
             if len(line) > 0:
-                clean = '%s%s\n' % (clean, line)
+                clean = "%s%s\n" % (clean, line)
         return clean
 
 
 class JobsDB:
-
     @staticmethod
     def check_db_latest():
-        conn = sqlite3.connect("file://%s" % app_config['ydl_server'].get('metadata_db_path'), uri=True)
+        conn = sqlite3.connect("file://%s" % app_config["ydl_server"].get("metadata_db_path"), uri=True)
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info('jobs')")
         columns = [row[1] for row in cursor.fetchall()]
@@ -65,12 +64,12 @@ class JobsDB:
             cursor.execute("DROP TABLE if exists jobs;")
         conn.close()
 
-
     @staticmethod
     def init_db():
-        conn = sqlite3.connect("file://%s" % app_config['ydl_server'].get('metadata_db_path'), uri=True)
+        conn = sqlite3.connect("file://%s" % app_config["ydl_server"].get("metadata_db_path"), uri=True)
         cursor = conn.cursor()
-        cursor.execute("CREATE TABLE if not exists jobs \
+        cursor.execute(
+            "CREATE TABLE if not exists jobs \
                 (id INTEGER PRIMARY KEY AUTOINCREMENT, \
                 name TEXT NOT NULL, \
                 status INTEGER NOT NULL, \
@@ -78,14 +77,15 @@ class JobsDB:
                 format TEXT, \
                 last_update DATETIME DEFAULT CURRENT_TIMESTAMP, \
                 type INTEGER NOT NULL, \
-                url TEXT);")
+                url TEXT);"
+        )
         conn.commit()
         conn.close()
 
     def __init__(self, readonly=True):
-        self.conn = sqlite3.connect("file://%s%s" % (app_config['ydl_server'].get('metadata_db_path'),
-                                            "?mode=ro" if readonly else ""),
-                                    uri=True)
+        self.conn = sqlite3.connect(
+            "file://%s%s" % (app_config["ydl_server"].get("metadata_db_path"), "?mode=ro" if readonly else ""), uri=True
+        )
 
     def close(self):
         self.conn.close()
@@ -101,27 +101,40 @@ class JobsDB:
 
     def update_job(self, job):
         cursor = self.conn.cursor()
-        cursor.execute("UPDATE jobs SET status = ?, log = ?, last_update = datetime() \
-                where id = ?;", (str(job.status), job.log, str(job.id)))
+        cursor.execute(
+            "UPDATE jobs SET status = ?, log = ?, last_update = datetime() \
+                where id = ?;",
+            (str(job.status), job.log, str(job.id)),
+        )
         self.conn.commit()
 
     def set_job_status(self, job_id, status):
         cursor = self.conn.cursor()
-        cursor.execute("UPDATE jobs SET status = ?, last_update = datetime() \
-                where id = ?;", (str(status), str(job_id)))
+        cursor.execute(
+            "UPDATE jobs SET status = ?, last_update = datetime() \
+                where id = ?;",
+            (str(status), str(job_id)),
+        )
         self.conn.commit()
 
     def set_job_log(self, job_id, log):
         cursor = self.conn.cursor()
-        cursor.execute("UPDATE jobs SET log = ?, last_update = datetime() \
-                where id = ?;", (log, str(job_id)))
+        cursor.execute(
+            "UPDATE jobs SET log = ?, last_update = datetime() \
+                where id = ?;",
+            (log, str(job_id)),
+        )
         self.conn.commit()
 
     def set_job_name(self, job_id, name):
         cursor = self.conn.cursor()
-        cursor.execute("UPDATE jobs SET name = ?, last_update = datetime() \
-                where id = ?;", (name, str(job_id)))
+        cursor.execute(
+            "UPDATE jobs SET name = ?, last_update = datetime() \
+                where id = ?;",
+            (name, str(job_id)),
+        )
         self.conn.commit()
+
 
     def purge_jobs(self):
         cursor = self.conn.cursor()
@@ -134,7 +147,10 @@ class JobsDB:
         cursor.execute("SELECT last_update from jobs ORDER BY last_update DESC LIMIT ?;", (str(limit),))
         rows = list(cursor.fetchall())
         if len(rows) > 0:
-            cursor.execute("DELETE FROM jobs WHERE last_update < ? AND status != ? and status != ?;", (rows[-1][0], Job.PENDING, Job.RUNNING))
+            cursor.execute(
+                "DELETE FROM jobs WHERE last_update < ? AND status != ? and status != ?;",
+                (rows[-1][0], Job.PENDING, Job.RUNNING),
+            )
         self.conn.commit()
         self.conn.execute("VACUUM")
 
