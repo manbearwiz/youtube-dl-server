@@ -4,7 +4,7 @@
 # https://github.com/nbr23/youtube-dl-server
 #
 
-FROM python:alpine
+FROM python:alpine3.13
 ARG YOUTUBE_DL=youtube_dl
 ARG ATOMICPARSLEY=0
 
