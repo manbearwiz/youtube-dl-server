@@ -38,7 +38,28 @@ jobs:
         with:
           context: .
           build-args: |
+            YOUTUBE_DL=yt_dlp
+          platforms: linux/amd64,linux/arm,linux/arm64
+          push: true
+          tags: nbr23/youtube-dl-server:yt-dlp
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          build-args: |
             ATOMICPARSLEY=1
           platforms: linux/amd64,linux/arm,linux/arm64
           push: true
           tags: nbr23/youtube-dl-server:atomicparsley,nbr23/youtube-dl-server:youtube-dl_atomicparsley
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          build-args: |
+            ATOMICPARSLEY=1
+            YOUTUBE_DL=yt_dlp
+          platforms: linux/amd64,linux/arm,linux/arm64
+          push: true
+          tags: nbr23/youtube-dl-server:yt-dlp_atomicparsley
