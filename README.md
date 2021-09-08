@@ -127,11 +127,11 @@ to download the required front-end libraries (jquery, bootstrap).
 python3 -u ./youtube-dl-server.py
 ```
 
-To force a specific `youtube-dl` version/fork  (eg `youtube-dlc`), use the
+To force a specific `youtube-dl` version/fork  (eg `youtube-dlc` or `yt-dlp`), use the
 variable `YOUTUBE_DL`:
 
 ```shell
-YOUTUBE_DL=youtube-dlc python3 -u ./youtube-dl-server.py
+YOUTUBE_DL=yt-dlp python3 -u ./youtube-dl-server.py
 ```
 
 ## Usage
