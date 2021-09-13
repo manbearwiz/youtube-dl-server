@@ -3,7 +3,7 @@ from starlette.templating import Jinja2Templates
 
 from operator import itemgetter
 from pathlib import Path
-from ydl_server.config import app_config, get_finished_path
+from ydl_server.config import app_config, get_finished_path, YDL_FORMATS
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from datetime import datetime
 import os
@@ -19,6 +19,8 @@ async def front_index(request):
         "ydl_version": request.app.state.ydlhandler.get_ydl_version(),
         "ydl_name": request.app.state.ydlhandler.ydl_module_name,
         "ydl_website": request.app.state.ydlhandler.ydl_website,
+        "ydl_formats": YDL_FORMATS,
+        "ydl_default_format": app_config["ydl_server"].get("default_format", 'video/best'),
     }
     return templates.TemplateResponse("index.html", context=context)
 

@@ -2,6 +2,32 @@ import os
 import yaml
 import shutil
 
+YDL_FORMATS = {
+    'Video': {
+        'video/best': 'Best',
+        'video/bestvideo': 'Best Video',
+        'video/mp4': 'MP4',
+        'video/flv': 'Flash Video (FLV)',
+        'video/webm': 'WebM',
+        'video/ogg': 'Ogg',
+        'video/mkv': 'Matroska (MKV)',
+        'video/avi': 'AVI',
+    },
+    'Audio': {
+        'bestaudio/best': 'Best Audio',
+        'audio/aac': 'AAC',
+        'audio/flac': 'FLAC',
+        'audio/mp3': 'MP3',
+        'audio/m4a': 'M4A',
+        'audio/opus': 'Opus',
+        'audio/vorbis': 'Vorbis',
+        'audio/wav': 'WAV'
+    },
+    'Metadata only':
+    {
+        'metadata': 'Metadata'
+    }
+}
 
 def copy_default_config(config_file_path):
     try:
