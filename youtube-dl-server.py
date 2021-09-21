@@ -72,10 +72,20 @@ def update():
         "error":  error.decode('ascii')
     }
 
+def login(request_options):
+    user_login = requests.post(request_options['base_url'] + '/auth/local', {
+        'identifier': os.getenv('IDENTIFIER'),
+        'password': os.getenv('PASSWORD'),
+    })
+
+    loging_content = json.loads(user_login.content.decode('utf-8'))
+    return loging_content['jwt']
+
 def dl_worker():
     while not done:
         url, options = dl_q.get()
         download(url, options)
+        jwt = login(options)
         dl_q.task_done()
 
 
