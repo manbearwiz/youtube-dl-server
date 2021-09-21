@@ -49,7 +49,9 @@ def q_put():
     url = request.forms.get("url")
     options = {
         'format': request.forms.get("format"),
-        'filename': request.forms.get("filename")
+        'filename': request.forms.get("filename"),
+        'collectionId': request.forms.get("collectionId"),
+        'base_url': request.forms.get("base_url")
     }
 
     if not url:
