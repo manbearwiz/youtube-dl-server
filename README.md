@@ -31,6 +31,16 @@ This is an example service definition that could be put in `docker-compose.yml`.
     restart: always
 ```
 
+### Env parameters
+
+You must create your .env file copying .env.example file and make sure you use correct data in the following variables (data used when you created previous database):
+
+```
+  IDENTIFIER='importer@cla.app'
+  PASSWORD='1mp0rt3r%passw0rd'
+  DOWNLOAD_PATH = '/youtube-dl/'
+```
+
 ### Python
 
 If you have python ^3.3.0 installed in your PATH you can simply run like this, providing optional environment variable overrides inline.
