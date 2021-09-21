@@ -8,6 +8,11 @@ from threading import Thread
 import youtube_dl
 from pathlib import Path
 from collections import ChainMap
+import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Bottle()
 

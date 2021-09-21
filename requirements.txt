@@ -1,2 +1,4 @@
 bottle
 youtube-dl
+requests
+python-dotenv
