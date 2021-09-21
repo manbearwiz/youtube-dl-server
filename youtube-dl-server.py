@@ -81,11 +81,24 @@ def login(request_options):
     loging_content = json.loads(user_login.content.decode('utf-8'))
     return loging_content['jwt']
 
+def upload_video(jwt, request_options):
+    upload_url = request_options['base_url'] + '/upload'
+    path = os.getenv('DOWNLOAD_PATH') + request_options['filename'] + '.mp4'
+    with open(path, 'rb') as f:
+        response = requests.post(
+            upload_url,
+            files={'files': (request_options['filename'] + '.mp4', f, 'video')},
+            headers={'Authorization': 'Bearer ' + jwt}
+        )
+
+    return response
+
 def dl_worker():
     while not done:
         url, options = dl_q.get()
         download(url, options)
         jwt = login(options)
+        upload_video_response = upload_video(jwt, options)
         dl_q.task_done()
 
 
