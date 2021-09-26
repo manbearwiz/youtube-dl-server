@@ -33,7 +33,7 @@ if __name__ == "__main__":
     app.state.jobshandler.start(app.state.ydlhandler.queue)
     print("Started jobs manager thread")
 
-    print("Updating youtube-dl to the newest version")
+    print("Updating %s to the newest version" % app.state.ydlhandler.ydl_module_name)
     job = Job("Youtube-dl at Boot Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
     app.state.jobshandler.put((Actions.INSERT, job))
 
