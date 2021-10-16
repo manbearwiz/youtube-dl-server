@@ -3,18 +3,15 @@
 #
 # https://github.com/nbr23/youtube-dl-server
 #
-FROM python:alpine3.13 AS base
 
-RUN apk add --no-cache musl-dev python3-dev gcc libffi-dev openssl-dev rust cargo
-RUN pip install cryptography pycryptodome
 
 FROM python:alpine3.13
 ARG YOUTUBE_DL=youtube_dl
 ARG ATOMICPARSLEY=0
 
-COPY --from=base /root/.cache /root/.cache
 
-RUN pip install cryptography pycryptodome && rm -rf /root/.cache
+RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then apk add --no-cache musl-dev python3-dev gcc libffi-dev openssl-dev rust cargo; fi
+RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then pip install cryptography pycryptodome; fi
 
 RUN mkdir -p /usr/src/app
 RUN apk add --no-cache ffmpeg tzdata mailcap
