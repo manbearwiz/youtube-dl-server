@@ -47,14 +47,14 @@ class YdlHandler:
 
         self.app_config["ydl_last_update"] = datetime.now()
 
-        modules = ["youtube-dl", "youtube-dlc", "yt-dlp"]
+        modules = ["youtube_dl", "youtube_dlc", "yt_dlp"]
 
-        if os.environ.get("YOUTUBE_DL") in modules:
+        if os.environ.get("YOUTUBE_DL").replace("-", "_") in modules:
             self.ydl_module = importlib.import_module(os.environ.get("YOUTUBE_DL").replace("-", "_"))
         else:
             for module in modules:
                 try:
-                    self.ydl_module = importlib.import_module(module.replace("-", "_"))
+                    self.ydl_module = importlib.import_module(module)
                     break
                 except ImportError:
                     pass
