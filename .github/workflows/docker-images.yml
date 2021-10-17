@@ -31,6 +31,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm,linux/arm64
           push: true
+          no-cache: true
           tags: nbr23/youtube-dl-server:latest,nbr23/youtube-dl-server:youtube-dl
       -
         name: Build and push
@@ -41,6 +42,7 @@ jobs:
             YOUTUBE_DL=yt_dlp
           platforms: linux/amd64,linux/arm,linux/arm64
           push: true
+          no-cache: true
           tags: nbr23/youtube-dl-server:yt-dlp
       -
         name: Build and push
@@ -51,6 +53,7 @@ jobs:
             ATOMICPARSLEY=1
           platforms: linux/amd64,linux/arm,linux/arm64
           push: true
+          no-cache: true
           tags: nbr23/youtube-dl-server:atomicparsley,nbr23/youtube-dl-server:youtube-dl_atomicparsley
       -
         name: Build and push
@@ -62,4 +65,5 @@ jobs:
             YOUTUBE_DL=yt_dlp
           platforms: linux/amd64,linux/arm,linux/arm64
           push: true
+          no-cache: true
           tags: nbr23/youtube-dl-server:yt-dlp_atomicparsley
