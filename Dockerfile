@@ -8,7 +8,10 @@
 FROM python:alpine3.13
 ARG YOUTUBE_DL=youtube_dl
 ARG ATOMICPARSLEY=0
+ARG YDL_PYTHONPATH='/youtube-dl/.python'
 
+VOLUME "/youtube-dl"
+VOLUME "/app_config"
 
 RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then apk add --no-cache musl-dev python3-dev gcc libffi-dev openssl-dev rust cargo; fi
 RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then pip install cryptography pycryptodome; fi
@@ -31,9 +34,7 @@ RUN apk add --no-cache wget && ./bootstrap.sh && apk del wget
 
 EXPOSE 8080
 
-VOLUME "/youtube-dl"
-VOLUME "/app_config"
-
 ENV YOUTUBE_DL=$YOUTUBE_DL
 ENV YDL_CONFIG_PATH='/app_config'
+ENV YDL_PYTHONPATH=$YDL_PYTHONPATH
 CMD [ "python", "-u", "./youtube-dl-server.py" ]
