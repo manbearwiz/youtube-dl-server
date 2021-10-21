@@ -163,7 +163,7 @@ class JobsDB:
                          'name': escape(name),
                          'status': STATUS_NAME[status],
                          'log': escape(log),
-                         'format': escape(format),
+                         'format': escape(format) if format is not None else None,
                          'last_update': last_update,
                          'type': jobtype,
                          'url': escape(url)})
