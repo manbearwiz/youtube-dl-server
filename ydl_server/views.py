@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 async def front_index(request):
     context = {
         "request": request,
-        "ydl_version": request.app.state.ydlhandler.get_ydl_version(),
+        "ydl_version": request.app.state.ydlhandler.ydl_version,
         "ydl_name": request.app.state.ydlhandler.ydl_module_name,
         "ydl_website": request.app.state.ydlhandler.ydl_website,
         "ydl_formats": YDL_FORMATS,
@@ -28,7 +28,7 @@ async def front_index(request):
 async def front_logs(request):
     context = {
         "request": request,
-        "ydl_version": request.app.state.ydlhandler.get_ydl_version(),
+        "ydl_version": request.app.state.ydlhandler.ydl_version,
         "ydl_name": request.app.state.ydlhandler.ydl_module_name,
         "ydl_website": request.app.state.ydlhandler.ydl_website,
     }
@@ -62,7 +62,7 @@ async def front_finished(request):
 
     context = {
         "request": request,
-        "ydl_version": request.app.state.ydlhandler.get_ydl_version(),
+        "ydl_version": request.app.state.ydlhandler.ydl_version,
         "ydl_name": request.app.state.ydlhandler.ydl_module_name,
         "ydl_website": request.app.state.ydlhandler.ydl_website,
         "finished_files": sorted(files, key=itemgetter("modified"), reverse=True),
@@ -91,7 +91,7 @@ async def api_delete_file(request):
 
 
 async def api_list_extractors(request):
-    return JSONResponse(request.app.state.ydlhandler.get_ydl_extractors())
+    return JSONResponse(request.app.state.ydlhandler.ydl_extractors)
 
 
 async def api_queue_size(request):

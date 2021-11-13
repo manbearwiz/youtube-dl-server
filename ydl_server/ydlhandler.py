@@ -13,13 +13,7 @@ from subprocess import Popen, PIPE, STDOUT
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 
 
-def reload_youtube_dl():
-    for module in list(sys.modules.keys()):
-        if "youtube" in module:
-            try:
-                importlib.reload(sys.modules[module])
-            except ModuleNotFoundError:
-                print("ModuleNotFoundError:\n" + module)
+YDL_MODULES = ["youtube_dl", "youtube_dlc", "yt_dlp"]
 
 
 def get_ydl_website(ydl_module_name):
@@ -36,33 +30,47 @@ def read_proc_stdout(proc, strio):
 
 
 class YdlHandler:
+
+    def import_ydl_module(self):
+        ydl_module = None
+        if os.environ.get("YOUTUBE_DL").replace("-", "_") in YDL_MODULES:
+            ydl_module = importlib.import_module(os.environ.get("YOUTUBE_DL").replace("-", "_"))
+        else:
+            for module in YDL_MODULES:
+                try:
+                    ydl_module = importlib.import_module(module)
+                    break
+                except ImportError:
+                    pass
+        if ydl_module is None:
+            raise ImportError("No youtube_dl implementation found")
+
+        self.ydl_module_name = ydl_module.__name__.replace("_", "-")
+        self.ydl_website = get_ydl_website(self.ydl_module_name)
+
+        importlib.reload(ydl_module.version)
+        importlib.reload(ydl_module.extractor)
+
+        self.ydl_version = ydl_module.version.__version__
+        self.ydl_extractors = [
+            ie.IE_NAME
+            for ie in ydl_module.extractor.list_extractors(self.app_config["ydl_options"].get("age-limit"))
+            if ie._WORKING
+        ]
+
     def __init__(self, app_config, jobshandler):
         self.queue = Queue()
         self.thread = None
         self.done = False
-        self.ydl_module = None
         self.ydl_module_name = None
+        self.ydl_version = None
+        self.ydl_extractors = []
         self.app_config = app_config
         self.jobshandler = jobshandler
 
         self.app_config["ydl_last_update"] = datetime.now()
 
-        modules = ["youtube_dl", "youtube_dlc", "yt_dlp"]
-
-        if os.environ.get("YOUTUBE_DL").replace("-", "_") in modules:
-            self.ydl_module = importlib.import_module(os.environ.get("YOUTUBE_DL").replace("-", "_"))
-        else:
-            for module in modules:
-                try:
-                    self.ydl_module = importlib.import_module(module)
-                    break
-                except ImportError:
-                    pass
-        if self.ydl_module is None:
-            raise ImportError("No youtube_dl implementation found")
-        self.ydl_module_name = self.ydl_module.__name__.replace("_", "-")
-
-        self.ydl_website = get_ydl_website(self.ydl_module_name)
+        self.import_ydl_module()
 
         print("Using {} module".format(self.ydl_module_name))
 
@@ -97,6 +105,7 @@ class YdlHandler:
             self.queue.task_done()
 
     def update(self):
+        print(f"Updating: Current {self.ydl_module_name} version: {self.ydl_version}")
         if os.environ.get("YDL_PYTHONPATH"):
             command = [
                 "pip",
@@ -113,7 +122,8 @@ class YdlHandler:
         out, err = proc.communicate()
         if proc.wait() == 0:
             self.app_config["ydl_last_update"] = datetime.now()
-            reload_youtube_dl()
+            self.import_ydl_module()
+        print(f"Updating: New {self.ydl_module_name} version: {self.ydl_version}")
         return proc.returncode, str(out.decode("utf-8"))
 
     def get_ydl_options(self, ydl_config, request_options):
@@ -217,13 +227,3 @@ class YdlHandler:
     def join(self):
         if self.thread is not None:
             return self.thread.join()
-
-    def get_ydl_version(self):
-        return self.ydl_module.version.__version__
-
-    def get_ydl_extractors(self):
-        return [
-            ie.IE_NAME
-            for ie in self.ydl_module.extractor.list_extractors(self.app_config["ydl_options"].get("age-limit"))
-            if ie._WORKING
-        ]
