@@ -6,6 +6,6 @@ body {
   height: 100vh;
 }
 
-div.input-group>select.custom-select {
+div.input-group > select.custom-select {
   flex: 0.1 1 100px;
 }
