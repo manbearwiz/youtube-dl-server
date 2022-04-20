@@ -13,7 +13,7 @@ ARG YDL_PYTHONPATH='/youtube-dl/.python'
 VOLUME "/youtube-dl"
 VOLUME "/app_config"
 
-RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then apk add --no-cache musl-dev python3-dev gcc libffi-dev openssl-dev rust cargo; fi
+RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then apk add --no-cache musl-dev python3-dev gcc g++ libffi-dev openssl-dev rust cargo; fi
 RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then pip install cryptography pycryptodome; fi
 
 RUN mkdir -p /usr/src/app
