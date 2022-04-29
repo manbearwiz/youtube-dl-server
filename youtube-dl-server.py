@@ -7,7 +7,6 @@ from starlette.routing import Mount, Route
 from starlette.templating import Jinja2Templates
 from starlette.background import BackgroundTask
 
-import uvicorn
 from youtube_dl import YoutubeDL
 from collections import ChainMap
 
@@ -125,10 +124,3 @@ app = Starlette(debug=True, routes=routes)
 
 print("Updating youtube-dl to the newest version")
 update()
-
-app_vars = ChainMap(os.environ, app_defaults)
-
-if __name__ == "__main__":
-    uvicorn.run(
-        app, host=app_vars["YDL_SERVER_HOST"], port=int(app_vars["YDL_SERVER_PORT"])
-    )
