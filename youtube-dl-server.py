@@ -1,8 +1,11 @@
-import os, sys, subprocess
+import os
+import sys
+import subprocess
 
+from starlette.status import HTTP_303_SEE_OTHER
 from starlette.applications import Starlette
 from starlette.staticfiles import StaticFiles
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.templating import Jinja2Templates
 from starlette.background import BackgroundTask
@@ -29,9 +32,14 @@ async def dl_queue_list(request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+async def redirect(request):
+    return RedirectResponse(url="/youtube-dl")
+
+
 async def q_put(request):
     form = await request.form()
     url = form.get("url").strip()
+    ui = form.get("ui")
     options = {"format": form.get("format")}
 
     if not url:
@@ -42,8 +50,13 @@ async def q_put(request):
     task = BackgroundTask(download, url, options)
 
     print("Added url " + url + " to the download queue")
-    return JSONResponse(
-        {"success": True, "url": url, "options": options}, background=task
+
+    if not ui:
+        return JSONResponse(
+            {"success": True, "url": url, "options": options}, background=task
+        )
+    return RedirectResponse(
+        url="/youtube-dl?added=" + url, status_code=HTTP_303_SEE_OTHER, background=task
     )
 
 
@@ -62,6 +75,7 @@ def update():
         print(output.decode("ascii"))
     except subprocess.CalledProcessError as e:
         print(e.output)
+
 
 def get_ydl_options(request_options):
     request_vars = {
@@ -114,6 +128,7 @@ def download(url, request_options):
 
 
 routes = [
+    Route("/", endpoint=redirect),
     Route("/youtube-dl", endpoint=dl_queue_list),
     Route("/youtube-dl/q", endpoint=q_put, methods=["POST"]),
     Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),

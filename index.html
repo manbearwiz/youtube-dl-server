@@ -36,6 +36,7 @@
           available.
         </p>
         <form action="/youtube-dl/q" method="POST">
+          <input type="hidden" name="ui" value="true">
           <div class="input-group">
             <input
               name="url"
@@ -74,6 +75,7 @@
         </form>
       </main>
       <footer class="mt-auto text-muted">
+        <div id="liveAlertPlaceholder"></div>
         <p>
           Web frontend for
           <a class="text-light" href="https://rg3.github.io/youtube-dl/"
@@ -90,5 +92,26 @@
       integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
       crossorigin="anonymous"
     ></script>
+    <script>
+      var alertPlaceholder = document.getElementById('liveAlertPlaceholder');
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const added = urlParams.get('added');
+
+      function alert(message, type) {
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML =
+          '<div class="alert alert-' +
+          type +
+          ' alert-dismissible" role="alert">' +
+          message +
+          '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+        alertPlaceholder.append(wrapper);
+      }
+
+      if (added) {
+        alert('Successfully added <a href=' + added + '>one item</a> to the download queue', 'success');
+      }
+    </script>
   </body>
 </html>
