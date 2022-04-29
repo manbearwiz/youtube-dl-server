@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "youtube-dl-server"
+version = "0.1.0"
+description = "Very spartan Web and REST interface for downloading youtube videos onto a server"
+authors = ["Kevin Brey <manbearwiz@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+aiofiles = "^0.8.0"
+Jinja2 = "^3.1.2"
+python-multipart = "^0.0.5"
+starlette = "^0.19.1"
+uvicorn = {extras = ["standard"], version = "^0.17.6"}
+youtube_dl = "^2021.12.17"
+
+[tool.poetry.dev-dependencies]
+black = "^22.3.0"
+flake8 = "^3.9.2"
+pre-commit = "^2.13.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
