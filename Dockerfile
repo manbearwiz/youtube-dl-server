@@ -14,7 +14,7 @@ VOLUME "/youtube-dl"
 VOLUME "/app_config"
 
 COPY --from=nbr23/youtube-dl-wheels /out/wheels /wheels
-RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then pip install --no-cache /wheels/*; fi
+RUN pip install --no-cache /wheels/*
 
 RUN mkdir -p /usr/src/app
 RUN apk add --no-cache ffmpeg tzdata mailcap
