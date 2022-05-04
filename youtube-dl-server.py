@@ -13,7 +13,7 @@ from starlette.background import BackgroundTask
 from youtube_dl import YoutubeDL
 from collections import ChainMap
 
-templates = Jinja2Templates(directory="")
+templates = Jinja2Templates(directory="templates")
 
 app_defaults = {
     "YDL_FORMAT": "bestvideo+bestaudio/best",
@@ -132,7 +132,7 @@ routes = [
     Route("/youtube-dl", endpoint=dl_queue_list),
     Route("/youtube-dl/q", endpoint=q_put, methods=["POST"]),
     Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
-    Mount("/youtube-dl/static", app=StaticFiles(directory="static"), name="static"),
+    Mount("/static", app=StaticFiles(directory="static"), name="static"),
 ]
 
 app = Starlette(debug=True, routes=routes)
