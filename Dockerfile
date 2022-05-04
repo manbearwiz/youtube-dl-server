@@ -13,8 +13,8 @@ ARG YDL_PYTHONPATH='/youtube-dl/.python'
 VOLUME "/youtube-dl"
 VOLUME "/app_config"
 
-RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then apk add --no-cache musl-dev python3-dev gcc g++ libffi-dev openssl-dev rust cargo; fi
-RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then pip install cryptography pycryptodome; fi
+COPY --from=nbr23/youtube-dl-wheels /out/wheels /wheels
+RUN if [ $YOUTUBE_DL == "yt_dlp" ] || [ $YOUTUBE_DL == "yt-dlp" ]; then pip install --no-cache /wheels/*; fi
 
 RUN mkdir -p /usr/src/app
 RUN apk add --no-cache ffmpeg tzdata mailcap
