@@ -105,6 +105,8 @@ class YdlHandler:
             self.queue.task_done()
 
     def update(self):
+        if self.app_config["ydl_server"].get("no_updates", False):
+            return 0, ""
         print(f"Updating: Current {self.ydl_module_name} version: {self.ydl_version}")
         if os.environ.get("YDL_PYTHONPATH"):
             command = [
