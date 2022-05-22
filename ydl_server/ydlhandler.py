@@ -97,36 +97,8 @@ class YdlHandler:
                     job.status = Job.FAILED
                     job.log = "Error during download task:\n{}:\n\t{}".format(type(e).__name__, str(e))
                     print("Error during download task:\n{}:\n\t{}".format(type(e).__name__, str(e)))
-            elif job.type == JobType.YDL_UPDATE:
-                rc, log = self.update()
-                job.log = Job.clean_logs(log)
-                job.status = Job.COMPLETED if rc == 0 else Job.FAILED
             self.jobshandler.put((Actions.UPDATE, job))
             self.queue.task_done()
-
-    def update(self):
-        if self.app_config["ydl_server"].get("no_updates", False):
-            return 0, ""
-        print(f"Updating: Current {self.ydl_module_name} version: {self.ydl_version}")
-        if os.environ.get("YDL_PYTHONPATH"):
-            command = [
-                "pip",
-                "install",
-                "--no-cache-dir",
-                "-t",
-                os.environ.get("YDL_PYTHONPATH"),
-                "--upgrade",
-                self.ydl_module_name,
-            ]
-        else:
-            command = ["pip", "install", "--no-cache-dir", "--upgrade", self.ydl_module_name]
-        proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        out, err = proc.communicate()
-        if proc.wait() == 0:
-            self.app_config["ydl_last_update"] = datetime.now()
-            self.import_ydl_module()
-        print(f"Updating: New {self.ydl_module_name} version: {self.ydl_version}")
-        return proc.returncode, str(out.decode("utf-8"))
 
     def get_ydl_options(self, ydl_config, request_options):
         ydl_config = ydl_config.copy()
@@ -212,19 +184,16 @@ class YdlHandler:
         jobs = db.get_all(self.app_config["ydl_server"].get("max_log_entries", 100))
         not_endeds = [job for job in jobs if job["status"] == "Pending" or job["status"] == "Running"]
         for pending in not_endeds:
-            if int(pending["type"]) == JobType.YDL_UPDATE:
-                self.jobshandler.put((Actions.SET_STATUS, (pending["id"], Job.FAILED)))
-            else:
-                job = Job(
-                    pending["name"],
-                    Job.PENDING,
-                    "Queue stopped",
-                    int(pending["type"]),
-                    pending["format"],
-                    pending["url"],
-                )
-                job.id = pending["id"]
-                self.jobshandler.put((Actions.RESUME, job))
+            job = Job(
+                pending["name"],
+                Job.PENDING,
+                "Queue stopped",
+                int(pending["type"]),
+                pending["format"],
+                pending["url"],
+            )
+            job.id = pending["id"]
+            self.jobshandler.put((Actions.RESUME, job))
 
     def join(self):
         if self.thread is not None:

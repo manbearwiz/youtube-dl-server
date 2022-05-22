@@ -15,7 +15,6 @@ from ydl_server.config import app_config
 
 from ydl_server.routes import routes
 
-
 if __name__ == "__main__":
 
     JobsDB.check_db_latest()
@@ -32,10 +31,6 @@ if __name__ == "__main__":
     print("Started download thread")
     app.state.jobshandler.start(app.state.ydlhandler.queue)
     print("Started jobs manager thread")
-
-    print("Updating %s to the newest version" % app.state.ydlhandler.ydl_module_name)
-    job = Job("Youtube-dl at Boot Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
-    app.state.jobshandler.put((Actions.INSERT, job))
 
     app.state.ydlhandler.resume_pending()
 

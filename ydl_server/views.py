@@ -126,14 +126,14 @@ async def api_logs_clean(request):
     return JSONResponse({"success": True})
 
 
+# TODO
+async def api_jobs_stop(request):
+    request.app.state.jobshandler.put((Actions.CLEAN_LOGS, None))
+    return JSONResponse({"success": True})
+
+
 async def api_queue_download(request):
     data = await request.form()
-    if (app_config['ydl_server'].get('update_poll_delay_min') and
-            (datetime.now() - app_config['ydl_last_update']).total_seconds() >
-            app_config['ydl_server'].get('update_poll_delay_min') * 60):
-        job = Job("Youtube-dl Auto-Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
-        request.app.state.jobshandler.put((Actions.INSERT, job))
-
     url = data.get("url")
     options = {"format": data.get("format")}
 
@@ -153,13 +153,3 @@ async def api_metadata_fetch(request):
     if rc == 0:
         return JSONResponse(stdout)
     return JSONResponse({}, status_code=404)
-
-
-async def ydl_update(request):
-    job = Job("Youtube-dl Manual Update", Job.PENDING, "", JobType.YDL_UPDATE, None, None)
-    request.app.state.jobshandler.put((Actions.INSERT, job))
-    return JSONResponse(
-        {
-            "success": True,
-        }
-    )

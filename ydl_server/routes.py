@@ -16,7 +16,6 @@ routes = [
     Route("/logs", views.front_logs, name="logs"),
     Route("/finished", views.front_finished, name="finished"),
     Route("/api/extractors", views.api_list_extractors, name="api_list_extractors"),
-    Route("/api/youtube-dl/update", views.ydl_update, name="api_update"),
     Route("/api/downloads/stats", views.api_queue_size, name="api_queue_size"),
     Route("/api/downloads", views.api_logs, name="api_logs"),
     Route("/api/downloads/clean", views.api_logs_clean, name="api_logs_clean"),
