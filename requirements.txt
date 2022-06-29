@@ -1,6 +1,6 @@
 aiofiles==0.8.0
 Jinja2==3.1.2
 python-multipart==0.0.5
-starlette==0.20.3
+starlette==0.20.4
 uvicorn[standard]==0.18.2
 youtube-dl==2021.12.17
