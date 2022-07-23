@@ -19,12 +19,10 @@ Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube
 ## Running
 
 For easier deployment, a docker image is available on
-[dockerhub](https://hub.docker.com/r/nbr23/youtube-dl-server).
+[dockerhub](https://hub.docker.com/r/nbr23/youtube-dl-server):
 
-If you plan on using the `--embed-thumbnail` flag in youtube-dl,
-you will need `atomicparsley` embedded in the container.
-
-Use the tags `nbr23/youtube-dl-server:atomicparsley` to achieve this.
+- `nbr23/youtube-dl-server:latest` to use `youtube-dl`
+- `nbr23/youtube-dl-server:yt-dlp` to use `yt-dlp`
 
 ### Ansible
 
@@ -40,6 +38,12 @@ This directory will be used to output the resulting videos.
 
 ```shell
 docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:latest
+```
+
+OR for yt-dlp:
+
+```shell
+docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:yt-dlp
 ```
 
 ### Docker Compose
@@ -118,6 +122,12 @@ Install the python dependencies from `requirements.txt`:
 
 ```shell
 pip install -r requirements.txt
+```
+
+OR, if using `yt-dlp`:
+
+```shell
+pip install -r requirements-yt-dlp.txt
 ```
 
 You can run
