@@ -1,7 +1,6 @@
 ![Docker Stars Shield](https://img.shields.io/docker/stars/nbr23/youtube-dl-server.svg?style=flat-square)
 ![Docker Pulls Shield](https://img.shields.io/docker/pulls/nbr23/youtube-dl-server.svg?style=flat-square)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://raw.githubusercontent.com/nbr23/youtube-dl-server/master/LICENSE)
-[![ci](https://github.com/nbr23/youtube-dl-server/actions/workflows/docker-images.yml/badge.svg)](https://github.com/nbr23/youtube-dl-server/actions/workflows/docker-images.yml)
 
 # youtube-dl-server
 
