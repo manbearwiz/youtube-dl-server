@@ -10,7 +10,7 @@ from starlette.routing import Mount, Route
 from starlette.templating import Jinja2Templates
 from starlette.background import BackgroundTask
 
-from youtube_dl import YoutubeDL
+from yt_dlp import YoutubeDL
 from collections import ChainMap
 
 templates = Jinja2Templates(directory="templates")
@@ -69,7 +69,7 @@ async def update_route(scope, receive, send):
 def update():
     try:
         output = subprocess.check_output(
-            [sys.executable, "-m", "pip", "install", "--upgrade", "youtube-dl"]
+            [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"]
         )
 
         print(output.decode("ascii"))

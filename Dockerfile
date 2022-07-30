@@ -1,5 +1,5 @@
 #
-# youtube-dl Server Dockerfile
+# youtube-dl-server Dockerfile
 #
 # https://github.com/manbearwiz/youtube-dl-server-dockerfile
 #
