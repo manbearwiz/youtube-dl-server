@@ -72,7 +72,7 @@ def update():
             [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"]
         )
 
-        print(output.decode("ascii"))
+        print(output.decode("utf-8"))
     except subprocess.CalledProcessError as e:
         print(e.output)
 
