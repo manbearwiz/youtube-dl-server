@@ -1,9 +1,9 @@
-import os
 import sys
 import subprocess
 
 from starlette.status import HTTP_303_SEE_OTHER
 from starlette.applications import Starlette
+from starlette.config import Config
 from starlette.staticfiles import StaticFiles
 from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Mount, Route
@@ -11,20 +11,18 @@ from starlette.templating import Jinja2Templates
 from starlette.background import BackgroundTask
 
 from yt_dlp import YoutubeDL
-from collections import ChainMap
 
 templates = Jinja2Templates(directory="templates")
+config = Config(".env")
 
 app_defaults = {
-    "YDL_FORMAT": "bestvideo+bestaudio/best",
-    "YDL_EXTRACT_AUDIO_FORMAT": None,
-    "YDL_EXTRACT_AUDIO_QUALITY": "192",
-    "YDL_RECODE_VIDEO_FORMAT": None,
-    "YDL_OUTPUT_TEMPLATE": "/youtube-dl/%(title).200s [%(id)s].%(ext)s",
-    "YDL_ARCHIVE_FILE": None,
-    "YDL_SERVER_HOST": "0.0.0.0",
-    "YDL_SERVER_PORT": 8080,
-    "YDL_UPDATE_TIME": "True",
+    "YDL_FORMAT": config("YDL_FORMAT", cast=str, default="bestvideo+bestaudio/best"),
+    "YDL_EXTRACT_AUDIO_FORMAT": config("YDL_EXTRACT_AUDIO_FORMAT", default=None),
+    "YDL_EXTRACT_AUDIO_QUALITY": config("YDL_EXTRACT_AUDIO_QUALITY", cast=str, default="192"),
+    "YDL_RECODE_VIDEO_FORMAT": config("YDL_RECODE_VIDEO_FORMAT", default=None),
+    "YDL_OUTPUT_TEMPLATE": config("YDL_OUTPUT_TEMPLATE", cast=str, default="/youtube-dl/%(title).200s [%(id)s].%(ext)s"),
+    "YDL_ARCHIVE_FILE": config("YDL_ARCHIVE_FILE", default=None),
+    "YDL_UPDATE_TIME": config("YDL_UPDATE_TIME", cast=bool, default=True),
 }
 
 
@@ -92,7 +90,7 @@ def get_ydl_options(request_options):
     elif requested_format in ["mp4", "flv", "webm", "ogg", "mkv", "avi"]:
         request_vars["YDL_RECODE_VIDEO_FORMAT"] = requested_format
 
-    ydl_vars = ChainMap(request_vars, os.environ, app_defaults)
+    ydl_vars = app_defaults | request_vars
 
     postprocessors = []
 
