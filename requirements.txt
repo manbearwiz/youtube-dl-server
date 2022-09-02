@@ -3,4 +3,4 @@ Jinja2==3.1.2
 python-multipart==0.0.5
 starlette==0.20.4
 uvicorn[standard]==0.18.3
-yt-dlp==2022.8.19
+yt-dlp==2022.9.1
