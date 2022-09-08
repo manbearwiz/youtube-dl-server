@@ -10,7 +10,8 @@
             <thead>
               <tr class="d-flex">
                 <th class="col-1">Action</th>
-                <th class="col-9">Name</th>
+                <th class="col-8">Name</th>
+                <th class="col-1">Size</th>
                 <th class="col-2">Date</th>
               </tr>
             </thead>
@@ -54,7 +55,8 @@
                     </svg>
                   </a>
                 </td>
-                <td class="col-9">&emsp;<a href="api/finished/{{ f.name | urlencode }}/{{ c.name | urlencode }}">{{ c.name }}</a></td>
+                <td class="col-8">&emsp;<a href="api/finished/{{ f.name | urlencode }}/{{ c.name | urlencode }}">{{ c.name }}</a></td>
+                <td class="col-1">{{ c.size }}</td>
                 <td class="col-2">{{ c.modified }}</td>
               </tr>
             </tbody>
@@ -76,7 +78,8 @@
                   </svg>
                 </a>
               </td>
-                <td class="col-9"><a href="api/finished/{{ f.name | urlencode }}">{{ f.name }}</a></td>
+              <td class="col-8"><a href="api/finished/{{ f.name | urlencode }}">{{ f.name }}</a></td>
+              <td class="col-1">{{ f.size }}</td>
               <td class="col-2">{{ f.modified }}</td>
             </tr>
             </tbody>

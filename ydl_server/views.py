@@ -8,6 +8,7 @@ from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from datetime import datetime
 import os
 import shutil
+import humanize
 
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -46,7 +47,7 @@ async def front_finished(request):
             "directory": f1.is_dir(),
             "children": sorted(
                 [
-                    {"name": f2.name, "modified": datetime.fromtimestamp(f2.stat().st_mtime).strftime("%H:%m %D")}
+                    {"name": f2.name, "size": humanize.naturalsize(f2.stat().st_size),"modified": datetime.fromtimestamp(f2.stat().st_mtime).strftime("%H:%m %D")}
                     for f2 in f1.iterdir()
                     if not f2.name.startswith(".")
                 ],
