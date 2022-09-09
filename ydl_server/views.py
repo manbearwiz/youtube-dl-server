@@ -44,6 +44,7 @@ async def front_finished(request):
         {
             "name": f1.name,
             "modified": datetime.fromtimestamp(f1.stat().st_mtime).strftime("%H:%m %D"),
+            "size": humanize.naturalsize(f1.stat().st_size) if not f1.is_dir() else None,
             "directory": f1.is_dir(),
             "children": sorted(
                 [
