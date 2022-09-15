@@ -4,7 +4,7 @@ from markupsafe import Markup, escape
 
 from ydl_server.config import app_config
 
-STATUS_NAME = ["Running", "Completed", "Failed", "Pending"]
+STATUS_NAME = ["Running", "Completed", "Failed", "Pending", "Aborted"]
 
 
 class Actions:
@@ -17,6 +17,7 @@ class Actions:
     SET_STATUS = 7
     SET_LOG = 8
     CLEAN_LOGS = 9
+    SET_PID = 10
 
 
 class JobType:
@@ -29,8 +30,9 @@ class Job:
     COMPLETED = 1
     FAILED = 2
     PENDING = 3
+    ABORTED = 4
 
-    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1):
+    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1, pid=0):
         self.id = id
         self.name = name
         self.status = status
@@ -39,6 +41,7 @@ class Job:
         self.format = format
         self.type = jobtype
         self.url = url
+        self.pid = pid
 
     @staticmethod
     def clean_logs(logs):
@@ -59,8 +62,8 @@ class JobsDB:
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info('jobs')")
         columns = [row[1] for row in cursor.fetchall()]
-        if set(columns) != set(['id', 'name', 'status', 'format', 'log', 'last_update', 'type', 'url']):
-            print("Outdated jbos table, cleaning up and recreating")
+        if set(columns) != set(["id", "name", "status", "format", "log", "last_update", "type", "url", "pid"]):
+            print("Outdated jobs table, cleaning up and recreating")
             cursor.execute("DROP TABLE if exists jobs;")
         conn.close()
 
@@ -77,7 +80,8 @@ class JobsDB:
                 format TEXT, \
                 last_update DATETIME DEFAULT CURRENT_TIMESTAMP, \
                 type INTEGER NOT NULL, \
-                url TEXT);"
+                url TEXT, \
+                pid INTEGER);"
         )
         conn.commit()
         conn.close()
@@ -92,10 +96,11 @@ class JobsDB:
 
     def insert_job(self, job):
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO jobs (name, status, log, format, type, \
-                url) VALUES (?, ?, ?, ?, ?, ?);",
-                (job.name, str(job.status), job.log, job.format, str(job.type),
-                    job.url))
+        cursor.execute(
+            "INSERT INTO jobs (name, status, log, format, type, \
+                url, pid) VALUES (?, ?, ?, ?, ?, ?, ?);",
+            (job.name, str(job.status), job.log, job.format, str(job.type), job.url, job.pid),
+        )
         job.id = cursor.lastrowid
         self.conn.commit()
 
@@ -117,6 +122,15 @@ class JobsDB:
         )
         self.conn.commit()
 
+    def set_job_pid(self, job_id, pid):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "UPDATE jobs SET pid = ?, last_update = datetime() \
+                where id = ?;",
+            (str(pid), str(job_id)),
+        )
+        self.conn.commit()
+
     def set_job_log(self, job_id, log):
         cursor = self.conn.cursor()
         cursor.execute(
@@ -135,6 +149,14 @@ class JobsDB:
         )
         self.conn.commit()
 
+    def set_job_pid(self, job_id, pid):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "UPDATE jobs SET pid = ?, last_update = datetime() \
+                where id = ?;",
+            (pid, str(job_id)),
+        )
+        self.conn.commit()
 
     def purge_jobs(self):
         cursor = self.conn.cursor()
@@ -154,17 +176,44 @@ class JobsDB:
         self.conn.commit()
         self.conn.execute("VACUUM")
 
+    def get_job_by_id(self, job_id):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT id, name, status, log, last_update, format, type, url, pid from jobs where id = ?;",
+            (job_id,),
+        )
+        job_id, name, status, log, last_update, format, jobtype, url, pid = cursor.fetchone()
+        return {
+            "id": job_id,
+            "name": escape(name),
+            "status": STATUS_NAME[status],
+            "log": escape(log),
+                    'format': escape(format) if format is not None else None,
+            "last_update": last_update,
+            "type": jobtype,
+            "url": url,
+            "pid": pid,
+        }
+
     def get_all(self, limit=50):
         cursor = self.conn.cursor()
-        cursor.execute("SELECT id, name, status, log, last_update, format, type, url from jobs ORDER BY last_update DESC LIMIT ?;", (str(limit),))
+        cursor.execute(
+            "SELECT id, name, status, log, last_update, format, type, url, pid from jobs ORDER BY last_update DESC LIMIT ?;",
+            (str(limit),),
+        )
         rows = []
-        for job_id, name, status, log, last_update, format, jobtype, url in cursor.fetchall():
-            rows.append({'id': job_id,
-                         'name': escape(name),
-                         'status': STATUS_NAME[status],
-                         'log': escape(log),
-                         'format': escape(format) if format is not None else None,
-                         'last_update': last_update,
-                         'type': jobtype,
-                         'url': escape(url)})
+        for job_id, name, status, log, last_update, format, jobtype, url, pid in cursor.fetchall():
+            rows.append(
+                {
+                    "id": job_id,
+                    "name": escape(name),
+                    "status": STATUS_NAME[status],
+                    "log": escape(log),
+                    'format': escape(format) if format is not None else None,
+                    "last_update": last_update,
+                    "type": jobtype,
+                    "url": escape(url),
+                    "pid": pid,
+                }
+            )
         return rows

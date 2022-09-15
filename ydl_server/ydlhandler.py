@@ -85,8 +85,13 @@ class YdlHandler:
         self.done = True
 
     def worker(self):
+        db = JobsDB(readonly=True)
         while not self.done:
             job = self.queue.get()
+            job_detail = db.get_job_by_id(job.id)
+            if job_detail["status"] == 'Aborted':
+                self.queue.task_done()
+                continue
             job.status = Job.RUNNING
             self.jobshandler.put((Actions.SET_STATUS, (job.id, job.status)))
             if job.type == JobType.YDL_DOWNLOAD:
@@ -165,6 +170,7 @@ class YdlHandler:
         cmd = self.get_ydl_full_cmd(ydl_opts, job.url)
 
         proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+        self.jobshandler.put((Actions.SET_PID, (job.id, proc.pid)))
         stdout_thread = Thread(target=self.download_log_update, args=(job, proc, output))
         stdout_thread.start()
 

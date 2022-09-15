@@ -7,6 +7,7 @@ from ydl_server.config import app_config, get_finished_path, YDL_FORMATS
 from ydl_server.logdb import JobsDB, Job, Actions, JobType
 from datetime import datetime
 import os
+import signal
 import shutil
 import humanize
 
@@ -108,6 +109,7 @@ async def api_queue_size(request):
                 "running": len([job for job in jobs if job["status"] == "Running"]),
                 "completed": len([job for job in jobs if job["status"] == "Completed"]),
                 "failed": len([job for job in jobs if job["status"] == "Failed"]),
+                "aborted": len([job for job in jobs if job["status"] == "Aborted"]),
             },
         }
     )
@@ -128,9 +130,18 @@ async def api_logs_clean(request):
     return JSONResponse({"success": True})
 
 
-# TODO
 async def api_jobs_stop(request):
-    request.app.state.jobshandler.put((Actions.CLEAN_LOGS, None))
+    db = JobsDB(readonly=True)
+    data = await request.form()
+    job_id = request.path_params["job_id"]
+    job = db.get_job_by_id(job_id)
+    if job["status"] == 'Pending':
+        print("Cancelling pending job")
+        request.app.state.jobshandler.put((Actions.SET_STATUS, (job["id"], Job.ABORTED)))
+    elif job["status"] == 'Running' and int(job["pid"]) != 0:
+        print("Stopping running job", job["pid"])
+        print(os.kill(job["pid"], signal.SIGINT))
+
     return JSONResponse({"success": True})
 
 

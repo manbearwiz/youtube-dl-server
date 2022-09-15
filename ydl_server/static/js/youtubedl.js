@@ -33,6 +33,12 @@ function retry_download(url, format){
     });
 }
 
+function terminate_job(job_id){
+  $.post(`api/jobs/${job_id}/stop`, {})
+    .done(function (data) {
+    });
+}
+
 function pretty_size(size_b) {
   if (size_b == null) {
     return "NaN";
@@ -141,6 +147,7 @@ function purge_download_logs(){
 var statusToTrClass = {
   Pending: 'badge',
   Failed: 'badge bg-danger',
+  Aborted: 'badge bg-warning',
   Running: 'badge bg-info',
   Completed: 'badge bg-success'
 }
@@ -153,12 +160,14 @@ function get_download_logs(){
       download_logs += "<td>" + row.last_update + "</td>";
       download_logs += "<td>" + row.name + "</td>";
       download_logs += "<td>" + (row.format != null ? row.format : "") + "</td>";
-      if (row.status == 'Failed' && row.type != 1) {
+      if ((row.status === 'Failed' || row.status === 'Aborted') && row.type != 1) {
         format = row.format != null ? "'" + row.format +"'" : "null";
         download_logs += "<td> <a href=\"#\" onclick=\"retry_download('" + row.url + "'," + format + ")\" class='" + statusToTrClass[row.status] + "'>" + row.status + " / Retry</a></td>";
-      }
-      else
+      } else if ((row.status === 'Running' || row.status === 'Pending') && row.type != 1) {
+        download_logs += "<td> <span class='" + statusToTrClass[row.status] + "'>" + row.status + ` <a role="button" aria-label="Abort" onclick="terminate_job(${row.id})">&times;</a></span></td>`;
+      } else {
         download_logs += "<td> <span class='" + statusToTrClass[row.status] + "'>" + row.status + "</span></td>";
+      }
       download_logs += "<td style='text-align: left;'>" + row.log.replace(/\n|\r/g, '<br/>') + "</td>";
       download_logs += "</tr>";
     });
