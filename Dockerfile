@@ -8,7 +8,6 @@
 FROM python:alpine3.13
 ARG YOUTUBE_DL=youtube_dl
 ARG ATOMICPARSLEY=0
-ARG YDL_PYTHONPATH='/youtube-dl/.python'
 
 VOLUME "/youtube-dl"
 VOLUME "/app_config"
@@ -37,5 +36,4 @@ EXPOSE 8080
 
 ENV YOUTUBE_DL=$YOUTUBE_DL
 ENV YDL_CONFIG_PATH='/app_config'
-ENV YDL_PYTHONPATH=$YDL_PYTHONPATH
 CMD [ "./docker_run.sh" ]

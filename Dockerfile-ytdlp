@@ -10,20 +10,19 @@ WORKDIR /ffmpeg
 
 RUN apk add wget &&  \
   if [ "$(uname -m)" == "x86_64" ]; then \
-    wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz; \
+  wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz; \
   elif [ "$(uname -m)" == "aarch64" ]; then \
-    wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-arm64-static.tar.xz; \
+  wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-arm64-static.tar.xz; \
   elif [ "$(uname -m)" == "armv7l" ]; then \
-    wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-armhf-static.tar.xz; \
+  wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-armhf-static.tar.xz; \
   else \
-    wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-$(uname -m)-static.tar.xz; \
+  wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-$(uname -m)-static.tar.xz; \
   fi \
   && tar -xvf ffmpeg-git-*-static.tar.xz && cd ffmpeg-git-*-static && mv ffmpeg ffprobe ../
 
 FROM python:alpine3.13
 ARG YOUTUBE_DL=youtube_dl
 ARG ATOMICPARSLEY=0
-ARG YDL_PYTHONPATH='/youtube-dl/.python'
 
 VOLUME "/youtube-dl"
 VOLUME "/app_config"
@@ -54,5 +53,4 @@ EXPOSE 8080
 
 ENV YOUTUBE_DL=$YOUTUBE_DL
 ENV YDL_CONFIG_PATH='/app_config'
-ENV YDL_PYTHONPATH=$YDL_PYTHONPATH
 CMD [ "./docker_run.sh" ]
