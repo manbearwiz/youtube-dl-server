@@ -36,13 +36,13 @@ app. Note the `-v` argument to specify the volume and its binding on the host.
 This directory will be used to output the resulting videos.
 
 ```shell
-docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:latest
+docker run -d --name youtube-dl -p 8080:8080 -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:latest
 ```
 
 OR for yt-dlp:
 
 ```shell
-docker run -d --name youtube-dl -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:yt-dlp
+docker run -d --name youtube-dl -p 8080:8080 -v $HOME/youtube-dl:/youtube-dl nbr23/youtube-dl-server:yt-dlp
 ```
 
 ### Docker Compose
