@@ -5,18 +5,19 @@
     <div class="flex-grow-1"></div>
     <div class="jumbotron bg-transparent flex-grow-1">
       <h1 class="display-4">youtube-dl</h1>
-      <p class="lead">Enter a video url to download the video to the server. Url can be to YouTube or <a
+      <p class="lead">Enter a video URL to download the video to the server. URL can be to YouTube or <a
           class="text-info" href="#" onclick="extractors_show()">any
           other supported site</a>. The server will automatically download the highest quality version available.</p>
       <div>
         <div class="input-group">
           <input name="url" type="url" class="form-control" placeholder="URL" aria-label="URL"
-            aria-describedby="button-submit" id="url" autofocus/>
+            aria-describedby="button-submit" id="url" autocomplete="off" autofocus />
           <select class="custom-select" name="format" id="format">
             {% for category in ydl_formats %}
             <optgroup label="{{ category }}">
               {% for format in ydl_formats[category] %}
-              <option value="{{ format }}" {% if ydl_default_format == format %}selected{% endif %}>{{ ydl_formats[category][format] }}</option>
+              <option value="{{ format }}" {% if ydl_default_format==format %}selected{% endif %}>{{
+                ydl_formats[category][format] }}</option>
               {% endfor %}
             </optgroup>
             {% endfor %}
@@ -28,8 +29,9 @@
       </div>
       <br />
 
-      <div class="modal fade text-dark" id="extractors_modal" tabindex="-1" aria-labelledby="extractors_title" aria-hidden="true">
-        <div class="modal-dialog"  id='extractors_dialog'>
+      <div class="modal fade text-dark" id="extractors_modal" tabindex="-1" aria-labelledby="extractors_title"
+        aria-hidden="true">
+        <div class="modal-dialog" id='extractors_dialog'>
           <div class="modal-content bg-light">
             <div class="modal-header">
               <h1 class="modal-title fs-5" id="extractors_title"></h1>

@@ -18,10 +18,24 @@ nav {
   background-color: #001b26;
 }
 
-div.input-group > select.custom-select {
+div.input-group>select.custom-select {
   flex: 0.1 1 100px;
   background-color: #d1e4eb;
   color: #000;
+  border: 1px solid #c1c1c1;
+  z-index: 100;
+}
+
+
+div.input-group>input.form-control {
+  border: 1px solid #c1c1c1;
+  box-shadow: inset 1px 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+#button-submit {
+  margin-left: -3px;
+  padding-left: 15px;
+  box-shadow: none;
 }
 
 .nav-item .badge {
