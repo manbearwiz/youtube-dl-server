@@ -17,7 +17,7 @@ RUN pip install --no-cache /wheels/*
 
 RUN mkdir -p /usr/src/app
 RUN apk add --no-cache ffmpeg tzdata mailcap
-RUN if [ $ATOMICPARSLEY == 1 ]; then apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing atomicparsley; ln /usr/bin/atomicparsley /usr/bin/AtomicParsley; fi
+RUN if [ $ATOMICPARSLEY == 1 ]; then apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing atomicparsley; ln /usr/bin/atomicparsley /usr/bin/AtomicParsley || true; fi
 COPY ./requirements.txt /usr/src/app/
 RUN pip install --upgrade pip && sed -i s/youtube-dl/${YOUTUBE_DL}/ /usr/src/app/requirements.txt && pip install --no-cache-dir -r /usr/src/app/requirements.txt
 
