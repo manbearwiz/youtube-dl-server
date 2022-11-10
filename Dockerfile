@@ -4,7 +4,7 @@
 # https://github.com/manbearwiz/youtube-dl-server-dockerfile
 #
 
-FROM python:alpine
+FROM python:3.9-alpine
 
 RUN apk add --no-cache \
   ffmpeg \
@@ -13,6 +13,7 @@ RUN apk add --no-cache \
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
+ADD pip.conf /etc/pip.conf
 COPY requirements.txt /usr/src/app/
 RUN apk --update-cache add --virtual build-dependencies gcc libc-dev make \
   && pip install --no-cache-dir -r requirements.txt \
