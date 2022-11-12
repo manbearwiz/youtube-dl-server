@@ -20,9 +20,9 @@ def get_ydl_website(ydl_module_name):
     import pip._internal.commands.show as pipshow
 
     info = list(pipshow.search_packages_info([ydl_module_name]))
-    if len(info) < 1 or "home-page" not in info[0]:
+    if len(info) < 1:
         return ""
-    return info[0]["home-page"]
+    return getattr(info[0], "home-page", getattr(info[0], "homepage", ""))
 
 
 def read_proc_stdout(proc, strio):
