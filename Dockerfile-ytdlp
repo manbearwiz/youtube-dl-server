@@ -28,7 +28,7 @@ VOLUME "/youtube-dl"
 VOLUME "/app_config"
 
 COPY --from=nbr23/youtube-dl-wheels /out/wheels /wheels
-RUN pip install --no-cache /wheels/*
+RUN pip install --upgrade --no-cache-dir pip && pip install --no-cache-dir /wheels/*
 
 RUN mkdir -p /usr/src/app
 COPY --from=ffmpeg /ffmpeg/ffmpeg /usr/local/bin/ffmpeg

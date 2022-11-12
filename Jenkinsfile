@@ -20,7 +20,7 @@ pipeline {
             steps {
                 sh '''
                     BUILDER=`docker buildx create --use`
-                    docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg ATOMICPARSLEY=1 -t nbr23/youtube-dl-server:latest -t nbr23/youtube-dl-server:youtube-dl -t nbr23/youtube-dl-server:youtube-dl_atomicparsley --push .
+                    docker buildx build --pull --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg ATOMICPARSLEY=1 -t nbr23/youtube-dl-server:latest -t nbr23/youtube-dl-server:youtube-dl -t nbr23/youtube-dl-server:youtube-dl_atomicparsley --push .
                     docker buildx rm $BUILDER
                     '''
             }
@@ -30,7 +30,7 @@ pipeline {
             steps {
                 sh '''
                     BUILDER=`docker buildx create --use`
-                    docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg YOUTUBE_DL=yt_dlp --build-arg ATOMICPARSLEY=1 -t nbr23/youtube-dl-server:yt-dlp -t nbr23/youtube-dl-server:yt-dlp_atomicparsley -f Dockerfile-ytdlp --push .
+                    docker buildx build --pull --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg YOUTUBE_DL=yt_dlp --build-arg ATOMICPARSLEY=1 -t nbr23/youtube-dl-server:yt-dlp -t nbr23/youtube-dl-server:yt-dlp_atomicparsley -f Dockerfile-ytdlp --push .
                     docker buildx rm $BUILDER
                     '''
             }
