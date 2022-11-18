@@ -1,6 +1,6 @@
 aiofiles==0.8.0
 Jinja2==3.1.2
 python-multipart==0.0.5
-starlette==0.21.0
+starlette==0.22.0
 uvicorn[standard]==0.19.0
 yt-dlp==2022.10.4
