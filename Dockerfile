@@ -6,8 +6,8 @@
 
 FROM python:alpine
 
-ENV YTDL_PORT 8080
-ENV YTDL_BASE_URL /youtube-dl
+ENV YDL_PORT 8080
+ENV YDL_BASE_URL /youtube-dl
 
 RUN apk add --no-cache \
   ffmpeg \
@@ -23,8 +23,8 @@ RUN apk --update-cache add --virtual build-dependencies gcc libc-dev make \
 
 COPY . /usr/src/app
 
-EXPOSE ${YTDL_PORT}
+EXPOSE ${YDL_PORT}
 
 VOLUME ["/youtube-dl"]
 
-CMD ["uvicorn", "youtube-dl-server:app", "--host", "0.0.0.0", "--port", ${YTDL_PORT}]
+CMD ["uvicorn", "youtube-dl-server:app", "--host", "0.0.0.0", "--port", ${YDL_PORT}]
