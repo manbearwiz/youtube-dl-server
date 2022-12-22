@@ -5,7 +5,7 @@
 #
 
 
-FROM python:alpine3.13
+FROM python:alpine3.17
 ARG YOUTUBE_DL=youtube_dl
 ARG ATOMICPARSLEY=0
 
