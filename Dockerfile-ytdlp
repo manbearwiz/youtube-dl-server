@@ -20,7 +20,7 @@ RUN apk add wget &&  \
   fi \
   && tar -xvf ffmpeg-git-*-static.tar.xz && cd ffmpeg-git-*-static && mv ffmpeg ffprobe ../
 
-FROM python:alpine3.13
+FROM python:alpine3.17
 ARG YOUTUBE_DL=yt_dlp
 ARG ATOMICPARSLEY=0
 
