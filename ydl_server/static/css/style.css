@@ -1,6 +1,8 @@
-html, body {
+html,
+body {
   height: 100%;
   background-color: #002b36;
+  color: #fff;
   margin: 0;
 }
 
@@ -16,14 +18,18 @@ nav {
   background-color: #001b26;
 }
 
-div.input-group>select.custom-select {
+div.input-group > select.custom-select {
   flex: 0.1 1 100px;
+  background-color: #d1e4eb;
+  color: #000;
 }
 
 .nav-item .badge {
   margin-right: 2px;
 }
 
-.footer{
-  height: 70px;
+.footer {
+  width: 100%;
+  position: absolute;
+  bottom: 0;
 }
