@@ -1,5 +1,6 @@
 import sys
 import subprocess
+import os
 
 from starlette.status import HTTP_303_SEE_OTHER
 from starlette.applications import Starlette
@@ -11,6 +12,8 @@ from starlette.templating import Jinja2Templates
 from starlette.background import BackgroundTask
 
 from yt_dlp import YoutubeDL
+
+base_url = os.environ.get('YDL_BASE_URL','/')
 
 templates = Jinja2Templates(directory="templates")
 config = Config(".env")
@@ -127,9 +130,9 @@ def download(url, request_options):
 
 routes = [
     Route("/", endpoint=redirect),
-    Route("/youtube-dl", endpoint=dl_queue_list),
-    Route("/youtube-dl/q", endpoint=q_put, methods=["POST"]),
-    Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
+    Route(base_url, endpoint=dl_queue_list),
+    Route(base_url+"/q", endpoint=q_put, methods=["POST"]),
+    Route(base_url+"/update", endpoint=update_route, methods=["PUT"]),
     Mount("/static", app=StaticFiles(directory="static"), name="static"),
 ]
 
