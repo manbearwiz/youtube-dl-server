@@ -14,7 +14,15 @@
       integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
       crossorigin="anonymous"
     />
-    <link href="{{ url_for('static', path='/css/style.css') }}" rel="stylesheet">
+    <style>
+      body {
+        background-color: #002b36;
+      }
+
+      div.input-group > select.form-select {
+        flex: 0.1 1 100px;
+      }
+    </style>
 
     <title>youtube-dl</title>
   </head>
@@ -36,7 +44,7 @@
           available.
         </p>
         <form action="/youtube-dl/q" method="POST">
-          <input type="hidden" name="ui" value="true">
+          <input type="hidden" name="ui" value="true" />
           <div class="input-group">
             <input
               name="url"
@@ -110,7 +118,12 @@
       }
 
       if (added) {
-        alert('Successfully added <a href=' + added + '>one item</a> to the download queue', 'success');
+        alert(
+          'Successfully added <a href=' +
+            added +
+            '>one item</a> to the download queue',
+          'success',
+        );
       }
     </script>
   </body>
