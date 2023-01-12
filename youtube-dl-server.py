@@ -10,7 +10,7 @@ from starlette.routing import Mount, Route
 from starlette.templating import Jinja2Templates
 from starlette.background import BackgroundTask
 
-from yt_dlp import YoutubeDL
+from yt_dlp import YoutubeDL, version
 
 templates = Jinja2Templates(directory="templates")
 config = Config(".env")
@@ -27,7 +27,7 @@ app_defaults = {
 
 
 async def dl_queue_list(request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request, "ytdlp_version": version.__version__})
 
 
 async def redirect(request):
