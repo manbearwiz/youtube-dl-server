@@ -30,11 +30,11 @@ app_defaults = {
 
 
 async def dl_queue_list(request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request, "base_url": base_url})
 
 
 async def redirect(request):
-    return RedirectResponse(url="/youtube-dl")
+    return RedirectResponse(url="/"+base_url)
 
 
 async def q_put(request):
