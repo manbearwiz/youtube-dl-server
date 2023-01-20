@@ -133,7 +133,7 @@ routes = [
     Route(base_url, endpoint=dl_queue_list),
     Route(base_url+"/q", endpoint=q_put, methods=["POST"]),
     Route(base_url+"/update", endpoint=update_route, methods=["PUT"]),
-    Mount("/static", app=StaticFiles(directory="static"), name="static"),
+    Mount(base_url+"/static", app=StaticFiles(directory="static"), name="static"),
 ]
 
 app = Starlette(debug=True, routes=routes)
