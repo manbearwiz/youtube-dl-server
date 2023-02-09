@@ -1,7 +1,6 @@
 import os
 from queue import Queue
 from threading import Thread
-import subprocess
 import io
 import importlib
 import json
@@ -130,8 +129,7 @@ class YdlHandler:
 
     def fetch_metadata(self, url):
         ydl_opts = self.app_config.get("ydl_options", {})
-        cmd = self.get_ydl_full_cmd(ydl_opts, url)
-        cmd.extend(["-J", "--flat-playlist"])
+        cmd = self.get_ydl_full_cmd(ydl_opts, url, ["-J", "--flat-playlist"])
 
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = proc.communicate()
@@ -140,7 +138,7 @@ class YdlHandler:
 
         return 0, json.loads(stdout)
 
-    def get_ydl_full_cmd(self, opt_dict, url):
+    def get_ydl_full_cmd(self, opt_dict, url, extra_opts=None):
         cmd = [self.ydl_module_name]
         if opt_dict is not None:
             for key, val in opt_dict.items():
@@ -149,6 +147,9 @@ class YdlHandler:
                 cmd.append("--{}".format(key))
                 if val is not None and not isinstance(val, bool):
                     cmd.append(str(val))
+        if extra_opts is not None and isinstance(extra_opts, list):
+            cmd.extend(extra_opts)
+        cmd.append("--")
         cmd.append(url)
         return cmd
 
