@@ -23,6 +23,8 @@ app_defaults = {
     "YDL_OUTPUT_TEMPLATE": config("YDL_OUTPUT_TEMPLATE", cast=str, default="/youtube-dl/%(title).200s [%(id)s].%(ext)s"),
     "YDL_ARCHIVE_FILE": config("YDL_ARCHIVE_FILE", default=None),
     "YDL_UPDATE_TIME": config("YDL_UPDATE_TIME", cast=bool, default=True),
+    "YDL_WRITE_SUBTITLES": config("YDL_WRITE_SUBTITLES", cast=bool, default=False),
+    "YDL_SUBTITLES_SRT": config("YDL_SUBTITLES_SRT", cast=bool, default=False),
 }
 
 
@@ -38,7 +40,10 @@ async def q_put(request):
     form = await request.form()
     url = form.get("url").strip()
     ui = form.get("ui")
-    options = {"format": form.get("format")}
+    options = {
+        "format": form.get("format"),
+        "subtitles": form.get("subtitles")
+        }
 
     if not url:
         return JSONResponse(
@@ -82,6 +87,7 @@ def get_ydl_options(request_options):
     }
 
     requested_format = request_options.get("format", "bestvideo")
+    requested_subtitles = request_options.get("subtitles", "no-subtitles")
 
     if requested_format in ["aac", "flac", "mp3", "m4a", "opus", "vorbis", "wav"]:
         request_vars["YDL_EXTRACT_AUDIO_FORMAT"] = requested_format
@@ -89,6 +95,11 @@ def get_ydl_options(request_options):
         request_vars["YDL_EXTRACT_AUDIO_FORMAT"] = "best"
     elif requested_format in ["mp4", "flv", "webm", "ogg", "mkv", "avi"]:
         request_vars["YDL_RECODE_VIDEO_FORMAT"] = requested_format
+    
+    if requested_subtitles != "no-subtitles":
+        request_vars["YDL_WRITE_SUBTITLES"] = True
+    if requested_subtitles == "all-srt":
+        request_vars["YDL_SUBTITLES_SRT"] = True
 
     ydl_vars = app_defaults | request_vars
 
@@ -110,6 +121,25 @@ def get_ydl_options(request_options):
                 "preferedformat": ydl_vars["YDL_RECODE_VIDEO_FORMAT"],
             }
         )
+    
+    if ydl_vars["YDL_SUBTITLES_SRT"] == True and ydl_vars["YDL_WRITE_SUBTITLES"] == True:
+        # convert the subtitles to SRT - required if your video player cannot read new formats (e.g. Kodi 18)
+        postprocessors.append(
+            {
+                "key": "FFmpegSubtitlesConvertor",
+                'format': "srt"
+            }
+        )
+
+    if ydl_vars["YDL_WRITE_SUBTITLES"] == True:
+        # merge the subtitles in the output file
+        postprocessors.append(
+            {
+                "key": "FFmpegEmbedSubtitle",
+                'already_have_subtitle': False
+            }
+        )
+
 
     return {
         "format": ydl_vars["YDL_FORMAT"],
@@ -117,11 +147,16 @@ def get_ydl_options(request_options):
         "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
         "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
         "updatetime": ydl_vars["YDL_UPDATE_TIME"] == "True",
+        "writesubtitles": ydl_vars["YDL_WRITE_SUBTITLES"],
+        "subtitleslangs": ["all"],
+        "allsubtitles": True
     }
 
 
 def download(url, request_options):
-    with YoutubeDL(get_ydl_options(request_options)) as ydl:
+    opts = get_ydl_options(request_options)
+    print(f"downloading {url} with options {opts}")
+    with YoutubeDL(opts) as ydl:
         ydl.download([url])
 
 
