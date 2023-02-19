@@ -4,5 +4,5 @@ aiofiles
 jinja2
 python-multipart
 pyyaml
-humanize==4.3.0
+humanize==4.6.0
 youtube-dl
