@@ -2,5 +2,5 @@ aiofiles==23.1.0
 Jinja2==3.1.2
 python-multipart==0.0.5
 starlette==0.24.0
-uvicorn[standard]==0.20.0
+uvicorn==0.20.0
 yt-dlp==2023.1.6

@@ -14,7 +14,9 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 COPY requirements.txt /usr/src/app/
-RUN apk --update-cache add --virtual build-dependencies gcc libc-dev make \
+
+ENV CARGO_NET_GIT_FETCH_WITH_CLI=true
+RUN apk --update-cache --no-cache add --virtual build-dependencies build-base gcc libc-dev make rust cargo git alpine-sdk \
   && pip install --no-cache-dir -r requirements.txt \
   && apk del build-dependencies
 
