@@ -44,5 +44,5 @@ div.input-group>input.form-control {
 
 .footer {
   width: 100%;
-  position: absolute;
+  #position: absolute; #If downloadlist is longer than normal, footer getting inside the list
 }
