@@ -10,13 +10,13 @@ WORKDIR /ffmpeg
 
 RUN apk add wget &&  \
   if [ "$(uname -m)" == "x86_64" ]; then \
-  wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz; \
+  wget -q https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz; \
   elif [ "$(uname -m)" == "aarch64" ]; then \
-  wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-arm64-static.tar.xz; \
+  wget -q https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-arm64-static.tar.xz; \
   elif [ "$(uname -m)" == "armv7l" ]; then \
-  wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-armhf-static.tar.xz; \
+  wget -q https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-armhf-static.tar.xz; \
   else \
-  wget https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-$(uname -m)-static.tar.xz; \
+  wget -q https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-$(uname -m)-static.tar.xz; \
   fi \
   && tar -xvf ffmpeg-git-*-static.tar.xz && cd ffmpeg-git-*-static && mv ffmpeg ffprobe ../
 
