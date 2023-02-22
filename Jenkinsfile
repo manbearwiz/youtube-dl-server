@@ -1,14 +1,11 @@
 pipeline {
     agent any
     stages {
-
-
         stage('Checkout'){
             steps {
                 checkout scm
             }
         }
-
         stage('Dockerhub login') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
@@ -35,11 +32,11 @@ pipeline {
                     '''
             }
         }
-    }
-
-    post {
-        always {
-            sh 'docker logout'
+        stage('Sync github repo') {
+            when { branch 'master' }
+            steps {
+                syncRemoteBranch('git@github.com:nbr23/youtube-dl-server.git', 'master')
+            }
         }
     }
 }
