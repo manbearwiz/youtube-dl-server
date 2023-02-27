@@ -4,6 +4,10 @@
 # https://github.com/nbr23/youtube-dl-server
 #
 
+FROM python:alpine3.17 as wheels
+
+RUN apk add --no-cache g++
+RUN pip install --upgrade --no-cache-dir pip && pip wheel --no-cache-dir --no-deps --wheel-dir /out/wheels brotli pycryptodomex websockets pyyaml
 
 FROM python:alpine3.17
 ARG YOUTUBE_DL=youtube_dl
@@ -12,7 +16,7 @@ ARG ATOMICPARSLEY=0
 VOLUME "/youtube-dl"
 VOLUME "/app_config"
 
-COPY --from=nbr23/youtube-dl-wheels /out/wheels /wheels
+COPY --from=wheels /out/wheels /wheels
 RUN pip install --no-cache /wheels/*
 
 RUN mkdir -p /usr/src/app
