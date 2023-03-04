@@ -6,4 +6,4 @@ python-multipart==0.0.6
 PyYAML==6.0
 humanize==4.6.0
 youtube-dl==2021.12.17
-yt-dlp==2023.2.17
+yt-dlp==2023.3.3
