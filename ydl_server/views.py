@@ -96,6 +96,22 @@ async def api_delete_file(request):
 async def api_list_extractors(request):
     return JSONResponse(request.app.state.ydlhandler.ydl_extractors)
 
+async def api_server_info(request):
+    return JSONResponse(
+        {
+            "ydl_module_name": request.app.state.ydlhandler.ydl_module_name,
+            "ydl_module_version": request.app.state.ydlhandler.ydl_version,
+            "ydl_module_website": request.app.state.ydlhandler.ydl_website,
+        }
+    )
+
+async def api_list_formats(request):
+    return JSONResponse(
+        {
+            "ydl_formats": YDL_FORMATS,
+            "ydl_default_format": app_config["ydl_server"].get("default_format", 'video/best')
+        }
+    )
 
 async def api_queue_size(request):
     db = JobsDB(readonly=True)
