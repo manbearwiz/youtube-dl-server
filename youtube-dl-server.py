@@ -1,13 +1,10 @@
 from __future__ import unicode_literals
 from starlette.applications import Starlette
-from starlette.staticfiles import StaticFiles
-from starlette.responses import HTMLResponse
-from starlette.templating import Jinja2Templates
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 import uvicorn
 
-from ydl_server.logdb import JobsDB, Job, Actions, JobType
+from ydl_server.logdb import JobsDB
 
 from ydl_server.ydlhandler import YdlHandler
 from ydl_server.jobshandler import JobsHandler
@@ -20,7 +17,7 @@ if __name__ == "__main__":
     JobsDB.check_db_latest()
     JobsDB.init_db()
 
-    middleware = [Middleware(CORSMiddleware, allow_origins=["*"])]
+    middleware = [Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"])]
 
     app = Starlette(routes=routes, debug=app_config["ydl_server"].get("debug", False), middleware=middleware)
 

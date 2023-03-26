@@ -1,5 +1,4 @@
 from starlette.responses import JSONResponse
-from starlette.templating import Jinja2Templates
 
 from operator import itemgetter
 from pathlib import Path
@@ -12,32 +11,7 @@ import shutil
 import humanize
 
 
-templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
-
-
-async def front_index(request):
-    context = {
-        "request": request,
-        "ydl_version": request.app.state.ydlhandler.ydl_version,
-        "ydl_name": request.app.state.ydlhandler.ydl_module_name,
-        "ydl_website": request.app.state.ydlhandler.ydl_website,
-        "ydl_formats": YDL_FORMATS,
-        "ydl_default_format": app_config["ydl_server"].get("default_format", 'video/best'),
-    }
-    return templates.TemplateResponse("index.html", context=context)
-
-
-async def front_logs(request):
-    context = {
-        "request": request,
-        "ydl_version": request.app.state.ydlhandler.ydl_version,
-        "ydl_name": request.app.state.ydlhandler.ydl_module_name,
-        "ydl_website": request.app.state.ydlhandler.ydl_website,
-    }
-    return templates.TemplateResponse("logs.html", context=context)
-
-
-async def front_finished(request):
+async def api_finished(request):
     root_dir = Path(get_finished_path())
     matches = root_dir.glob("*")
 
@@ -62,16 +36,7 @@ async def front_finished(request):
         for f1 in matches
         if not f1.name.startswith(".")
     ]
-
-    context = {
-        "request": request,
-        "ydl_version": request.app.state.ydlhandler.ydl_version,
-        "ydl_name": request.app.state.ydlhandler.ydl_module_name,
-        "ydl_website": request.app.state.ydlhandler.ydl_website,
-        "finished_files": sorted(files, key=itemgetter("modified"), reverse=True),
-    }
-    return templates.TemplateResponse("finished.html", context=context)
-
+    return JSONResponse(files)
 
 async def api_delete_file(request):
     fname = request.path_params["fname"]
@@ -162,7 +127,7 @@ async def api_jobs_stop(request):
 
 
 async def api_queue_download(request):
-    data = await request.form()
+    data = await request.json()
     url = data.get("url")
     options = {"format": data.get("format")}
 
@@ -177,8 +142,8 @@ async def api_queue_download(request):
 
 
 async def api_metadata_fetch(request):
-    data = await request.form()
+    data = await request.json()
     rc, stdout = request.app.state.ydlhandler.fetch_metadata(data.get("url"))
     if rc == 0:
         return JSONResponse(stdout)
-    return JSONResponse({}, status_code=404)
+    return JSONResponse({"success": False}, status_code=404)

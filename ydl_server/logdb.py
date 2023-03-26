@@ -1,6 +1,5 @@
 import sqlite3
 import re
-from markupsafe import Markup, escape
 
 from ydl_server.config import app_config
 
@@ -185,10 +184,10 @@ class JobsDB:
         job_id, name, status, log, last_update, format, jobtype, url, pid = cursor.fetchone()
         return {
             "id": job_id,
-            "name": escape(name),
+            "name": name,
             "status": STATUS_NAME[status],
-            "log": escape(log),
-                    'format': escape(format) if format is not None else None,
+            "log": log,
+            'format': format,
             "last_update": last_update,
             "type": jobtype,
             "url": url,
@@ -206,13 +205,13 @@ class JobsDB:
             rows.append(
                 {
                     "id": job_id,
-                    "name": escape(name),
+                    "name": name,
                     "status": STATUS_NAME[status],
-                    "log": escape(log),
-                    'format': escape(format) if format is not None else None,
+                    "log": log,
+                    'format': format,
                     "last_update": last_update,
                     "type": jobtype,
-                    "url": escape(url),
+                    "url": url,
                     "pid": pid,
                 }
             )

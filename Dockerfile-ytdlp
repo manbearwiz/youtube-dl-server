@@ -4,6 +4,14 @@
 # https://github.com/nbr23/youtube-dl-server
 #
 
+FROM node:19-alpine as nodebuild
+
+WORKDIR /app
+COPY ./front/package*.json /app
+RUN npm ci
+COPY ./front /app
+RUN npm run build
+
 FROM python:alpine3.17 as wheels
 
 RUN apk add --no-cache g++
@@ -47,6 +55,8 @@ COPY ./bootstrap.sh /usr/src/app/
 COPY ./config.yml /usr/src/app/default_config.yml
 COPY ./ydl_server /usr/src/app/ydl_server
 COPY ./youtube-dl-server.py /usr/src/app/
+
+COPY --from=nodebuild /app/dist /usr/src/app/ydl_server/static
 
 WORKDIR /usr/src/app
 
