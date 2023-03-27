@@ -12,8 +12,10 @@ export default {
       Running: 'badge bg-info',
       Completed: 'badge bg-success'
     },
+    VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
+    this.VITE_YOUTUBE_DL_SERVER_API_URL = import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL || '';
     this.mounted = true;
     this.fetchLogs();
   },
@@ -23,7 +25,7 @@ export default {
 
   methods: {
     abortDownload(job_id) {
-      const url = `${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/jobs/${job_id}/stop`
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/jobs/${job_id}/stop`
       fetch(url, {
         method: 'POST',
         headers: {
@@ -34,7 +36,7 @@ export default {
     },
     retryDownload(url, format) {
       console.log(url, format)
-      const apiurl = `${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`
+      const apiurl = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`
       fetch(apiurl, {
         method: 'POST',
         headers: {
@@ -48,7 +50,7 @@ export default {
       this.fetchLogs(true)
     },
     purgeLogs() {
-      const url = `${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`
       fetch(url, {
         method: 'DELETE',
         headers: {
@@ -58,7 +60,7 @@ export default {
       this.fetchLogs(true)
     },
     async fetchLogs(once = false) {
-      const url = `${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`
       this.logs = await (await fetch(url)).json()
       if (!once && this.mounted) {
         setTimeout(() => {

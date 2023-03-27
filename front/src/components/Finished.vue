@@ -17,7 +17,7 @@ export default {
 
   methods: {
     async deleteFinishedFile(file_name) {
-      const url = `${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/finished/${file_name}`
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/finished/${file_name}`
       fetch(url, {
         method: 'DELETE',
         headers: {
@@ -27,7 +27,7 @@ export default {
       this.fetchFinished(true)
     },
     async fetchFinished(once = false) {
-      const url = `${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/finished`
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/finished`
       this.finished = await (await fetch(url)).json()
       if (!once && this.mounted) {
         setTimeout(() => {

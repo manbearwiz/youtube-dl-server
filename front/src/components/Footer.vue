@@ -2,8 +2,10 @@
 export default {
   data: () => ({
     server_info: {},
+    VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
+    this.VITE_YOUTUBE_DL_SERVER_API_URL = import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL || '';
     this.fetchServerInfo();
     this.setBookmarklet();
   },

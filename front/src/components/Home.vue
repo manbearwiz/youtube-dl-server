@@ -11,9 +11,11 @@ export default {
     extractorsModal: null,
     urlBox: null,
     selectedFormat: null,
-    metadata: null
+    metadata: null,
+    VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
+    this.VITE_YOUTUBE_DL_SERVER_API_URL = import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL || '';
     this.extractorsModal = new Modal('#extractorsModal');
     this.metadataModal = new Modal('#metadataModal');
     this.urlBox = document.getElementById('url');
@@ -68,16 +70,16 @@ export default {
       this.metadataModal.show();
     },
     async fetchExtractors() {
-      const url = `${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/extractors`
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/extractors`
       this.extractors = await (await fetch(url)).json()
     },
     async fetchAvailableFormats() {
-      const url = `${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/formats`
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/formats`
       this.formats = await (await fetch(url)).json()
     },
     async submitVideo() {
       if (this.selectedFormat.value != 'metadata') {
-        fetch(`${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`, {
+        fetch(`${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -106,7 +108,7 @@ export default {
           });
       }
       else {
-        fetch(`${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/metadata`, {
+        fetch(`${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/metadata`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
