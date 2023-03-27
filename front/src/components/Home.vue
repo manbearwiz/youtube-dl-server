@@ -15,8 +15,7 @@ export default {
     VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
-    this.VITE_YOUTUBE_DL_SERVER_API_URL = import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL || '';
-    this.extractorsModal = new Modal('#extractorsModal');
+    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', ''); this.extractorsModal = new Modal('#extractorsModal');
     this.metadataModal = new Modal('#metadataModal');
     this.urlBox = document.getElementById('url');
     this.selectedFormat = document.getElementById('format');

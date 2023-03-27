@@ -1,3 +1,6 @@
+<script setup>
+import { get } from 'lodash'
+</script>
 <script>
 export default {
   data: () => ({
@@ -5,7 +8,7 @@ export default {
     VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
-    this.VITE_YOUTUBE_DL_SERVER_API_URL = import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL || '';
+    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', '');
     this.fetchStats();
   },
 

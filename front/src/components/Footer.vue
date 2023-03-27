@@ -1,3 +1,6 @@
+<script setup>
+import { get } from 'lodash'
+</script>
 <script>
 export default {
   data: () => ({
@@ -5,14 +8,14 @@ export default {
     VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
-    this.VITE_YOUTUBE_DL_SERVER_API_URL = import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL || '';
+    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', '');
     this.fetchServerInfo();
     this.setBookmarklet();
   },
 
   methods: {
     async fetchServerInfo() {
-      const url = `${import.meta.env.VITE_YOUTUBE_DL_SERVER_API_URL}/api/info`
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/info`
       this.server_info = await (await fetch(url)).json()
     },
     setBookmarklet() {
@@ -39,9 +42,9 @@ export default {
       Drag and Drop the Bookmarklet to your bookmark bar for easy access: <a id="bookmarklet" class="badge text-bg-dark"
         href="">Youtube-DL</a>
       <br />
-      Powered by <a target="_blank" rel="noopener noreferrer" class="text-light"
-        :href="this.server_info.ydl_module_website">{{ this.server_info.ydl_module_name
-        }}</a> version {{ this.server_info.ydl_module_version }}.
+      Powered by <a target="_blank" rel="noopener noreferrer" class="text-light" :href="server_info.ydl_module_website">{{
+        server_info.ydl_module_name
+      }}</a> version {{ server_info.ydl_module_version }}.
       Code &amp; issues on <a target="_blank" rel="noopener noreferrer" class="text-light"
         href="https://github.com/nbr23/youtube-dl-server">GitHub</a>.
     </p>
