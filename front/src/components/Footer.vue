@@ -15,8 +15,8 @@ export default {
 
   methods: {
     async fetchServerInfo() {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/info`
-      this.server_info = await (await fetch(url)).json()
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/info`;
+      this.server_info = await (await fetch(url)).json();
     },
     setBookmarklet() {
       let url = window.location.protocol + '//' + window.location.hostname

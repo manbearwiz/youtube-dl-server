@@ -14,8 +14,8 @@ export default {
 
   methods: {
     async fetchStats() {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads/stats`
-      this.stats = (await (await fetch(url)).json()).stats || {}
+      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads/stats`;
+      this.stats = (await (await fetch(url)).json()).stats || {};
       setTimeout(() => {
         this.fetchStats()
       }, 5000)
