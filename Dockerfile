@@ -34,7 +34,6 @@ RUN if [ $ATOMICPARSLEY == 1 ]; then apk add --no-cache -X http://dl-cdn.alpinel
 COPY ./requirements.txt /usr/src/app/
 RUN pip install --upgrade pip && pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v yt-dlp)
 
-COPY ./bootstrap.sh /usr/src/app/
 COPY ./config.yml /usr/src/app/default_config.yml
 COPY ./ydl_server /usr/src/app/ydl_server
 COPY ./youtube-dl-server.py /usr/src/app/
@@ -42,9 +41,6 @@ COPY ./youtube-dl-server.py /usr/src/app/
 COPY --from=nodebuild /app/dist /usr/src/app/ydl_server/static
 
 WORKDIR /usr/src/app
-
-RUN apk add --no-cache wget && ./bootstrap.sh && apk del wget
-
 
 EXPOSE 8080
 
