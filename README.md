@@ -158,7 +158,7 @@ Just navigate to `http://{{host}}:8080/` and enter the requested `{{url}}`.
 ### Curl
 
 ```shell
-curl -X POST --data-urlencode "url={{url}}" http://{{host}}:8080/api/downloads
+curl -X POST  -H 'Content-Type: application/json' --data-raw '{"url":"{{ URL }}","format":"video/best"}' http://{{host}}:8080/api/downloads
 ```
 
 ### Fetch
