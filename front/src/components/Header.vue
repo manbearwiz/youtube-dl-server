@@ -46,7 +46,9 @@ export default {
               <li class="nav-item">
                 <router-link to="/logs" class="navbar-text nav-link">
                   Stats:
-                  <span data-toggle="tooltip" data-placement="bottom" title="Pending" id='queue_pending_size'
+                  <span v-if="stats.queue === stats.pending" data-toggle="tooltip" data-placement="bottom" title="Pending"
+                    id='queue_pending_size' class="badge bg-secondary">{{ stats.queue }}</span>
+                  <span v-else data-toggle="tooltip" data-placement="bottom" title="Pending" id='queue_pending_size'
                     class="badge bg-secondary">{{ stats.queue }} | {{ stats.pending }}</span>
                   <span data-toggle="tooltip" data-placement="bottom" title="Running" id='running_size'
                     class="badge bg-info">{{ stats.running }}</span>

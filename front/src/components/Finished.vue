@@ -1,5 +1,5 @@
 <script setup>
-import { get } from 'lodash'
+import { get, orderBy } from 'lodash'
 </script>
 <script>
 export default {
@@ -7,16 +7,44 @@ export default {
     finished: [],
     mounted: false,
     VITE_YOUTUBE_DL_SERVER_API_URL: '',
+    sortBy: 'modified',
+    sortOrder: 'desc',
   }),
   mounted() {
-    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', ''); this.fetchFinished();
+    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', '');
+    this.fetchFinished();
     this.mounted = true;
   },
   unmounted() {
     this.mounted = false;
   },
+  computed: {
+    orderedFinished: function () {
+      if (this.sortBy === 'modified') {
+        return orderBy(this.finished, e => {
+          return new Date(e.modified)
+        }, this.sortOrder)
+      }
+      return orderBy(this.finished, this.sortBy, this.sortOrder)
+    }
+  },
 
   methods: {
+    prettySize(size_b) {
+      if (size_b == null) {
+        return "NaN";
+      }
+      var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      var i = 0;
+      for (i = 0; i < sizes.length; i++) {
+        if (size_b < 1024) {
+          i++;
+          break
+        }
+        size_b = size_b / 1024;
+      }
+      return Number((size_b).toFixed(2)) + ' ' + sizes[i - 1];
+    },
     async deleteFinishedFile(file_name) {
       const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/finished/${file_name}`
       fetch(url, {
@@ -50,12 +78,33 @@ export default {
           <thead>
             <tr class="d-flex">
               <th class="col-1">Action</th>
-              <th class="col-8">Name</th>
-              <th class="col-1">Size</th>
-              <th class="col-2">Fetched On</th>
+              <th class="col-6">Name
+                <a class="text-light" style="text-decoration: none;" href="#"
+                  @click.prevent="sortBy = 'name'; sortOrder = 'asc'">&uarr;</a>
+                <a class="text-light" style="text-decoration: none;" href="#"
+                  @click.prevent="sortBy = 'name'; sortOrder = 'desc'">&darr;</a>
+              </th>
+              <th class="col-1">Size
+                <a class="text-light" style="text-decoration: none;" href="#"
+                  @click.prevent="sortBy = 'size'; sortOrder = 'asc'">&uarr;</a>
+                <a class="text-light" style="text-decoration: none;" href="#"
+                  @click.prevent="sortBy = 'size'; sortOrder = 'desc'">&darr;</a>
+              </th>
+              <th class="col-2">Upload Date
+                <a class="text-light" style="text-decoration: none;" href="#"
+                  @click.prevent="sortBy = 'modified'; sortOrder = 'asc'">&uarr;</a>
+                <a class="text-light" style="text-decoration: none;" href="#"
+                  @click.prevent="sortBy = 'modified'; sortOrder = 'desc'">&darr;</a>
+              </th>
+              <th class="col-2">Fetch Date
+                <a class="text-light" style="text-decoration: none;" href="#"
+                  @click.prevent="sortBy = 'created'; sortOrder = 'asc'">&uarr;</a>
+                <a class="text-light" style="text-decoration: none;" href="#"
+                  @click.prevent="sortBy = 'created'; sortOrder = 'desc'">&darr;</a>
+              </th>
             </tr>
           </thead>
-          <template v-for="(f, i) in finished">
+          <template v-for="(f, i) in orderedFinished">
             <template v-if="f.directory">
               <tbody>
                 <tr class="d-flex" href="#" data-bs-toggle="collapse" :data-bs-target="'#directory-' + i"
@@ -81,8 +130,9 @@ export default {
                       </svg>
                     </a>
                   </td>
-                  <td class="col-9"><b>{{ f.name }}</b></td>
+                  <td class="col-7"><b>{{ f.name }}</b></td>
                   <td class="col-2">{{ f.modified }}</td>
+                  <td class="col-2">{{ f.created }}</td>
                 </tr>
               </tbody>
               <tbody v-for="c in f.children" class="collapse" :id="'directory-' + i">
@@ -110,12 +160,13 @@ export default {
                       </svg>
                     </a>
                   </td>
-                  <td class="col-8">&emsp;<a
+                  <td class="col-6">&#x21B3;&emsp;<a
                       :href="VITE_YOUTUBE_DL_SERVER_API_URL + '/api/finished/' + encodeURIComponent(f.name) + '/' + encodeURIComponent(c.name)">{{
                         c.name
                       }}</a></td>
-                  <td class="col-1">{{ c.size }}</td>
+                  <td class="col-1">{{ prettySize(c.size) }}</td>
                   <td class="col-2">{{ c.modified }}</td>
+                  <td class="col-2">{{ c.created }}</td>
                 </tr>
               </tbody>
             </template>
@@ -143,12 +194,13 @@ export default {
                     </svg>
                   </a>
                 </td>
-                <td class="col-8"><a
+                <td class="col-6"><a
                     :href="VITE_YOUTUBE_DL_SERVER_API_URL + '/api/finished/' + encodeURIComponent(f.name)">{{
                       f.name
                     }}</a></td>
-                <td class="col-1">{{ f.size }}</td>
+                <td class="col-1">{{ prettySize(f.size) }}</td>
                 <td class="col-2">{{ f.modified }}</td>
+                <td class="col-2">{{ f.created }}</td>
               </tr>
             </tbody>
           </template>

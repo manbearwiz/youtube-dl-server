@@ -8,7 +8,6 @@ from datetime import datetime
 import os
 import signal
 import shutil
-import humanize
 
 
 async def api_finished(request):
@@ -19,11 +18,17 @@ async def api_finished(request):
         {
             "name": f1.name,
             "modified": datetime.fromtimestamp(f1.stat().st_mtime).strftime("%H:%m %D"),
-            "size": humanize.naturalsize(f1.stat().st_size) if not f1.is_dir() else None,
+            "created": datetime.fromtimestamp(f1.stat().st_ctime).strftime("%H:%m %D"),
+            "size": f1.stat().st_size if not f1.is_dir() else None,
             "directory": f1.is_dir(),
             "children": sorted(
                 [
-                    {"name": f2.name, "size": humanize.naturalsize(f2.stat().st_size),"modified": datetime.fromtimestamp(f2.stat().st_mtime).strftime("%H:%m %D")}
+                    {
+                        "name": f2.name,
+                        "size": f2.stat().st_size,
+                        "modified": datetime.fromtimestamp(f2.stat().st_mtime).strftime("%H:%m %D"),
+                        "created": datetime.fromtimestamp(f2.stat().st_ctime).strftime("%H:%m %D"),
+                        }
                     for f2 in f1.iterdir()
                     if not f2.name.startswith(".")
                 ],
