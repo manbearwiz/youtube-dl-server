@@ -42,6 +42,10 @@ div.input-group>input.form-control {
   margin-right: 2px;
 }
 
+.nav-link.router-link-active {
+  color: white;
+}
+
 .footer {
   width: 100%;
 }

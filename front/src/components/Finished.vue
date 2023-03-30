@@ -7,7 +7,7 @@ export default {
     finished: [],
     mounted: false,
     VITE_YOUTUBE_DL_SERVER_API_URL: '',
-    sortBy: 'modified',
+    sortBy: 'created',
     sortOrder: 'desc',
   }),
   mounted() {
