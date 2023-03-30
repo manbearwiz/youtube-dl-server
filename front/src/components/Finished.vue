@@ -25,6 +25,11 @@ export default {
           return new Date(e.modified)
         }, this.sortOrder)
       }
+      if (this.sortBy === 'created') {
+        return orderBy(this.finished, e => {
+          return new Date(e.created)
+        }, this.sortOrder)
+      }
       return orderBy(this.finished, this.sortBy, this.sortOrder)
     }
   },
