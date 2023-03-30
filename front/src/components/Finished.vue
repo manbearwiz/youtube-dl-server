@@ -84,27 +84,31 @@ export default {
             <tr class="d-flex">
               <th class="col-1">Action</th>
               <th class="col-6">Name
-                <a class="text-light" style="text-decoration: none;" href="#"
-                  @click.prevent="sortBy = 'name'; sortOrder = 'asc'">&uarr;</a>
-                <a class="text-light" style="text-decoration: none;" href="#"
-                  @click.prevent="sortBy = 'name'; sortOrder = 'desc'">&darr;</a>
+                <a :class="sortOrder === 'asc' && sortBy === 'name' ? 'text-light' : 'text-muted'"
+                  style="text-decoration: none;" href="#" @click.prevent="sortBy = 'name'; sortOrder = 'asc'">&uarr;</a>
+                <a :class="sortOrder === 'desc' && sortBy === 'name' ? 'text-light' : 'text-muted'"
+                  style="text-decoration: none;" href="#" @click.prevent="sortBy = 'name'; sortOrder = 'desc'">&darr;</a>
               </th>
               <th class="col-1">Size
-                <a class="text-light" style="text-decoration: none;" href="#"
-                  @click.prevent="sortBy = 'size'; sortOrder = 'asc'">&uarr;</a>
-                <a class="text-light" style="text-decoration: none;" href="#"
-                  @click.prevent="sortBy = 'size'; sortOrder = 'desc'">&darr;</a>
+                <a :class="sortOrder === 'asc' && sortBy === 'size' ? 'text-light' : 'text-muted'"
+                  style="text-decoration: none;" href="#" @click.prevent="sortBy = 'size'; sortOrder = 'asc'">&uarr;</a>
+                <a :class="sortOrder === 'desc' && sortBy === 'size' ? 'text-light' : 'text-muted'"
+                  style="text-decoration: none;" href="#" @click.prevent="sortBy = 'size'; sortOrder = 'desc'">&darr;</a>
               </th>
               <th class="col-2">Upload Date
-                <a class="text-light" style="text-decoration: none;" href="#"
+                <a :class="sortOrder === 'asc' && sortBy === 'modified' ? 'text-light' : 'text-muted'"
+                  style="text-decoration: none;" href="#"
                   @click.prevent="sortBy = 'modified'; sortOrder = 'asc'">&uarr;</a>
-                <a class="text-light" style="text-decoration: none;" href="#"
+                <a :class="sortOrder === 'desc' && sortBy === 'modified' ? 'text-light' : 'text-muted'"
+                  style="text-decoration: none;" href="#"
                   @click.prevent="sortBy = 'modified'; sortOrder = 'desc'">&darr;</a>
               </th>
               <th class="col-2">Fetch Date
-                <a class="text-light" style="text-decoration: none;" href="#"
+                <a :class="sortOrder === 'asc' && sortBy === 'created' ? 'text-light' : 'text-muted'"
+                  style="text-decoration: none;" href="#"
                   @click.prevent="sortBy = 'created'; sortOrder = 'asc'">&uarr;</a>
-                <a class="text-light" style="text-decoration: none;" href="#"
+                <a :class="sortOrder === 'desc' && sortBy === 'created' ? 'text-light' : 'text-muted'"
+                  style="text-decoration: none;" href="#"
                   @click.prevent="sortBy = 'created'; sortOrder = 'desc'">&darr;</a>
               </th>
             </tr>
