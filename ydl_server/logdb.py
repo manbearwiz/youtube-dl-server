@@ -1,5 +1,6 @@
 import sqlite3
 import re
+import datetime
 
 from ydl_server.config import app_config
 
@@ -84,6 +85,11 @@ class JobsDB:
         )
         conn.commit()
         conn.close()
+
+    @staticmethod
+    def convert_datetime_to_tz(dt):
+        dt = datetime.datetime.strptime("{} +0000".format(dt), "%Y-%m-%d %H:%M:%S %z")
+        return dt.astimezone().strftime("%Y-%m-%d %H:%M:%S")
 
     def __init__(self, readonly=True):
         self.conn = sqlite3.connect(
@@ -188,7 +194,7 @@ class JobsDB:
             "status": STATUS_NAME[status],
             "log": log,
             'format': format,
-            "last_update": last_update,
+            "last_update": JobsDB.convert_datetime_to_tz(last_update),
             "type": jobtype,
             "url": url,
             "pid": pid,
@@ -209,7 +215,7 @@ class JobsDB:
                     "status": STATUS_NAME[status],
                     "log": log,
                     'format': format,
-                    "last_update": last_update,
+                    "last_update": JobsDB.convert_datetime_to_tz(last_update),
                     "type": jobtype,
                     "url": url,
                     "pid": pid,
