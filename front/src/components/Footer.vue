@@ -40,11 +40,15 @@ export default {
       Drag and Drop the Bookmarklet to your bookmark bar for easy access: <a id="bookmarklet" class="badge text-bg-dark"
         href="">Youtube-DL</a>
       <br />
-      Powered by <a target="_blank" rel="noopener noreferrer" class="text-light" :href="server_info.ydl_module_website">{{
+      Powered by
+      <a target="_blank" rel="noopener noreferrer" class="text-light" :href="server_info.ydl_module_website">{{
         server_info.ydl_module_name
       }}</a> version {{ server_info.ydl_module_version }}.
       Code &amp; issues on <a target="_blank" rel="noopener noreferrer" class="text-light"
         href="https://github.com/nbr23/youtube-dl-server">GitHub</a>.
+      <span v-if="server_info.ydls_version != ''">Rev <span class="badge text-bg-dark">{{
+        server_info.ydls_version }}</span>
+      </span>
     </p>
   </footer>
 </template>

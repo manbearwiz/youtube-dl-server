@@ -36,6 +36,9 @@ RUN apk add wget &&  \
 FROM python:alpine3.17
 ARG YOUTUBE_DL=yt_dlp
 ARG ATOMICPARSLEY=0
+ARG YDLS_VERSION
+
+ENV YDLS_VERSION=$YDLS_VERSION
 
 VOLUME "/youtube-dl"
 VOLUME "/app_config"

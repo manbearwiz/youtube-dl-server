@@ -24,7 +24,7 @@ pipeline {
                     sh 'docker login -u $DOCKERHUB_CREDENTIALS_USR -p "$DOCKERHUB_CREDENTIALS_PSW"'
                 }
                 sh """
-                    docker buildx build --pull --builder \$BUILDX_BUILDER  --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg YOUTUBE_DL=yt_dlp --build-arg ATOMICPARSLEY=1 -t nbr23/youtube-dl-server:yt-dlp -t nbr23/youtube-dl-server:${GIT_COMMIT}-yt-dlp -t nbr23/youtube-dl-server:yt-dlp_atomicparsley -f Dockerfile-ytdlp ${ "$GIT_BRANCH" == "master" ? "--push" : ""} .
+                    docker buildx build --pull --builder \$BUILDX_BUILDER  --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg YDLS_VERSION=`git rev-parse --short HEAD` --build-arg YOUTUBE_DL=yt_dlp --build-arg ATOMICPARSLEY=1 -t nbr23/youtube-dl-server:yt-dlp -t nbr23/youtube-dl-server:${GIT_COMMIT}-yt-dlp -t nbr23/youtube-dl-server:yt-dlp_atomicparsley -f Dockerfile-ytdlp ${ "$GIT_BRANCH" == "master" ? "--push" : ""} .
                     """
             }
         }
@@ -34,7 +34,7 @@ pipeline {
                     sh 'docker login -u $DOCKERHUB_CREDENTIALS_USR -p "$DOCKERHUB_CREDENTIALS_PSW"'
                 }
                 sh """
-                    docker buildx build --pull --builder \$BUILDX_BUILDER  --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg ATOMICPARSLEY=1 -t nbr23/youtube-dl-server:latest -t nbr23/youtube-dl-server:youtube-dl  -t nbr23/youtube-dl-server:${GIT_COMMIT}-youtube-dl -t nbr23/youtube-dl-server:youtube-dl_atomicparsley ${ "$GIT_BRANCH" == "master" ? "--push" : ""} .
+                    docker buildx build --pull --builder \$BUILDX_BUILDER  --platform linux/amd64,linux/arm64,linux/arm/v7 --build-arg YDLS_VERSION=`git rev-parse --short HEAD` --build-arg ATOMICPARSLEY=1 -t nbr23/youtube-dl-server:latest -t nbr23/youtube-dl-server:youtube-dl  -t nbr23/youtube-dl-server:${GIT_COMMIT}-youtube-dl -t nbr23/youtube-dl-server:youtube-dl_atomicparsley ${ "$GIT_BRANCH" == "master" ? "--push" : ""} .
                     """
             }
         }

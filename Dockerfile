@@ -21,6 +21,9 @@ RUN pip install --upgrade --no-cache-dir pip && pip wheel --no-cache-dir --no-de
 FROM python:alpine3.17
 ARG YOUTUBE_DL=youtube_dl
 ARG ATOMICPARSLEY=0
+ARG YDLS_VERSION
+
+ENV YDLS_VERSION=$YDLS_VERSION
 
 VOLUME "/youtube-dl"
 VOLUME "/app_config"

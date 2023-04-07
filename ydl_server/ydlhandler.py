@@ -47,6 +47,8 @@ class YdlHandler:
         self.ydl_module_name = ydl_module.__name__.replace("_", "-")
         self.ydl_website = get_ydl_website(self.ydl_module_name)
 
+        self.ydls_version = os.environ.get("YDLS_VERSION", "")
+
         importlib.reload(ydl_module.version)
         importlib.reload(ydl_module.extractor)
 
