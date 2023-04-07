@@ -1,5 +1,5 @@
 <script setup>
-import { get } from 'lodash'
+import { getAPIUrl } from '../utils';
 </script>
 <script>
 export default {
@@ -14,10 +14,8 @@ export default {
       Running: 'badge bg-info',
       Completed: 'badge bg-success'
     },
-    VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
-    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', '');
     this.mounted = true;
     this.fetchLogs();
   },
@@ -27,7 +25,7 @@ export default {
 
   methods: {
     abortDownload(job_id) {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/jobs/${job_id}/stop`
+      const url = getAPIUrl(`api/jobs/${job_id}/stop`, import.meta.env);
       fetch(url, {
         method: 'POST',
         headers: {
@@ -38,7 +36,7 @@ export default {
     },
     retryDownload(url, format) {
       console.log(url, format)
-      const apiurl = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`
+      const apiurl = getAPIUrl(`api/downloads`, import.meta.env);
       fetch(apiurl, {
         method: 'POST',
         headers: {
@@ -52,7 +50,7 @@ export default {
       this.fetchLogs(true)
     },
     purgeLogs() {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`
+      const url = getAPIUrl(`api/downloads`, import.meta.env);
       fetch(url, {
         method: 'DELETE',
         headers: {
@@ -62,7 +60,7 @@ export default {
       this.fetchLogs(true)
     },
     async fetchLogs(once = false) {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`
+      const url = getAPIUrl(`api/downloads`, import.meta.env);
       this.logs = await (await fetch(url)).json()
       if (!once && this.mounted) {
         setTimeout(() => {

@@ -1,17 +1,16 @@
 <script setup>
-import { get, orderBy } from 'lodash'
+import { orderBy } from 'lodash'
+import { getAPIUrl } from '../utils'
 </script>
 <script>
 export default {
   data: () => ({
     finished: [],
     mounted: false,
-    VITE_YOUTUBE_DL_SERVER_API_URL: '',
     sortBy: 'created',
     sortOrder: 'desc',
   }),
   mounted() {
-    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', '');
     this.fetchFinished();
     this.mounted = true;
   },
@@ -51,7 +50,7 @@ export default {
       return Number((size_b).toFixed(2)) + ' ' + sizes[i - 1];
     },
     async deleteFinishedFile(file_name) {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/finished/${file_name}`
+      const url = getAPIUrl(`api/finished/${file_name}`);
       fetch(url, {
         method: 'DELETE',
         headers: {
@@ -61,7 +60,7 @@ export default {
       this.fetchFinished(true)
     },
     async fetchFinished(once = false) {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/finished`
+      const url = getAPIUrl(`api/finished`);
       this.finished = await (await fetch(url)).json()
       if (!once && this.mounted) {
         setTimeout(() => {
@@ -147,7 +146,7 @@ export default {
               <tbody v-for="c in f.children" class="collapse" :id="'directory-' + i">
                 <tr class="d-flex">
                   <td class="col-1">
-                    <a :href="VITE_YOUTUBE_DL_SERVER_API_URL + '/api/finished/' + encodeURIComponent(f.name) + '/' + encodeURIComponent(c.name)"
+                    <a :href="'api/finished/' + encodeURIComponent(f.name) + '/' + encodeURIComponent(c.name)"
                       style="text-decoration: none;" download>
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--bs-teal)"
                         class="bi bi-download" viewBox="0 0 16 16">
@@ -170,7 +169,7 @@ export default {
                     </a>
                   </td>
                   <td class="col-6">&#x21B3;&emsp;<a
-                      :href="VITE_YOUTUBE_DL_SERVER_API_URL + '/api/finished/' + encodeURIComponent(f.name) + '/' + encodeURIComponent(c.name)">{{
+                      :href="'api/finished/' + encodeURIComponent(f.name) + '/' + encodeURIComponent(c.name)">{{
                         c.name
                       }}</a></td>
                   <td class="col-1">{{ prettySize(c.size) }}</td>
@@ -182,8 +181,7 @@ export default {
             <tbody v-else>
               <tr class="d-flex">
                 <td class="col-1">
-                  <a :href="VITE_YOUTUBE_DL_SERVER_API_URL + '/api/finished/' + encodeURIComponent(f.name)"
-                    style="text-decoration: none;" download>
+                  <a :href="'api/finished/' + encodeURIComponent(f.name)" style="text-decoration: none;" download>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--bs-teal)"
                       class="bi bi-download" viewBox="0 0 16 16">
                       <path
@@ -203,10 +201,9 @@ export default {
                     </svg>
                   </a>
                 </td>
-                <td class="col-6"><a
-                    :href="VITE_YOUTUBE_DL_SERVER_API_URL + '/api/finished/' + encodeURIComponent(f.name)">{{
-                      f.name
-                    }}</a></td>
+                <td class="col-6"><a :href="'api/finished/' + encodeURIComponent(f.name)">{{
+                  f.name
+                }}</a></td>
                 <td class="col-1">{{ prettySize(f.size) }}</td>
                 <td class="col-2">{{ f.modified }}</td>
                 <td class="col-2">{{ f.created }}</td>

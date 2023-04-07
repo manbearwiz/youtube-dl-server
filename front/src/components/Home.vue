@@ -1,6 +1,7 @@
 <script setup>
 import { get } from 'lodash'
 import { Modal } from 'bootstrap'
+import { getAPIUrl } from '../utils';
 </script>
 
 <script>
@@ -12,10 +13,9 @@ export default {
     urlBox: null,
     selectedFormat: null,
     metadata: null,
-    VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
-    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', ''); this.extractorsModal = new Modal('#extractorsModal');
+    this.extractorsModal = new Modal('#extractorsModal');
     this.metadataModal = new Modal('#metadataModal');
     this.urlBox = document.getElementById('url');
     this.selectedFormat = document.getElementById('format');
@@ -69,16 +69,17 @@ export default {
       this.metadataModal.show();
     },
     async fetchExtractors() {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/extractors`
+      const url = getAPIUrl('api/extractors', import.meta.env);
       this.extractors = await (await fetch(url)).json()
     },
     async fetchAvailableFormats() {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/formats`
+      const url = getAPIUrl('api/formats', import.meta.env);
       this.formats = await (await fetch(url)).json()
     },
     async submitVideo() {
       if (this.selectedFormat.value != 'metadata') {
-        fetch(`${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads`, {
+        const url = getAPIUrl('api/downloads', import.meta.env);
+        fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -107,7 +108,8 @@ export default {
           });
       }
       else {
-        fetch(`${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/metadata`, {
+        const url = getAPIUrl('api/metadata', import.meta.env);
+        fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

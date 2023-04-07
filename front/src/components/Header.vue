@@ -1,20 +1,18 @@
 <script setup>
-import { get } from 'lodash'
+import { getAPIUrl } from '../utils';
 </script>
 <script>
 export default {
   data: () => ({
     stats: {},
-    VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
-    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', '');
     this.fetchStats();
   },
 
   methods: {
     async fetchStats() {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/downloads/stats`;
+      const url = getAPIUrl('api/downloads/stats', import.meta.env);
       this.stats = (await (await fetch(url)).json()).stats || {};
       setTimeout(() => {
         this.fetchStats()

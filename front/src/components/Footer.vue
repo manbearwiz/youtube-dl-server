@@ -1,21 +1,19 @@
 <script setup>
-import { get } from 'lodash'
+import { getAPIUrl } from '../utils';
 </script>
 <script>
 export default {
   data: () => ({
     server_info: {},
-    VITE_YOUTUBE_DL_SERVER_API_URL: '',
   }),
   mounted() {
-    this.VITE_YOUTUBE_DL_SERVER_API_URL = get(import.meta.env, 'VITE_YOUTUBE_DL_SERVER_API_URL', '');
     this.fetchServerInfo();
     this.setBookmarklet();
   },
 
   methods: {
     async fetchServerInfo() {
-      const url = `${this.VITE_YOUTUBE_DL_SERVER_API_URL}/api/info`;
+      const url = getAPIUrl('api/info', import.meta.env);
       this.server_info = await (await fetch(url)).json();
     },
     setBookmarklet() {
