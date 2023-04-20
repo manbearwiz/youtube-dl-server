@@ -27,25 +27,15 @@ export default {
     abortDownload(job_id) {
       const url = getAPIUrl(`api/jobs/${job_id}/stop`, import.meta.env);
       fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        method: 'POST'
       })
       this.fetchLogs(true)
     },
-    retryDownload(url, format) {
-      console.log(url, format)
-      const apiurl = getAPIUrl(`api/downloads`, import.meta.env);
+    retryDownload(job_id) {
+      console.log(job_id)
+      const apiurl = getAPIUrl(`api/jobs/${job_id}/retry`, import.meta.env);
       fetch(apiurl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          url,
-          format
-        })
+        method: 'POST'
       })
       this.fetchLogs(true)
     },
@@ -98,7 +88,7 @@ export default {
               <td>{{ log.format }}</td>
               <td v-if="log.status == 'Failed' || log.status == 'Aborted'">
                 <span :class=statusToTrClass[log.status]>
-                  <a role="button" aria-label="Retry" @click.prevent="retryDownload(log.url, log.format)">{{
+                  <a role="button" aria-label="Retry" @click.prevent="retryDownload(log.id)">{{
                     log.status }} / Retry</a>
                 </span>
               </td>

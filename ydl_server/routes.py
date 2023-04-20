@@ -23,6 +23,7 @@ routes = [
     Route("/api/finished", views.api_finished, name="api_finished", methods=["GET"]),
     Route("/api/finished/{fname:path}", views.api_delete_file, name="api_delete_file", methods=["DELETE"]),
     Route("/api/jobs/{job_id:str}/stop", views.api_jobs_stop, name="api_jobs_stop", methods=["POST"]),
+    Route("/api/jobs/{job_id:str}/retry", views.api_jobs_retry, name="api_jobs_retry", methods=["POST"]),
     Mount("/api/finished/", finished_files, name="api_finished"),
     Mount("/", static, name="static"),
 ]

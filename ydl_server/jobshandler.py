@@ -52,6 +52,8 @@ class JobsHandler:
                 db.set_job_pid(job_id, pid)
             elif action == Actions.CLEAN_LOGS:
                 db.clean_old_jobs()
+            elif action == Actions.DELETE_LOG:
+                db.delete_job(job["id"])
             self.queue.task_done()
 
     def join(self):

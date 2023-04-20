@@ -119,7 +119,6 @@ async def api_logs_clean(request):
 
 async def api_jobs_stop(request):
     db = JobsDB(readonly=True)
-    data = await request.form()
     job_id = request.path_params["job_id"]
     job = db.get_job_by_id(job_id)
     if job["status"] == 'Pending':
@@ -131,6 +130,16 @@ async def api_jobs_stop(request):
 
     return JSONResponse({"success": True})
 
+async def api_jobs_retry(request):
+    db = JobsDB(readonly=True)
+    job_id = request.path_params["job_id"]
+    job = db.get_job_by_id(job_id)
+    new_job = Job(job["url"], Job.PENDING, "", JobType.YDL_DOWNLOAD, job["format"], job["url"])
+
+    request.app.state.jobshandler.put((Actions.DELETE_LOG, job))
+    request.app.state.jobshandler.put((Actions.INSERT, new_job))
+
+    return JSONResponse({"success": True})
 
 async def api_queue_download(request):
     data = await request.json()

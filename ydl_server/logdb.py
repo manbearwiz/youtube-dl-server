@@ -18,6 +18,7 @@ class Actions:
     SET_LOG = 8
     CLEAN_LOGS = 9
     SET_PID = 10
+    DELETE_LOG = 11
 
 
 class JobType:
@@ -166,6 +167,13 @@ class JobsDB:
     def purge_jobs(self):
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM jobs;")
+        self.conn.commit()
+        self.conn.execute("VACUUM")
+
+    def delete_job(self, job_id):
+        cursor = self.conn.cursor()
+        cursor.execute("DELETE FROM jobs WHERE id = ? AND ( status = ? OR status = ? );",
+                       (str(job_id), Job.ABORTED, Job.FAILED))
         self.conn.commit()
         self.conn.execute("VACUUM")
 
