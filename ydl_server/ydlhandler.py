@@ -110,7 +110,7 @@ class YdlHandler:
         ydl_config = ydl_config.copy()
         req_format = request_options.get("format")
         if req_format is None:
-            req_format = "best"
+            req_format = "video/best"
         if req_format.startswith("audio/"):
             ydl_config.update({"extract-audio": None})
             ydl_config.update({"audio-format": req_format.split("/")[-1]})
