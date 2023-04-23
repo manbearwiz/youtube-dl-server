@@ -184,7 +184,7 @@ If your youtube-dl-server is served through https (behind a reverse proxy
 handling https for example), you can use the following bookmarklet:
 
 ```javascript
-javascript:fetch("https://${host}/api/downloads",{body:new URLSearchParams({url:window.location.href,format:"bestvideo"}),method:"POST"});
+javascript:fetch("https://${host}/api/downloads",{body:JSON.stringify({url:window.location.href,format:"bestvideo"}),method:"POST",headers:{'Content-Type':'application/json'}});
 ```
 
 #### Plain text

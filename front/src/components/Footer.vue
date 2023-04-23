@@ -23,7 +23,7 @@ export default {
       }
       if (window.location.protocol == 'https:') {
         document.getElementById('bookmarklet').href = "javascript:fetch(\"" + url
-          + "/api/downloads\",{body:new URLSearchParams({url:window.location.href}),method:\"POST\"});";
+          + "/api/downloads\",{body:JSON.stringify({'url':window.location.href}),method:\"POST\",headers:{'Content-Type':'application/json'}});";
       }
       else {
         document.getElementById('bookmarklet').href = "javascript:(function(){document.body.innerHTML += '<form name=\"ydl_form\" method=\"POST\" action=\""
