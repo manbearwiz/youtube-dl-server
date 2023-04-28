@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from ydl_server import views
-from ydl_server.config import app_config, get_finished_path
+from ydl_server.config import get_finished_path
 
 from starlette.routing import Route, Mount
 from starlette.staticfiles import StaticFiles

@@ -6,7 +6,6 @@ import importlib
 import json
 from time import sleep
 from datetime import datetime
-import sys
 from subprocess import Popen, PIPE, STDOUT
 
 from ydl_server.logdb import JobsDB, Job, Actions, JobType

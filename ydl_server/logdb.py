@@ -155,15 +155,6 @@ class JobsDB:
         )
         self.conn.commit()
 
-    def set_job_pid(self, job_id, pid):
-        cursor = self.conn.cursor()
-        cursor.execute(
-            "UPDATE jobs SET pid = ?, last_update = datetime() \
-                where id = ?;",
-            (pid, str(job_id)),
-        )
-        self.conn.commit()
-
     def purge_jobs(self):
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM jobs;")
