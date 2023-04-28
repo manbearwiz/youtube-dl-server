@@ -43,6 +43,7 @@ async def api_finished(request):
     ]
     return JSONResponse(files)
 
+
 async def api_delete_file(request):
     fname = request.path_params["fname"]
     if not fname:
@@ -66,6 +67,7 @@ async def api_delete_file(request):
 async def api_list_extractors(request):
     return JSONResponse(request.app.state.ydlhandler.ydl_extractors)
 
+
 async def api_server_info(request):
     return JSONResponse(
         {
@@ -76,6 +78,7 @@ async def api_server_info(request):
         }
     )
 
+
 async def api_list_formats(request):
     return JSONResponse(
         {
@@ -83,6 +86,7 @@ async def api_list_formats(request):
             "ydl_default_format": app_config["ydl_server"].get("default_format", 'video/best')
         }
     )
+
 
 async def api_queue_size(request):
     db = JobsDB(readonly=True)

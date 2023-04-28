@@ -13,13 +13,16 @@ from ydl_server.config import app_config
 from ydl_server.routes import routes
 
 if __name__ == "__main__":
-
     JobsDB.check_db_latest()
     JobsDB.init_db()
 
     middleware = [Middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"])]
 
-    app = Starlette(routes=routes, debug=app_config["ydl_server"].get("debug", False), middleware=middleware)
+    app = Starlette(
+        routes=routes,
+        debug=app_config["ydl_server"].get("debug", False),
+        middleware=middleware,
+    )
 
     app.state.jobshandler = JobsHandler(app_config)
     app.state.ydlhandler = YdlHandler(app_config, app.state.jobshandler)
