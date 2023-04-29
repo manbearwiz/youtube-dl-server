@@ -11,6 +11,13 @@ pipeline {
                 checkout scm
             }
         }
+        stage('Linting') {
+            steps {
+                script {
+                    sh "ruff .";
+                }
+            }
+        }
         stage('Prep buildx') {
             steps {
                 script {
@@ -73,7 +80,7 @@ pipeline {
     post {
         always {
             sh 'docker buildx stop $BUILDX_BUILDER || true'
-            sh 'docker buildx rm $BUILDX_BUILDER'
+            sh 'docker buildx rm $BUILDX_BUILDER || true'
         }
     }
 }
