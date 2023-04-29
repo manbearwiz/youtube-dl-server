@@ -46,7 +46,8 @@ export default {
       }}</a> version {{ server_info.ydl_module_version }}.
       Code &amp; issues on <a target="_blank" rel="noopener noreferrer" class="text-light"
         href="https://github.com/nbr23/youtube-dl-server">GitHub</a>.
-      <span v-if="server_info.ydls_version != ''">Rev <a target="_blank"
+      <span v-if="server_info.ydls_version != ''" data-toggle="tooltip" data-placement="top"
+        :title="server_info.ydls_release_date">Rev <a target="_blank"
           :href="'https://github.com/nbr23/youtube-dl-server/commit/' + server_info.ydls_version"
           class="badge text-bg-dark">{{
             server_info.ydls_version }}</a>

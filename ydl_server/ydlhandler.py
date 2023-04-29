@@ -47,6 +47,7 @@ class YdlHandler:
         self.ydl_website = get_ydl_website(self.ydl_module_name)
 
         self.ydls_version = os.environ.get("YDLS_VERSION", "")
+        self.ydls_release_date = os.environ.get("YDLS_RELEASE_DATE", "")
 
         importlib.reload(ydl_module.version)
         importlib.reload(ydl_module.extractor)

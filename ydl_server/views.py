@@ -75,6 +75,7 @@ async def api_server_info(request):
             "ydl_module_version": request.app.state.ydlhandler.ydl_version,
             "ydl_module_website": request.app.state.ydlhandler.ydl_website,
             "ydls_version": request.app.state.ydlhandler.ydls_version,
+            "ydls_release_date": request.app.state.ydlhandler.ydls_release_date,
         }
     )
 
