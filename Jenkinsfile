@@ -41,7 +41,7 @@ pipeline {
                         --build-arg ATOMICPARSLEY=1 \
                         -t nbr23/youtube-dl-server:yt-dlp \
                         -t nbr23/youtube-dl-server:`git rev-parse --short HEAD`-yt-dlp \
-                        -t nbr23/youtube-dl-server:${GIT_COMMIT}-yt-dlp \
+                        -t nbr23/youtube-dl-server:${GIT_COMMIT}-$(date +%s)-yt-dlp \
                         -t nbr23/youtube-dl-server:yt-dlp_atomicparsley \
                         -f Dockerfile-ytdlp \
                         ${ "$GIT_BRANCH" == "master" ? "--push" : ""} .
@@ -64,7 +64,7 @@ pipeline {
                         -t nbr23/youtube-dl-server:latest \
                         -t nbr23/youtube-dl-server:youtube-dl \
                         -t nbr23/youtube-dl-server:`git rev-parse --short HEAD`-youtube-dl \
-                        -t nbr23/youtube-dl-server:${GIT_COMMIT}-youtube-dl \
+                        -t nbr23/youtube-dl-server:${GIT_COMMIT}-$(date +%s)-youtube-dl \
                         -t nbr23/youtube-dl-server:youtube-dl_atomicparsley \
                         ${ "$GIT_BRANCH" == "master" ? "--push" : ""} .
                     """
