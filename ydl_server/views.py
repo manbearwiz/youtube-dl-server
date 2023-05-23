@@ -147,9 +147,14 @@ async def api_jobs_retry(request):
     return JSONResponse({"success": True})
 
 async def api_queue_download(request):
-    data = await request.json()
-    url = data.get("url")
-    options = {"format": data.get("format")}
+    if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
+        data = await request.form()
+        url = data.get("url")
+        options = {"format": data.get("format")}
+    else:
+        data = await request.json()
+        url = data.get("url")
+        options = {"format": data.get("format")}
 
     if not url:
         return JSONResponse({"success": False, "error": "'url' query parameter omitted"})
