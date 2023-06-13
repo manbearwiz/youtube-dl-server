@@ -49,3 +49,8 @@ div.input-group>input.form-control {
 .footer {
   width: 100%;
 }
+
+.text-muted {
+  --bs-text-opacity: 1;
+  color: #6c757d !important;
+}
