@@ -28,7 +28,7 @@ if __name__ == "__main__":
     app.state.ydlhandler = YdlHandler(app_config, app.state.jobshandler)
 
     app.state.ydlhandler.start()
-    print("Started download thread")
+    print("Started download threads")
     app.state.jobshandler.start(app.state.ydlhandler.queue)
     print("Started jobs manager thread")
 

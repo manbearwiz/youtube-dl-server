@@ -61,7 +61,7 @@ class YdlHandler:
 
     def __init__(self, app_config, jobshandler):
         self.queue = Queue()
-        self.thread = None
+        self.threads = []
         self.done = False
         self.ydl_module_name = None
         self.ydl_version = None
@@ -76,8 +76,12 @@ class YdlHandler:
         print("Using {} module".format(self.ydl_module_name))
 
     def start(self):
-        self.thread = Thread(target=self.worker)
-        self.thread.start()
+        for i in range(self.app_config["ydl_server"].get("download_workers_count", 2)):
+            thread = Thread(target=self.worker, args=(i,))
+            self.threads.append(thread)
+            thread.start()
+            print("Started dl worker %i" % i)
+
 
     def put(self, obj):
         self.queue.put(obj)
@@ -85,7 +89,7 @@ class YdlHandler:
     def finish(self):
         self.done = True
 
-    def worker(self):
+    def worker(self, thread_id):
         db = JobsDB(readonly=True)
         while not self.done:
             job = self.queue.get()
@@ -95,6 +99,7 @@ class YdlHandler:
                 continue
             job.status = Job.RUNNING
             self.jobshandler.put((Actions.SET_STATUS, (job.id, job.status)))
+            self.queue.task_done()
             if job.type == JobType.YDL_DOWNLOAD:
                 output = io.StringIO()
                 try:
@@ -104,7 +109,6 @@ class YdlHandler:
                     job.log = "Error during download task:\n{}:\n\t{}".format(type(e).__name__, str(e))
                     print("Error during download task:\n{}:\n\t{}".format(type(e).__name__, str(e)))
             self.jobshandler.put((Actions.UPDATE, job))
-            self.queue.task_done()
 
     def get_ydl_options(self, ydl_config, request_options):
         ydl_config = ydl_config.copy()
@@ -205,5 +209,5 @@ class YdlHandler:
             self.jobshandler.put((Actions.RESUME, job))
 
     def join(self):
-        if self.thread is not None:
-            return self.thread.join()
+        for thread in self.threads:
+            thread.join()
