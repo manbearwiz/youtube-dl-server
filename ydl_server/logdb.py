@@ -315,3 +315,40 @@ class JobsDB:
                 }
             )
         return rows
+
+    def get_jobs(self, limit=50):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                id, name, status, last_update, format, type, url, pid
+            FROM
+                jobs
+            ORDER BY last_update DESC LIMIT ?;
+            """,
+            (str(limit),),
+        )
+        rows = []
+        for (
+            job_id,
+            name,
+            status,
+            last_update,
+            format,
+            jobtype,
+            url,
+            pid,
+        ) in cursor.fetchall():
+            rows.append(
+                {
+                    "id": job_id,
+                    "name": name,
+                    "status": STATUS_NAME[status],
+                    "format": format,
+                    "last_update": JobsDB.convert_datetime_to_tz(last_update),
+                    "type": jobtype,
+                    "url": url,
+                    "pid": pid,
+                }
+            )
+        return rows

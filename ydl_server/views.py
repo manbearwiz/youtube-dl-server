@@ -109,7 +109,9 @@ async def api_queue_size(request):
 
 async def api_logs(request):
     db = JobsDB(readonly=True)
-    return JSONResponse(db.get_all(app_config["ydl_server"].get("max_log_entries", 100)))
+    if request.query_params.get("show_logs", "1") in ["1", "true"]:
+        return JSONResponse(db.get_all(app_config["ydl_server"].get("max_log_entries", 100)))
+    return JSONResponse(db.get_jobs(app_config["ydl_server"].get("max_log_entries", 100)))
 
 
 async def api_logs_purge(request):
