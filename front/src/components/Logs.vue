@@ -71,41 +71,44 @@ export default {
         <button class="btn btn-dark" @click="fetchLogs">Refresh</button>
         <button class="btn btn-dark" @click="purgeLogs">Purge logs</button>
         <br />
-        <table class="col-md-16 table table-stripped table-md table-dark">
-          <thead>
-            <tr>
-              <th>Last update</th>
-              <th>Name</th>
-              <th>Format</th>
-              <th>Status</th>
-              <th v-if="showLogDetails">Log</th>
-            </tr>
-          </thead>
-          <tbody id="job_logs">
-            <tr v-for="log in logs" :key="log.id">
-              <td>{{ log.last_update }}</td>
-              <td>{{ log.name }}</td>
-              <td>{{ log.format }}</td>
-              <td v-if="log.status == 'Failed' || log.status == 'Aborted'">
-                <span :class=statusToTrClass[log.status]>
-                  <a role="button" aria-label="Retry" @click.prevent="retryDownload(log.id)">{{
-                    log.status }} / Retry</a>
-                </span>
-              </td>
-              <td v-else-if="log.status == 'Running' || log.status == 'Pending'">
-                <span :class=statusToTrClass[log.status]>
-                  {{ log.status }} <a role="button" aria-label="Abort" @click.prevent="abortDownload(log.id)">&times;</a>
-                </span>
-              </td>
-              <td v-else>
-                <span :class=statusToTrClass[log.status]>
-                  {{ log.status }}
-                </span>
-              </td>
-              <td style="white-space: pre; text-align: left;" v-if="showLogDetails">{{ log.log }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-responsive">
+          <table class="col-md-16 table table-stripped table-md table-dark">
+            <thead>
+              <tr>
+                <th class="col-md-1">Last update</th>
+                <th class="col-md-3">Name</th>
+                <th class="col-md-1">Format</th>
+                <th class="col-md-1">Status</th>
+                <th v-if="showLogDetails" class="col-md-6">Log</th>
+              </tr>
+            </thead>
+            <tbody id="job_logs">
+              <tr v-for="log in logs" :key="log.id">
+                <td>{{ log.last_update }}</td>
+                <td>{{ log.name }}</td>
+                <td>{{ log.format }}</td>
+                <td v-if="log.status == 'Failed' || log.status == 'Aborted'">
+                  <span :class=statusToTrClass[log.status]>
+                    <a role="button" aria-label="Retry" @click.prevent="retryDownload(log.id)">{{
+                      log.status }} / Retry</a>
+                  </span>
+                </td>
+                <td v-else-if="log.status == 'Running' || log.status == 'Pending'">
+                  <span :class=statusToTrClass[log.status]>
+                    {{ log.status }} <a role="button" aria-label="Abort"
+                      @click.prevent="abortDownload(log.id)">&times;</a>
+                  </span>
+                </td>
+                <td v-else>
+                  <span :class=statusToTrClass[log.status]>
+                    {{ log.status }}
+                  </span>
+                </td>
+                <td style="text-align: left;" v-if="showLogDetails">{{ log.log }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>

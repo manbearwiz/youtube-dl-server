@@ -6,6 +6,20 @@ body {
   margin: 0;
 }
 
+.table-responsive {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.table-responsive table {
+  table-layout: fixed;
+}
+
+.table-responsive td {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 .content {
   min-height: 100%;
   margin-top: -50px;
