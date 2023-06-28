@@ -1,4 +1,5 @@
 <script setup>
+import { orderBy } from 'lodash'
 import { getAPIUrl } from '../utils';
 </script>
 <script>
@@ -14,6 +15,8 @@ export default {
       Running: 'badge bg-info',
       Completed: 'badge bg-success'
     },
+    sortBy: 'last_update',
+    sortOrder: 'desc',
   }),
   mounted() {
     this.mounted = true;
@@ -22,7 +25,16 @@ export default {
   unmounted() {
     this.mounted = false;
   },
-
+  computed: {
+    orderedLogs: function () {
+      if (this.sortBy === 'last_update') {
+        return orderBy(this.logs, e => {
+          return new Date(e.last_update)
+        }, this.sortOrder)
+      }
+      return orderBy(this.logs, this.sortBy, this.sortOrder)
+    }
+  },
   methods: {
     abortDownload(job_id) {
       const url = getAPIUrl(`api/jobs/${job_id}/stop`, import.meta.env);
@@ -75,15 +87,42 @@ export default {
           <table class="col-md-16 table table-stripped table-md table-dark">
             <thead>
               <tr>
-                <th class="col-md-1">Last update</th>
-                <th class="col-md-3">Name</th>
-                <th class="col-md-1">Format</th>
-                <th class="col-md-1">Status</th>
+                <th class="col-md-1">Last update
+                  <a :class="sortOrder === 'asc' && sortBy === 'last_update' ? 'text-light' : 'text-muted'"
+                    style="text-decoration: none;" href="#"
+                    @click.prevent="sortBy = 'last_update'; sortOrder = 'asc'">&uarr;</a>
+                  <a :class="sortOrder === 'desc' && sortBy === 'last_update' ? 'text-light' : 'text-muted'"
+                    style="text-decoration: none;" href="#"
+                    @click.prevent="sortBy = 'last_update'; sortOrder = 'desc'">&darr;</a>
+                </th>
+                <th class="col-md-3">Name
+                  <a :class="sortOrder === 'asc' && sortBy === 'name' ? 'text-light' : 'text-muted'"
+                    style="text-decoration: none;" href="#" @click.prevent="sortBy = 'name'; sortOrder = 'asc'">&uarr;</a>
+                  <a :class="sortOrder === 'desc' && sortBy === 'name' ? 'text-light' : 'text-muted'"
+                    style="text-decoration: none;" href="#"
+                    @click.prevent="sortBy = 'name'; sortOrder = 'desc'">&darr;</a>
+                </th>
+                <th class="col-md-1">Format
+                  <a :class="sortOrder === 'asc' && sortBy === 'format' ? 'text-light' : 'text-muted'"
+                    style="text-decoration: none;" href="#"
+                    @click.prevent="sortBy = 'format'; sortOrder = 'asc'">&uarr;</a>
+                  <a :class="sortOrder === 'desc' && sortBy === 'format' ? 'text-light' : 'text-muted'"
+                    style="text-decoration: none;" href="#"
+                    @click.prevent="sortBy = 'format'; sortOrder = 'desc'">&darr;</a>
+                </th>
+                <th class="col-md-1">Status
+                  <a :class="sortOrder === 'asc' && sortBy === 'status' ? 'text-light' : 'text-muted'"
+                    style="text-decoration: none;" href="#"
+                    @click.prevent="sortBy = 'status'; sortOrder = 'asc'">&uarr;</a>
+                  <a :class="sortOrder === 'desc' && sortBy === 'status' ? 'text-light' : 'text-muted'"
+                    style="text-decoration: none;" href="#"
+                    @click.prevent="sortBy = 'status'; sortOrder = 'desc'">&darr;</a>
+                </th>
                 <th v-if="showLogDetails" class="col-md-6">Log</th>
               </tr>
             </thead>
             <tbody id="job_logs">
-              <tr v-for="log in logs" :key="log.id">
+              <tr v-for="log in orderedLogs" :key="log.id">
                 <td>{{ log.last_update }}</td>
                 <td>{{ log.name }}</td>
                 <td>{{ log.format }}</td>
@@ -111,5 +150,4 @@ export default {
         </div>
       </div>
     </div>
-  </div>
-</template>
+  </div></template>
