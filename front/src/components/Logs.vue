@@ -87,7 +87,7 @@ export default {
           <table class="col-md-16 table table-stripped table-md table-dark">
             <thead>
               <tr>
-                <th class="col-md-1">Last update
+                <th class="col-md-2">Last update
                   <a :class="sortOrder === 'asc' && sortBy === 'last_update' ? 'text-light' : 'text-muted'"
                     style="text-decoration: none;" href="#"
                     @click.prevent="sortBy = 'last_update'; sortOrder = 'asc'">&uarr;</a>
@@ -95,7 +95,7 @@ export default {
                     style="text-decoration: none;" href="#"
                     @click.prevent="sortBy = 'last_update'; sortOrder = 'desc'">&darr;</a>
                 </th>
-                <th class="col-md-3">Name
+                <th class="col-md-2">Name
                   <a :class="sortOrder === 'asc' && sortBy === 'name' ? 'text-light' : 'text-muted'"
                     style="text-decoration: none;" href="#" @click.prevent="sortBy = 'name'; sortOrder = 'asc'">&uarr;</a>
                   <a :class="sortOrder === 'desc' && sortBy === 'name' ? 'text-light' : 'text-muted'"
@@ -150,4 +150,5 @@ export default {
         </div>
       </div>
     </div>
-  </div></template>
+  </div>
+</template>
