@@ -1,6 +1,6 @@
 <script setup>
 import { orderBy } from 'lodash'
-import { getAPIUrl } from '../utils';
+import { getAPIUrl, saveConfig, getConfig } from '../utils';
 </script>
 <script>
 export default {
@@ -19,6 +19,7 @@ export default {
     sortOrder: 'desc',
   }),
   mounted() {
+    this.showLogDetails = getConfig('showLogDetails', 'true') === 'true';
     this.mounted = true;
     this.fetchLogs();
   },
@@ -78,8 +79,10 @@ export default {
     <div class="container-fluid d-flex flex-column text-light text-center">
       <div class="container-fluid flex-grow-1">
         <h1 class="display-4">Jobs History</h1>
-        <button v-if="showLogDetails" class="btn btn-dark" @click="showLogDetails = false">Hide logs</button>
-        <button v-else class="btn btn-dark" @click="showLogDetails = true">Show logs</button>
+        <button v-if="showLogDetails" class="btn btn-dark"
+          @click="showLogDetails = false; saveConfig('showLogDetails', false)">Hide logs</button>
+        <button v-else class="btn btn-dark" @click="showLogDetails = true; saveConfig('showLogDetails', true)">Show
+          logs</button>
         <button class="btn btn-dark" @click="fetchLogs">Refresh</button>
         <button class="btn btn-dark" @click="purgeLogs">Purge logs</button>
         <br />

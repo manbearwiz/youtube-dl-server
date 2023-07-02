@@ -1,4 +1,4 @@
-import {get} from 'lodash';
+import { get } from 'lodash';
 
 function getAPIUrl(path, env) {
   const VITE_YOUTUBE_DL_SERVER_API_URL = get(env, 'VITE_YOUTUBE_DL_SERVER_API_URL', '');
@@ -11,5 +11,13 @@ function getAPIUrl(path, env) {
   return path;
 }
 
+function saveConfig(key, value) {
+  $cookies.set(key, value, -1, '/', '', true, 'Strict');
+}
 
-export {getAPIUrl};
+function getConfig(key, defaultValue) {
+  return $cookies.get(key) || defaultValue;
+}
+
+
+export { getAPIUrl, saveConfig, getConfig };

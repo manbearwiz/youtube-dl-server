@@ -12,6 +12,7 @@
     "bootstrap": "^5.2.3",
     "lodash": "^4.17.21",
     "vue": "^3.2.47",
+    "vue-cookies": "^1.8.3",
     "vue-router": "^4.1.6"
   },
   "devDependencies": {
