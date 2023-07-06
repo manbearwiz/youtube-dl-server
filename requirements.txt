@@ -5,4 +5,4 @@ Jinja2==3.1.2
 python-multipart==0.0.6
 PyYAML==6.0
 youtube-dl==2021.12.17
-yt-dlp==2023.6.22
+yt-dlp==2023.7.6
