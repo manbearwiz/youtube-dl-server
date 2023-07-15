@@ -5,12 +5,18 @@ import { getAPIUrl } from '../utils';
 export default {
   data: () => ({
     stats: {},
+    server_info: {},
   }),
   mounted() {
     this.fetchStats();
+    this.fetchServerInfo();
   },
 
   methods: {
+    async fetchServerInfo() {
+      const url = getAPIUrl('api/info', import.meta.env);
+      this.server_info = await (await fetch(url)).json();
+    },
     async fetchStats() {
       const url = getAPIUrl('api/downloads/stats', import.meta.env);
       this.stats = (await (await fetch(url)).json()).stats || {};
@@ -49,7 +55,7 @@ export default {
                   <span v-else data-toggle="tooltip" data-placement="bottom" title="Pending" id='queue_pending_size'
                     class="badge bg-secondary">{{ stats.queue }} | {{ stats.pending }}</span>
                   <span data-toggle="tooltip" data-placement="bottom" title="Running" id='running_size'
-                    class="badge bg-info">{{ stats.running }}</span>
+                    class="badge bg-info">{{ stats.running }}/{{ server_info.download_workers_count }}</span>
                   <span data-toggle="tooltip" data-placement="bottom" title="Completed" id='completed_size'
                     class="badge bg-success">{{ stats.completed }}</span>
                   <span data-toggle="tooltip" data-placement="bottom" title="Failed" id='failed_size'

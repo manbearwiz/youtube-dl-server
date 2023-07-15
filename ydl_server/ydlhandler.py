@@ -76,7 +76,8 @@ class YdlHandler:
         print("Using {} module".format(self.ydl_module_name))
 
     def start(self):
-        for i in range(self.app_config["ydl_server"].get("download_workers_count", 2)):
+        self.download_workers_count = self.app_config["ydl_server"].get("download_workers_count", 2)
+        for i in range(self.download_workers_count):
             thread = Thread(target=self.worker, args=(i,))
             self.threads.append(thread)
             thread.start()
