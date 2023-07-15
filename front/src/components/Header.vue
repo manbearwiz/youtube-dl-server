@@ -54,7 +54,7 @@ export default {
                     id='queue_pending_size' class="badge bg-secondary">{{ stats.queue }}</span>
                   <span v-else data-toggle="tooltip" data-placement="bottom" title="Pending" id='queue_pending_size'
                     class="badge bg-secondary">{{ stats.queue }} | {{ stats.pending }}</span>
-                  <span data-toggle="tooltip" data-placement="bottom" title="Running" id='running_size'
+                  <span data-toggle="tooltip" data-placement="bottom" title="Running / Total Workers" id='running_size'
                     class="badge bg-info">{{ stats.running }}/{{ server_info.download_workers_count }}</span>
                   <span data-toggle="tooltip" data-placement="bottom" title="Completed" id='completed_size'
                     class="badge bg-success">{{ stats.completed }}</span>
