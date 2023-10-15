@@ -221,3 +221,7 @@ This docker image is based on
 
 [1]:youtube-dl-server.png
 [2]:youtube-dl-server-logs.png
+
+## Additional references
+
+* [ytdl-k8s](https://github.com/droopy4096/ytdl-k8s) - `youtube-dl-server` Helm chart (uses `youtube-dl-server` image for kubernetes deployment)
