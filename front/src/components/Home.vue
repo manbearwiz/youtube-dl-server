@@ -177,8 +177,8 @@ export default {
               </div>
               <div class="modal-body text-left" id="extractors_body">
                 <p>
-                  <span id="extractors_items">
-                    <span v-for="extractor in extractors">
+                  <span id="extractors_items" class="list-group">
+                    <span class="list-group-item list-group-item-action" v-for="extractor in extractors">
                       <b>{{ extractor }}</b><br />
                     </span>
                   </span>
