@@ -85,7 +85,7 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            urls: this.urlBox.value.split('\n').join(' ').split(' '),
+            urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
             format: this.selectedFormat.value
           })
         })
@@ -115,7 +115,7 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            urls: this.urlBox.value.split('\n').join(' ').split(' '),
+            urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
           })
         })
           .then(response => {
