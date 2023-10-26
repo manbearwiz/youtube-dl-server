@@ -222,16 +222,17 @@ export default {
                   <br />
                   <br />
                   <span v-if="get(metadata, '_type', '') === 'playlist'">
-                    <span v-for="entry in get(metadata, 'entries', [])">
-                      <a target="_blank" :href=entry.url>{{ entry.title }}</a>
+                    <ul class="list-group" v-for="entry in get(metadata, 'entries', [])">
+                      <a class="list-group-item list-group-item-action" target="_blank" :href=entry.url>{{ entry.title
+                      }}</a>
                       <br />
-                    </span>
+                    </ul>
                   </span>
                   <span v-else>
                     <ul class="list-group" v-for="format in get(metadata, 'formats', [])">
-                      <li class="list-group-item" target="_blank" :href=format.url>
+                      <a class="list-group-item list-group-item-action" target="_blank" :href=format.url>
                         {{ format.ext }} {{ format.format }} - {{ prettySize(format.filesize) }}
-                      </li>
+                      </a>
                     </ul>
                   </span>
                 </p>
