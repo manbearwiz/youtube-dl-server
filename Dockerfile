@@ -4,7 +4,7 @@
 # https://github.com/nbr23/youtube-dl-server
 #
 
-FROM --platform=$BUILDPLATFORM node:18-alpine as nodebuild
+FROM --platform=$BUILDPLATFORM node:21-alpine as nodebuild
 
 WORKDIR /app
 COPY ./front/package*.json /app
