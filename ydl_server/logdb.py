@@ -140,7 +140,7 @@ class JobsDB:
                 job.log,
                 job.format,
                 str(job.type),
-                job.url,
+                '\n'.join(job.url),
                 job.pid,
             ),
         )
@@ -273,7 +273,7 @@ class JobsDB:
             "format": format,
             "last_update": JobsDB.convert_datetime_to_tz(last_update),
             "type": jobtype,
-            "url": url,
+            "urls": url.split("\n"),
             "pid": pid,
         }
 
@@ -310,7 +310,7 @@ class JobsDB:
                     "format": format,
                     "last_update": JobsDB.convert_datetime_to_tz(last_update),
                     "type": jobtype,
-                    "url": url,
+                    "urls": url.split("\n"),
                     "pid": pid,
                 }
             )
@@ -347,7 +347,7 @@ class JobsDB:
                     "format": format,
                     "last_update": JobsDB.convert_datetime_to_tz(last_update),
                     "type": jobtype,
-                    "url": url,
+                    "urls": url.split("\n"),
                     "pid": pid,
                 }
             )

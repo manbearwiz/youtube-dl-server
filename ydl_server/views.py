@@ -142,7 +142,7 @@ async def api_jobs_retry(request):
     db = JobsDB(readonly=True)
     job_id = request.path_params["job_id"]
     job = db.get_job_by_id(job_id)
-    new_job = Job(job["url"], Job.PENDING, "", JobType.YDL_DOWNLOAD, job["format"], job["url"])
+    new_job = Job(job["name"], Job.PENDING, "", JobType.YDL_DOWNLOAD, job["format"], job["urls"])
 
     request.app.state.jobshandler.put((Actions.DELETE_LOG, job))
     request.app.state.jobshandler.put((Actions.INSERT, new_job))
@@ -152,26 +152,32 @@ async def api_jobs_retry(request):
 async def api_queue_download(request):
     if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
         data = await request.form()
-        url = data.get("url")
-        options = {"format": data.get("format")}
     else:
         data = await request.json()
-        url = data.get("url")
-        options = {"format": data.get("format")}
+    url = data.get("url")
+    urls = data.get("urls", [])
+    options = {"format": data.get("format")}
 
-    if not url:
-        return JSONResponse({"success": False, "error": "'url' query parameter omitted"})
+    if url:
+        urls.append(url)
 
-    job = Job(url, Job.PENDING, "", JobType.YDL_DOWNLOAD, data.get("format"), url)
+    if len(urls) == 0:
+        return JSONResponse({"success": False, "error": "'url' and 'urls' query parameters omitted"})
+
+    job = Job(', '.join(urls), Job.PENDING, "", JobType.YDL_DOWNLOAD, data.get("format"), urls)
     request.app.state.jobshandler.put((Actions.INSERT, job))
 
-    print("Added url " + url + " to the download queue")
-    return JSONResponse({"success": True, "url": url, "options": options})
+    print("Added url " + ','.join(urls) + " to the download queue")
+    return JSONResponse({"success": True, "urls": urls, "options": options})
 
 
 async def api_metadata_fetch(request):
     data = await request.json()
-    rc, stdout = request.app.state.ydlhandler.fetch_metadata(data.get("url"))
+    url = data.get("url")
+    urls = data.get("urls", [])
+    if url:
+        urls.append(url)
+    rc, stdout = request.app.state.ydlhandler.fetch_metadata(urls)
     if rc == 0:
         return JSONResponse(stdout)
     return JSONResponse({"success": False}, status_code=404)

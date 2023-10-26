@@ -143,7 +143,7 @@ class YdlHandler:
         if proc.wait() != 0:
             return -1, stderr.decode()
 
-        return 0, json.loads(stdout)
+        return 0, [json.loads(s) for s in stdout.decode().strip().split('\n')]
 
     def get_ydl_full_cmd(self, opt_dict, url, extra_opts=None):
         cmd = [self.ydl_module_name]
@@ -157,7 +157,7 @@ class YdlHandler:
         if extra_opts is not None and isinstance(extra_opts, list):
             cmd.extend(extra_opts)
         cmd.append("--")
-        cmd.append(url)
+        cmd.extend(url)
         return cmd
 
     def download(self, job, request_options, output):
@@ -168,11 +168,13 @@ class YdlHandler:
         if rc != 0:
             job.log = Job.clean_logs(metadata)
             job.status = Job.FAILED
+            print("Error in metadata fetching process:\n" + job.log)
             raise Exception(job.log)
 
-        self.jobshandler.put((Actions.SET_NAME, (job.id, metadata.get("title", job.url))))
+        title = ', '.join([md.get("title", job.url[i]) for i, md in enumerate(metadata)])
+        self.jobshandler.put((Actions.SET_NAME, (job.id, title)))
 
-        if metadata.get("_type") == "playlist":
+        if metadata[0].get("_type") == "playlist" or len(metadata) > 1:
             ydl_opts.update({"output": self.app_config["ydl_server"].get("output_playlist", ydl_opts.get("output"))})
 
         cmd = self.get_ydl_full_cmd(ydl_opts, job.url)
@@ -182,7 +184,8 @@ class YdlHandler:
         stdout_thread = Thread(target=self.download_log_update, args=(job, proc, output))
         stdout_thread.start()
 
-        if proc.wait() == 0:
+        rc = proc.wait()
+        if rc == 0:
             read_proc_stdout(proc, output)
             job.log = Job.clean_logs(output.getvalue())
             job.status = Job.COMPLETED
@@ -190,7 +193,7 @@ class YdlHandler:
             read_proc_stdout(proc, output)
             job.log = Job.clean_logs(output.getvalue())
             job.status = Job.FAILED
-            print("Error during download task:\n" + output.getvalue())
+            print("Error in download process (RC=" + str(rc) + "):\n" + output.getvalue())
         stdout_thread.join()
 
     def resume_pending(self):
@@ -204,7 +207,7 @@ class YdlHandler:
                 "Queue stopped",
                 int(pending["type"]),
                 pending["format"],
-                pending["url"],
+                pending["urls"],
             )
             job.id = pending["id"]
             self.jobshandler.put((Actions.RESUME, job))
