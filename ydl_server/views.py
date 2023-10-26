@@ -132,11 +132,18 @@ async def api_jobs_stop(request):
     if job["status"] == 'Pending':
         print("Cancelling pending job")
         request.app.state.jobshandler.put((Actions.SET_STATUS, (job["id"], Job.ABORTED)))
-    elif job["status"] == 'Running' and int(job["pid"]) != 0:
+        return JSONResponse({"success": True})
+    if job["status"] == 'Running' and int(job["pid"]) != 0:
         print("Stopping running job", job["pid"])
-        print(os.kill(job["pid"], signal.SIGINT))
-
-    return JSONResponse({"success": True})
+        try:
+            print(os.kill(job["pid"], signal.SIGINT))
+        except ProcessLookupError:
+            print("Process already dead")
+        return JSONResponse({"success": True})
+    if int(job["pid"]) == 0:
+        request.app.state.jobshandler.put((Actions.SET_STATUS, (job["id"], Job.ABORTED)))
+        return JSONResponse({"success": True})
+    return JSONResponse({"success": False})
 
 async def api_jobs_retry(request):
     db = JobsDB(readonly=True)
