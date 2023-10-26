@@ -222,19 +222,17 @@ export default {
                   <b v-else>Available formats:</b>
                   <br />
                   <br />
-                  <span v-if="get(metadata, '_type', '') === 'playlist'">
-                    <ul class="list-group" v-for="entry in get(metadata, 'entries', [])">
-                      <a class="list-group-item list-group-item-action" target="_blank" :href=entry.url>{{ entry.title
+                  <span class="list-group" v-if="get(metadata, '_type', '') === 'playlist'">
+                    <a v-for="entry in get(metadata, 'entries', [])" class="list-group-item list-group-item-action"
+                      target="_blank" :href=entry.url>{{ entry.title
                       }}</a>
-                      <br />
-                    </ul>
+                    <br />
                   </span>
-                  <span v-else>
-                    <ul class="list-group" v-for="format in get(metadata, 'formats', [])">
-                      <a class="list-group-item list-group-item-action" target="_blank" :href=format.url>
-                        {{ format.ext }} {{ format.format }} - {{ prettySize(format.filesize) }}
-                      </a>
-                    </ul>
+                  <span class="list-group" v-else>
+                    <a v-for="format in get(metadata, 'formats', [])" class="list-group-item list-group-item-action"
+                      target="_blank" :href=format.url>
+                      {{ format.ext }} {{ format.format }} - {{ prettySize(format.filesize) }}
+                    </a>
                   </span>
                 </p>
               </div>
