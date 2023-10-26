@@ -12,7 +12,7 @@ export default {
     extractorsModal: null,
     urlBox: null,
     selectedFormat: null,
-    metadata: null,
+    metadata_list: null,
   }),
   mounted() {
     this.extractorsModal = new Modal('#extractorsModal');
@@ -85,7 +85,7 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            url: this.urlBox.value,
+            urls: this.urlBox.value.split('\n').join(' ').split(' '),
             format: this.selectedFormat.value
           })
         })
@@ -115,7 +115,7 @@ export default {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            url: this.urlBox.value,
+            urls: this.urlBox.value.split('\n').join(' ').split(' '),
           })
         })
           .then(response => {
@@ -127,7 +127,7 @@ export default {
             }
           })
           .then(data => {
-            this.metadata = data;
+            this.metadata_list = data;
             this.showMetadataModal();
           })
           .catch((error) => {
@@ -192,26 +192,34 @@ export default {
         </div>
 
         <div class="modal fade text-dark" id="metadataModal" role="dialog" aria-hidden="true" tabindex="-1"
-          aria-labelledby="metadata_title">
+          aria-labelledby="metadata_title" style="text-align: left">
           <div class="modal-dialog" id='md_dialog' role="document">
             <div class="modal-content bg-light">
               <div class="modal-header">
-                <h5 class="modal-title" id="metadata_title">{{ get(metadata, 'title') }}</h5>
+                <h5 class="modal-title" id="metadata_title">{{ metadata_list && metadata_list.length === 1 ?
+                  get(metadata_list[0], 'title')
+                  :
+                  'Multiple Metadata sets' }}
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                 </button>
               </div>
               <div class="modal-body text-left" id="metadata_body">
-                <p>
-                  Title: <b><span id="md_title">{{ get(metadata, 'title') }}</span></b><br />
-                  Uploader: <b><span id="md_uploader">{{ get(metadata, 'uploader') }}</span></b><br />
-                  Url: <b>
-                    <a :href="get(metadata, 'webpage_url')" id="md_webpage_url" target="_blank">{{ get(metadata,
-                      'webpage_url')
-                    }}</a>
-                  </b><br />
+                <p v-for="metadata in metadata_list">
+                  <span style="text-align: center">
+                    Title: <b><span id="md_title">{{ get(metadata, 'title') }}</span></b><br />
+                    Uploader: <b><span id="md_uploader">{{ get(metadata, 'uploader') }}</span></b><br />
+                    Url: <b>
+                      <a :href="get(metadata, 'webpage_url')" id="md_webpage_url" target="_blank">{{ get(metadata,
+                        'webpage_url')
+                      }}</a>
+                    </b>
+                  </span>
                   <br />
-                  <span v-if="get(metadata, '_type', '') === 'playlist'">Playlist</span>
-                  <span v-else>Available formats:</span>
+                  <br />
+                  <b v-if="get(metadata, '_type', '') === 'playlist'">Playlist</b>
+                  <b v-else>Available formats:</b>
+                  <br />
                   <br />
                   <span v-if="get(metadata, '_type', '') === 'playlist'">
                     <span v-for="entry in get(metadata, 'entries', [])">
@@ -220,11 +228,11 @@ export default {
                     </span>
                   </span>
                   <span v-else>
-                    <span v-for="format in get(metadata, 'formats', [])">
-                      <a target="_blank" :href=format.url>{{ format.ext }} {{ format.format }} - {{
-                        prettySize(format.filesize) }}</a>
-                      <br />
-                    </span>
+                    <ul class="list-group" v-for="format in get(metadata, 'formats', [])">
+                      <li class="list-group-item" target="_blank" :href=format.url>
+                        {{ format.ext }} {{ format.format }} - {{ prettySize(format.filesize) }}
+                      </li>
+                    </ul>
                   </span>
                 </p>
               </div>
