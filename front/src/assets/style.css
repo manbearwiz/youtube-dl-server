@@ -28,6 +28,10 @@ body {
   padding-bottom: 70px;
 }
 
+.modal-dialog a {
+  overflow-wrap: break-word;
+}
+
 nav {
   background-color: #001b26;
 }

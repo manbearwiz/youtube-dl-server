@@ -193,13 +193,13 @@ export default {
 
         <div class="modal fade text-dark" id="metadataModal" role="dialog" aria-hidden="true" tabindex="-1"
           aria-labelledby="metadata_title" style="text-align: left">
-          <div class="modal-dialog" id='md_dialog' role="document">
-            <div class="modal-content bg-light">
+          <div class="modal-dialog modal-lg" id='md_dialog' role="document">
+            <div class="modal-content bg-light" v-if="metadata_list">
               <div class="modal-header">
                 <h5 class="modal-title" id="metadata_title">{{ metadata_list && metadata_list.length === 1 ?
                   get(metadata_list[0], 'title')
                   :
-                  'Multiple Metadata sets' }}
+                  `Multiple Metadata sets (${metadata_list.length})` }}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                 </button>
