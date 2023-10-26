@@ -207,8 +207,9 @@ export default {
               <div class="modal-body text-left" id="metadata_body">
                 <p v-for="metadata in metadata_list">
                   <span style="text-align: center">
-                    Title: <b><span id="md_title">{{ get(metadata, 'title') }}</span></b><br />
-                    Uploader: <b><span id="md_uploader">{{ get(metadata, 'uploader') }}</span></b><br />
+                    <span>Title: <b>{{ get(metadata, 'title') }}</b><br /></span>
+                    <span v-if="get(metadata, 'uploader')">Uploader: <b>{{ get(metadata, 'uploader')
+                    }}</b><br /></span>
                     Url: <b>
                       <a :href="get(metadata, 'webpage_url')" id="md_webpage_url" target="_blank">{{ get(metadata,
                         'webpage_url')
