@@ -13,12 +13,12 @@ COPY ./front /app
 RUN npm run build
 
 
-FROM python:alpine3.17 as wheels
+FROM python:alpine3.18 as wheels
 
 RUN apk add --no-cache g++
 RUN pip install --upgrade --no-cache-dir pip && pip wheel --no-cache-dir --no-deps --wheel-dir /out/wheels brotli pycryptodomex websockets pyyaml
 
-FROM python:alpine3.17
+FROM python:alpine3.18
 ARG YOUTUBE_DL=youtube_dl
 ARG ATOMICPARSLEY=0
 ARG YDLS_VERSION
