@@ -1,5 +1,6 @@
 <script setup>
 import { orderBy } from 'lodash'
+import { Modal } from 'bootstrap'
 import { getAPIUrl, saveConfig, getConfig } from '../utils';
 </script>
 <script>
@@ -17,8 +18,11 @@ export default {
     },
     sortBy: 'last_update',
     sortOrder: 'desc',
+    currentLogDetails: null,
+    currentLogDetailsModal: null
   }),
   mounted() {
+    this.currentLogDetailsModal = new Modal('#currentLogDetailsModal');
     this.showLogDetails = getConfig('showLogDetails', 'true') === 'true';
     this.mounted = true;
     this.fetchLogs();
@@ -37,6 +41,10 @@ export default {
     }
   },
   methods: {
+    showCurrentLogDetails(log) {
+      this.currentLogDetails = log
+      this.currentLogDetailsModal.show();
+    },
     abortDownload(job_id) {
       const url = getAPIUrl(`api/jobs/${job_id}/stop`, import.meta.env);
       fetch(url, {
@@ -126,9 +134,9 @@ export default {
             </thead>
             <tbody id="job_logs">
               <tr v-for="log in orderedLogs" :key="log.id">
-                <td>{{ log.last_update }}</td>
-                <td>{{ log.name }}</td>
-                <td>{{ log.format }}</td>
+                <td @click="showCurrentLogDetails(log)">{{ log.last_update }}</td>
+                <td @click="showCurrentLogDetails(log)">{{ log.name }}</td>
+                <td @click="showCurrentLogDetails(log)">{{ log.format }}</td>
                 <td v-if="log.status == 'Failed' || log.status == 'Aborted'">
                   <span :class=statusToTrClass[log.status]>
                     <a role="button" aria-label="Retry" @click.prevent="retryDownload(log.id)">{{
@@ -151,6 +159,29 @@ export default {
             </tbody>
           </table>
         </div>
+
+        <div class="modal fade text-dark" id="currentLogDetailsModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-xl" id='currentLogDetailDialog' style="text-align: left">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h1 class="modal-title fs-5" id="currentLogDetailId">{{ currentLogDetails?.name || '' }}</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body text-left" id="currentLogDetailContent">
+                <p v-if="currentLogDetails" style="white-space: pre-wrap">
+                  {{ currentLogDetails?.log }}
+                </p>
+                <div v-else class="spinner-border" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
