@@ -14,8 +14,9 @@ RUN npm run build
 
 FROM python:alpine3.18 as wheels
 
-RUN apk add --no-cache g++
-RUN pip install --upgrade --no-cache-dir pip && pip wheel --no-cache-dir --no-deps --wheel-dir /out/wheels brotli pycryptodomex websockets pyyaml
+RUN apk add --no-cache g++ gcc libffi-dev
+COPY ./requirements.txt .
+RUN pip install --upgrade --no-cache-dir pip && pip wheel --no-cache-dir --wheel-dir /out/wheels -r <(cat ./requirements.txt| grep -v youtube-dl)
 
 FROM python:alpine3.18
 ARG YOUTUBE_DL=yt_dlp

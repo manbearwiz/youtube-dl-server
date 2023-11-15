@@ -1,5 +1,5 @@
-starlette==0.32.0
-uvicorn==0.24.0
+starlette==0.32.0.post1
+uvicorn==0.24.0.post1
 aiofiles==23.2.1
 Jinja2==3.1.2
 python-multipart==0.0.6
