@@ -14,7 +14,7 @@ RUN npm run build
 
 FROM python:alpine3.18 as wheels
 
-RUN apk add --no-cache g++ gcc libffi-dev
+RUN apk add --no-cache g++ gcc libffi-dev cargo
 COPY ./requirements.txt .
 RUN pip install --upgrade --no-cache-dir pip && pip wheel --no-cache-dir --wheel-dir /out/wheels -r <(cat ./requirements.txt| grep -v youtube-dl)
 
