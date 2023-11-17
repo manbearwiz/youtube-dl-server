@@ -1,7 +1,7 @@
 aiofiles==23.2.1
 Jinja2==3.1.2
 python-multipart==0.0.6
-starlette==0.31.1
+starlette==0.32.0.post1
 uvicorn[standard]==0.23.2; platform_machine == 'x86_64'
 uvicorn==0.23.2; platform_machine != 'x86_64'
 yt-dlp==2023.11.16
