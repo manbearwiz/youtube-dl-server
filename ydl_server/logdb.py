@@ -140,7 +140,7 @@ class JobsDB:
                 job.log,
                 job.format,
                 str(job.type),
-                '\n'.join(job.url),
+                "\n".join(job.url),
                 job.pid,
             ),
         )

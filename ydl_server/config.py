@@ -51,7 +51,11 @@ def load_config():
     print("Using configuration file {}".format(config_file_path))
 
     if not os.path.isfile(config_file_path):
-        print("{} does not exist, creating it from default values".format(config_file_path))
+        print(
+            "{} does not exist, creating it from default values".format(
+                config_file_path
+            )
+        )
         copy_default_config(config_file_path)
     with open(config_file_path) as configfile:
         config = yaml.load(configfile, Loader=yaml.SafeLoader)
