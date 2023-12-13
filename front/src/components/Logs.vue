@@ -176,6 +176,14 @@ export default {
                 </div>
               </div>
               <div class="modal-footer">
+                <div v-if="currentLogDetails?.status == 'Failed' || currentLogDetails?.status == 'Aborted'">
+                  <button class="btn btn-primary" role="button" aria-label="Retry" data-bs-dismiss="modal"
+                    @click="retryDownload(currentLogDetails?.id)">Retry</button>
+                </div>
+                <div v-else-if="currentLogDetails?.status == 'Running' || currentLogDetails?.status == 'Pending'">
+                  <button class="btn btn-primary" role="button" aria-label="Abort" data-bs-dismiss="modal"
+                    @click="abortDownload(currentLogDetails?.id)">Abort</button>
+                </div>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
               </div>
             </div>
