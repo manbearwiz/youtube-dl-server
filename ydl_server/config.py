@@ -30,8 +30,7 @@ YDL_FORMATS = {
 def get_ydl_formats(app_config):
     if len(app_config.get("profiles", {}).keys()) > 0:
         YDL_FORMATS["Profiles"] = {
-            f"profiles/{k}": v.get("name")
-            for k, v in app_config.get("profiles").items()
+            f"profile/{k}": v.get("name") for k, v in app_config.get("profiles").items()
         }
     return YDL_FORMATS
 

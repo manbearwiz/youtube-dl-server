@@ -124,6 +124,20 @@ class YdlHandler:
     def get_ydl_options(self, ydl_config, request_options):
         ydl_config = ydl_config.copy()
         req_format = request_options.get("format")
+
+        profile = None
+        if req_format.startswith("profile/"):
+            profile_name = "/".join(req_format.split("/")[1:])
+            profile = (
+                self.app_config.get("profiles", {})
+                .get(profile_name, {})
+                .get("ydl_options")
+            )
+            if not profile:
+                raise Exception("Unknown profile ", profile_name)
+            req_format = profile.get("format")
+            profile = {k: v for k, v in profile.items() if k != "format"}
+
         if req_format is None:
             req_format = "video/best"
         if req_format.startswith("audio/"):
@@ -135,6 +149,8 @@ class YdlHandler:
                 ydl_config.update({"format": req_format.split("/")[-1]})
         else:
             ydl_config.update({"format": req_format})
+        if profile:
+            ydl_config.update(profile)
         return ydl_config
 
     def download_log_update(self, job, proc, strio):
