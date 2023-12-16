@@ -254,6 +254,9 @@ class JobsDB:
             """,
             (job_id,),
         )
+        row = cursor.fetchone()
+        if not row:
+            return
         (
             job_id,
             name,
@@ -264,7 +267,7 @@ class JobsDB:
             jobtype,
             url,
             pid,
-        ) = cursor.fetchone()
+        ) = row
         return {
             "id": job_id,
             "name": name,

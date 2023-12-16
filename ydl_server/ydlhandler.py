@@ -99,7 +99,7 @@ class YdlHandler:
         while not self.done:
             job = self.queue.get()
             job_detail = db.get_job_by_id(job.id)
-            if job_detail["status"] == "Aborted":
+            if not job_detail or job_detail["status"] == "Aborted":
                 self.queue.task_done()
                 continue
             job.status = Job.RUNNING

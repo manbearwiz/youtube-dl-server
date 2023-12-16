@@ -141,6 +141,9 @@ async def api_jobs_stop(request):
     db = JobsDB(readonly=True)
     job_id = request.path_params["job_id"]
     job = db.get_job_by_id(job_id)
+
+    if not job:
+        return JSONResponse({"success": False}, status_code=404)
     if job["status"] == "Pending":
         print("Cancelling pending job")
         request.app.state.jobshandler.put(
@@ -166,6 +169,9 @@ async def api_jobs_retry(request):
     db = JobsDB(readonly=True)
     job_id = request.path_params["job_id"]
     job = db.get_job_by_id(job_id)
+    if not job:
+        return JSONResponse({"success": False}, status_code=404)
+
     new_job = Job(
         job["name"], Job.PENDING, "", JobType.YDL_DOWNLOAD, job["format"], job["urls"]
     )
