@@ -18,8 +18,8 @@ export default {
     },
     sortBy: 'last_update',
     sortOrder: 'desc',
-    currentLogDetails: null,
-    currentLogDetailsModal: null
+    currentLogDetailsModal: null,
+    currentLogDetailId: null,
   }),
   mounted() {
     this.currentLogDetailsModal = new Modal('#currentLogDetailsModal');
@@ -31,6 +31,9 @@ export default {
     this.mounted = false;
   },
   computed: {
+    getLogById: function () {
+      return this.logs.find(log => log.id === this.currentLogDetailId);
+    },
     orderedLogs: function () {
       if (this.sortBy === 'last_update') {
         return orderBy(this.logs, e => {
@@ -41,8 +44,8 @@ export default {
     }
   },
   methods: {
-    showCurrentLogDetails(log) {
-      this.currentLogDetails = log
+    showCurrentLogDetails(logId) {
+      this.currentLogDetailId = logId
       this.currentLogDetailsModal.show();
     },
     abortDownload(job_id) {
@@ -134,9 +137,9 @@ export default {
             </thead>
             <tbody id="job_logs">
               <tr v-for="log in orderedLogs" :key="log.id">
-                <td @click="showCurrentLogDetails(log)">{{ log.last_update }}</td>
-                <td @click="showCurrentLogDetails(log)">{{ log.name }}</td>
-                <td @click="showCurrentLogDetails(log)">{{ log.format }}</td>
+                <td @click="showCurrentLogDetails(log.id)">{{ log.last_update }}</td>
+                <td @click="showCurrentLogDetails(log.id)">{{ log.name }}</td>
+                <td @click="showCurrentLogDetails(log.id)">{{ log.format }}</td>
                 <td v-if="log.status == 'Failed' || log.status == 'Aborted'">
                   <span :class=statusToTrClass[log.status]>
                     <a role="button" aria-label="Retry" @click.prevent="retryDownload(log.id)">{{
@@ -164,25 +167,25 @@ export default {
           <div class="modal-dialog modal-xl" id='currentLogDetailDialog' style="text-align: left">
             <div class="modal-content">
               <div class="modal-header">
-                <h1 class="modal-title fs-5" id="currentLogDetailId">{{ currentLogDetails?.name || '' }}</h1>
+                <h1 class="modal-title fs-5" id="currentLogDetailId">{{ getLogById?.name || '' }}</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body text-left" id="currentLogDetailContent">
-                <p v-if="currentLogDetails" style="white-space: pre-wrap">
-                  {{ currentLogDetails?.log }}
+                <p v-if="currentLogDetailId" style="white-space: pre-wrap">
+                  {{ getLogById?.log }}
                 </p>
                 <div v-else class="spinner-border" role="status">
                   <span class="visually-hidden">Loading...</span>
                 </div>
               </div>
               <div class="modal-footer">
-                <div v-if="currentLogDetails?.status == 'Failed' || currentLogDetails?.status == 'Aborted'">
+                <div v-if="getLogById?.status == 'Failed' || getLogById?.status == 'Aborted'">
                   <button class="btn btn-primary" role="button" aria-label="Retry" data-bs-dismiss="modal"
-                    @click="retryDownload(currentLogDetails?.id)">Retry</button>
+                    @click="retryDownload(getLogById?.id)">Retry</button>
                 </div>
-                <div v-else-if="currentLogDetails?.status == 'Running' || currentLogDetails?.status == 'Pending'">
+                <div v-else-if="getLogById?.status == 'Running' || getLogById?.status == 'Pending'">
                   <button class="btn btn-primary" role="button" aria-label="Abort" data-bs-dismiss="modal"
-                    @click="abortDownload(currentLogDetails?.id)">Abort</button>
+                    @click="abortDownload(getLogById?.id)">Abort</button>
                 </div>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
               </div>
