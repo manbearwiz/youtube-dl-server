@@ -100,7 +100,7 @@ async def api_list_formats(request):
 
 async def api_queue_size(request):
     db = JobsDB(readonly=True)
-    jobs = db.get_all(app_config["ydl_server"].get("max_log_entries", 100))
+    jobs = db.get_jobs(app_config["ydl_server"].get("max_log_entries", 100))
     return JSONResponse(
         {
             "success": True,
@@ -120,7 +120,10 @@ async def api_logs(request):
     db = JobsDB(readonly=True)
     if request.query_params.get("show_logs", "1") in ["1", "true"]:
         return JSONResponse(
-            db.get_all(app_config["ydl_server"].get("max_log_entries", 100))
+            db.get_jobs_with_logs(
+                app_config["ydl_server"].get("max_log_entries", 100),
+                request.query_params.get("status", None)
+                )
         )
     return JSONResponse(
         db.get_jobs(app_config["ydl_server"].get("max_log_entries", 100))

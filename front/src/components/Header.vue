@@ -48,19 +48,25 @@ export default {
           <div class="d-flex">
             <ul class="navbar-nav ml-auto">
               <li class="nav-item">
-                <router-link to="/logs" class="navbar-text nav-link">
                   Stats:
-                  <span v-if="stats.queue === stats.pending" data-toggle="tooltip" data-placement="bottom" title="Pending"
-                    id='queue_pending_size' class="badge bg-secondary">{{ stats.queue }}</span>
-                  <span v-else data-toggle="tooltip" data-placement="bottom" title="Pending" id='queue_pending_size'
-                    class="badge bg-secondary">{{ stats.queue }} | {{ stats.pending }}</span>
-                  <span data-toggle="tooltip" data-placement="bottom" title="Running / Total Workers" id='running_size'
-                    class="badge bg-info">{{ stats.running }}/{{ server_info.download_workers_count }}</span>
-                  <span data-toggle="tooltip" data-placement="bottom" title="Completed" id='completed_size'
-                    class="badge bg-success">{{ stats.completed }}</span>
-                  <span data-toggle="tooltip" data-placement="bottom" title="Failed" id='failed_size'
-                    class="badge bg-danger">{{ stats.failed }}</span>
-                </router-link>
+                  <router-link to="/logs?status=PENDING">
+                    <span v-if="stats.queue === stats.pending" data-toggle="tooltip" data-placement="bottom" title="Pending"
+                      id='queue_pending_size' class="badge bg-secondary">{{ stats.queue }}</span>
+                    <span v-else data-toggle="tooltip" data-placement="bottom" title="Pending" id='queue_pending_size'
+                      class="badge bg-secondary">{{ stats.queue }} | {{ stats.pending }}</span>
+                  </router-link>
+                  <router-link to="/logs?status=RUNNING">
+                    <span data-toggle="tooltip" data-placement="bottom" title="Running / Total Workers" id='running_size'
+                      class="badge bg-info">{{ stats.running }}/{{ server_info.download_workers_count }}</span>
+                  </router-link>
+                  <router-link to="/logs?status=COMPLETED">
+                    <span data-toggle="tooltip" data-placement="bottom" title="Completed" id='completed_size'
+                      class="badge bg-success">{{ stats.completed }}</span>
+                  </router-link>
+                  <router-link to="/logs?status=FAILED">
+                    <span data-toggle="tooltip" data-placement="bottom" title="Failed" id='failed_size'
+                      class="badge bg-danger">{{ stats.failed }}</span>
+                  </router-link>
               </li>
             </ul>
           </div>

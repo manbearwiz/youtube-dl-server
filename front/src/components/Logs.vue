@@ -20,11 +20,19 @@ export default {
     sortOrder: 'desc',
     currentLogDetailsModal: null,
     currentLogDetailId: null,
+    status: null,
   }),
+  watch: {
+    '$route'() {
+      this.status = this.$route.query.status;
+      this.fetchLogs(true);
+    }
+  },
   mounted() {
     this.currentLogDetailsModal = new Modal('#currentLogDetailsModal');
     this.showLogDetails = getConfig('showLogDetails', 'true') === 'true';
     this.mounted = true;
+    this.status = this.$route.query.status;
     this.fetchLogs();
   },
   unmounted() {
@@ -74,7 +82,7 @@ export default {
       this.fetchLogs(true)
     },
     async fetchLogs(once = false) {
-      const url = getAPIUrl(`api/downloads`, import.meta.env);
+      const url = getAPIUrl(`api/downloads?${this.status ? 'status=' + this.status : ''}`, import.meta.env);
       this.logs = await (await fetch(url)).json()
       if (!once && this.mounted) {
         setTimeout(() => {

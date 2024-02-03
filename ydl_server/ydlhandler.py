@@ -238,7 +238,7 @@ class YdlHandler:
 
     def resume_pending(self):
         db = JobsDB(readonly=False)
-        jobs = db.get_all(self.app_config["ydl_server"].get("max_log_entries", 100))
+        jobs = db.get_jobs_with_logs(self.app_config["ydl_server"].get("max_log_entries", 100))
         not_endeds = [
             job
             for job in jobs

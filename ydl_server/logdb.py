@@ -280,18 +280,38 @@ class JobsDB:
             "pid": pid,
         }
 
-    def get_all(self, limit=50):
+    def get_jobs_with_logs(self, limit=50, status=None):
         cursor = self.conn.cursor()
-        cursor.execute(
-            """
-            SELECT
-                id, name, status, log, last_update, format, type, url, pid
-            FROM
-                jobs
-            ORDER BY last_update DESC LIMIT ?;
-            """,
-            (str(limit),),
-        )
+        if status is not None:
+            statuses = [
+                STATUS_NAME.index(status.capitalize()),
+                STATUS_NAME.index(status.capitalize()),
+            ]
+            if status == 'FAILED':
+                statuses[1] = STATUS_NAME.index('Aborted')
+            cursor.execute(
+                """
+                SELECT
+                    id, name, status, log, last_update, format, type, url, pid
+                FROM
+                    jobs
+                WHERE
+                    status in (?, ?)
+                ORDER BY last_update DESC LIMIT ?;
+                """,
+                (statuses[0], statuses[1], str(limit),),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT
+                    id, name, status, log, last_update, format, type, url, pid
+                FROM
+                    jobs
+                ORDER BY last_update DESC LIMIT ?;
+                """,
+                (str(limit),),
+            )
         rows = []
         for (
             job_id,
@@ -319,18 +339,38 @@ class JobsDB:
             )
         return rows
 
-    def get_jobs(self, limit=50):
+    def get_jobs(self, limit=50, status=None):
         cursor = self.conn.cursor()
-        cursor.execute(
-            """
-            SELECT
-                id, name, status, last_update, format, type, url, pid
-            FROM
-                jobs
-            ORDER BY last_update DESC LIMIT ?;
-            """,
-            (str(limit),),
-        )
+        if status is not None:
+            statuses = [
+                STATUS_NAME.index(status.capitalize()),
+                STATUS_NAME.index(status.capitalize()),
+            ]
+            if status == 'FAILED':
+                statuses[1] = STATUS_NAME.index('Aborted')
+            cursor.execute(
+                """
+                SELECT
+                    id, name, status, last_update, format, type, url, pid
+                FROM
+                    jobs
+                WHERE
+                    status in (?, ?)
+                ORDER BY last_update DESC LIMIT ?;
+                """,
+                (statuses[0], statuses[1], str(limit),),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT
+                    id, name, status, last_update, format, type, url, pid
+                FROM
+                    jobs
+                ORDER BY last_update DESC LIMIT ?;
+                """,
+                (str(limit),),
+            )
         rows = []
         for (
             job_id,
