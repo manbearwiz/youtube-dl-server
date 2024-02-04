@@ -64,12 +64,20 @@ export default {
       this.fetchLogs(true)
     },
     retryDownload(job_id) {
-      console.log(job_id)
       const apiurl = getAPIUrl(`api/jobs/${job_id}/retry`, import.meta.env);
       fetch(apiurl, {
         method: 'POST'
+      }).then(() => {
+        this.fetchLogs(true);
       })
-      this.fetchLogs(true)
+    },
+    deleteLog(job_id) {
+      const apiurl = getAPIUrl(`api/jobs/${job_id}`, import.meta.env);
+      fetch(apiurl, {
+        method: 'DELETE'
+      }).then(() => {
+        this.fetchLogs(true);
+      })
     },
     purgeLogs() {
       const url = getAPIUrl(`api/downloads`, import.meta.env);
@@ -206,6 +214,7 @@ export default {
                   <button class="btn btn-primary" role="button" aria-label="Abort" data-bs-dismiss="modal"
                     @click="abortDownload(getLogById?.id)">Abort</button>
                 </div>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="deleteLog(getLogById?.id)">Delete log</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
               </div>
             </div>

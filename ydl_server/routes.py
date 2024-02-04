@@ -54,6 +54,12 @@ routes = [
         name="api_jobs_retry",
         methods=["POST"],
     ),
+    Route(
+        "/api/jobs/{job_id:str}",
+        views.api_jobs_delete,
+        name="api_jobs_delete",
+        methods=["DELETE"],
+    ),
     Mount("/api/finished/", finished_files, name="api_finished"),
     Mount("/", static, name="static"),
 ]

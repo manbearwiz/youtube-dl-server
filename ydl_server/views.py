@@ -179,11 +179,17 @@ async def api_jobs_retry(request):
         job["name"], Job.PENDING, "", JobType.YDL_DOWNLOAD, job["format"], job["urls"]
     )
 
-    request.app.state.jobshandler.put((Actions.DELETE_LOG, job))
+    request.app.state.jobshandler.put((Actions.DELETE_LOG_SAFE, job))
     request.app.state.jobshandler.put((Actions.INSERT, new_job))
 
     return JSONResponse({"success": True})
 
+async def api_jobs_delete(request):
+    job_id = request.path_params["job_id"]
+    if job_id is not None:
+        request.app.state.jobshandler.put((Actions.DELETE_LOG, {'id': job_id}))
+        return JSONResponse({"success": True})
+    return JSONResponse({"success": False})
 
 async def api_queue_download(request):
     if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
