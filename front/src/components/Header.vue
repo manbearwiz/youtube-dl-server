@@ -63,6 +63,10 @@ export default {
                     <span data-toggle="tooltip" data-placement="bottom" title="Completed" id='completed_size'
                       class="badge bg-success">{{ stats.completed }}</span>
                   </router-link>
+                  <router-link to="/logs?status=ABORTED">
+                    <span data-toggle="tooltip" data-placement="bottom" title="Aborted" id='aborted_size'
+                      class="badge bg-warning">{{ stats.aborted }}</span>
+                  </router-link>
                   <router-link to="/logs?status=FAILED">
                     <span data-toggle="tooltip" data-placement="bottom" title="Failed" id='failed_size'
                       class="badge bg-danger">{{ stats.failed }}</span>

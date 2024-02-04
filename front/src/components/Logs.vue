@@ -1,5 +1,5 @@
 <script setup>
-import { orderBy } from 'lodash'
+import { orderBy, capitalize } from 'lodash'
 import { Modal } from 'bootstrap'
 import { getAPIUrl, saveConfig, getConfig } from '../utils';
 </script>
@@ -104,6 +104,17 @@ export default {
           logs</button>
         <button class="btn btn-dark" @click="fetchLogs">Refresh</button>
         <button class="btn btn-dark" @click="purgeLogs">Purge logs</button>
+          <a class="btn btn-dark dropdown-toggle" href="#" role="button" id="statusFilterDropDown" data-bs-toggle="dropdown" aria-expanded="false">
+            Status {{ ['COMPLETED', 'FAILED', 'PENDING', 'RUNNING', 'ABORTED'].includes(status) ? `(${capitalize(status)})` : '(All)' }}
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="statusFilterDropDown">
+            <li><a class="dropdown-item" href="/#/logs">All</a></li>
+            <li><a class="dropdown-item" href="/#/logs?status=COMPLETED">Completed</a></li>
+            <li><a class="dropdown-item" href="/#/logs?status=FAILED">Failed</a></li>
+            <li><a class="dropdown-item" href="/#/logs?status=PENDING">Pending</a></li>
+            <li><a class="dropdown-item" href="/#/logs?status=RUNNING">Running</a></li>
+            <li><a class="dropdown-item" href="/#/logs?status=ABORTED">Aborted</a></li>
+          </ul>
         <br />
         <div class="table-responsive">
           <table class="col-md-16 table table-stripped table-md table-dark">

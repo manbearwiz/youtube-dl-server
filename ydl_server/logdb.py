@@ -282,13 +282,8 @@ class JobsDB:
 
     def get_jobs_with_logs(self, limit=50, status=None):
         cursor = self.conn.cursor()
-        if status is not None:
-            statuses = [
-                STATUS_NAME.index(status.capitalize()),
-                STATUS_NAME.index(status.capitalize()),
-            ]
-            if status == 'FAILED':
-                statuses[1] = STATUS_NAME.index('Aborted')
+        status = STATUS_NAME.index(status.capitalize()) if status and status.capitalize() in STATUS_NAME else -1
+        if status >= 0:
             cursor.execute(
                 """
                 SELECT
@@ -296,10 +291,10 @@ class JobsDB:
                 FROM
                     jobs
                 WHERE
-                    status in (?, ?)
+                    status = ?
                 ORDER BY last_update DESC LIMIT ?;
                 """,
-                (statuses[0], statuses[1], str(limit),),
+                (status, str(limit),),
             )
         else:
             cursor.execute(
@@ -341,13 +336,8 @@ class JobsDB:
 
     def get_jobs(self, limit=50, status=None):
         cursor = self.conn.cursor()
-        if status is not None:
-            statuses = [
-                STATUS_NAME.index(status.capitalize()),
-                STATUS_NAME.index(status.capitalize()),
-            ]
-            if status == 'FAILED':
-                statuses[1] = STATUS_NAME.index('Aborted')
+        status = STATUS_NAME.index(status.capitalize()) if status and status.capitalize() in STATUS_NAME else -1
+        if status >= 0:
             cursor.execute(
                 """
                 SELECT
@@ -355,10 +345,10 @@ class JobsDB:
                 FROM
                     jobs
                 WHERE
-                    status in (?, ?)
+                    status = ?
                 ORDER BY last_update DESC LIMIT ?;
                 """,
-                (statuses[0], statuses[1], str(limit),),
+                (status, str(limit),),
             )
         else:
             cursor.execute(
