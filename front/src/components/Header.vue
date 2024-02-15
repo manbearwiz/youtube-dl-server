@@ -48,7 +48,7 @@ export default {
           <div class="d-flex">
             <ul class="navbar-nav ml-auto">
               <li class="nav-item">
-                  Stats:
+                <router-link to="/logs" class="stats-link">Stats</router-link>:
                   <router-link to="/logs?status=PENDING">
                     <span v-if="stats.queue === stats.pending" data-toggle="tooltip" data-placement="bottom" title="Pending"
                       id='queue_pending_size' class="badge bg-secondary">{{ stats.queue }}</span>

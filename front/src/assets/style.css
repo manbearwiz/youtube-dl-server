@@ -64,6 +64,11 @@ div.input-group>input.form-control {
   color: white;
 }
 
+.stats-link {
+  color: white;
+  text-decoration: none;
+}
+
 .footer {
   width: 100%;
 }
