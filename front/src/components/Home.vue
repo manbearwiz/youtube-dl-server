@@ -13,6 +13,7 @@ export default {
     urlBox: null,
     selectedFormat: null,
     metadata_list: null,
+    loading: false,
   }),
   mounted() {
     this.extractorsModal = new Modal('#extractorsModal');
@@ -108,6 +109,7 @@ export default {
           });
       }
       else {
+        this.loading = true;
         const url = getAPIUrl('api/metadata', import.meta.env);
         fetch(url, {
           method: 'POST',
@@ -133,6 +135,9 @@ export default {
           .catch((error) => {
             console.error(error);
             this.setDismissibleMessage(false, 'Could not gather metadata for this video.');
+          })
+          .finally(() => {
+            this.loading = false;
           });
       }
     }
@@ -161,7 +166,13 @@ export default {
               </optgroup>
             </select>
             <div class="input-group-append">
-              <button class="btn btn-primary" id="button-submit" @click="submitVideo">Submit</button>
+              <button class="btn btn-primary" id="button-submit" @click="submitVideo" :disabled="loading">
+                <span v-if="!loading">Submit</span>
+                <span v-else>
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  <span class="visually-hidden">Loading...</span>
+                </span>
+              </button>
             </div>
           </div>
         </div>
