@@ -84,69 +84,66 @@ export default {
       const url = getAPIUrl('api/formats', import.meta.env);
       this.formats = await (await fetch(url)).json()
     },
+    async inspectVideo() {
+      this.loading = true;
+      const url = getAPIUrl('api/metadata', import.meta.env);
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
+        })
+      })
+        .then(response => {
+          if (response.status == 200) {
+            return response.json();
+          }
+          else {
+            throw new Error(response.statusText);
+          }
+        })
+        .then(data => {
+          this.metadata_list = data;
+          this.showMetadataModal();
+        })
+        .catch((error) => {
+          console.error(error);
+          this.setDismissibleMessage(false, 'Could not gather metadata for this video.');
+        })
+        .finally(() => {
+          this.loading = false;
+        });
+    },
     async submitVideo() {
-      if (this.selectedFormat.value != 'metadata') {
-        const url = getAPIUrl('api/downloads', import.meta.env);
-        fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
-            format: this.selectedFormat.value
-          })
+      const url = getAPIUrl('api/downloads', import.meta.env);
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
+          format: this.selectedFormat.value
         })
-          .then(response => {
-            if (response.status == 200) {
-              return response.json();
-            }
-            else {
-              throw new Error(response.statusText);
-            }
-          })
-          .then(data => {
-            console.log(data);
-            this.setDismissibleMessage(data.success, data.success ? (this.escapeHtml(this.urlBox.value) + " added to the list.") : data.error);
-            this.urlBox.value = '';
-          })
-          .catch((error) => {
-            console.error(error);
-            this.setDismissibleMessage(false, 'Could not add the url to the queue.');
-          });
-      }
-      else {
-        this.loading = true;
-        const url = getAPIUrl('api/metadata', import.meta.env);
-        fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
-          })
+      })
+        .then(response => {
+          if (response.status == 200) {
+            return response.json();
+          }
+          else {
+            throw new Error(response.statusText);
+          }
         })
-          .then(response => {
-            if (response.status == 200) {
-              return response.json();
-            }
-            else {
-              throw new Error(response.statusText);
-            }
-          })
-          .then(data => {
-            this.metadata_list = data;
-            this.showMetadataModal();
-          })
-          .catch((error) => {
-            console.error(error);
-            this.setDismissibleMessage(false, 'Could not gather metadata for this video.');
-          })
-          .finally(() => {
-            this.loading = false;
-          });
-      }
+        .then(data => {
+          this.setDismissibleMessage(data.success, data.success ? (this.escapeHtml(this.urlBox.value) + " added to the list.") : data.error);
+          this.urlBox.value = '';
+        })
+        .catch((error) => {
+          console.error(error);
+          this.setDismissibleMessage(false, 'Could not add the url to the queue.');
+        });
     }
   }
 }
@@ -172,15 +169,16 @@ export default {
                 </option>
               </optgroup>
             </select>
-            <div class="input-group-append">
-              <button class="btn btn-primary" id="button-submit" @click="submitVideo" :disabled="loading">
-                <span v-if="!loading">Submit</span>
+              <button class="btn btn-primary" id="button-submit" @click="submitVideo">
+                Download
+              </button>
+              <button class="btn btn-secondary" id="button-submit" @click="inspectVideo" :disabled="loading">
+                <span v-if="!loading">Inspect</span>
                 <span v-else>
                   <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                   <span class="visually-hidden">Loading...</span>
                 </span>
               </button>
-            </div>
           </div>
         </div>
         <br />

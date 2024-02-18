@@ -23,7 +23,6 @@ YDL_FORMATS = {
         "audio/vorbis": "Vorbis",
         "audio/wav": "WAV",
     },
-    "Metadata only": {"metadata": "Metadata"},
 }
 
 
