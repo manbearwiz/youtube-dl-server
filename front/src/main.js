@@ -13,6 +13,7 @@ import Finished from './components/Finished.vue';
 
 const routes = [
   { path: '/', component: Home },
+  { path: '/home', component: Home },
   { path: '/logs', component: Logs },
   { path: '/finished', component: Finished },
 ];
