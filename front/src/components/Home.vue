@@ -14,6 +14,7 @@ export default {
     selectedFormat: null,
     metadata_list: null,
     loading: false,
+    extractorsFilter: '',
   }),
   mounted() {
     this.extractorsModal = new Modal('#extractorsModal');
@@ -23,6 +24,12 @@ export default {
     this.messageList = document.getElementById('message_list');
     this.fetchExtractors();
     this.fetchAvailableFormats();
+  },
+
+  computed: {
+    filteredExtractors() {
+      return this.extractorsFilter ? this.extractors.filter(extractor => extractor.toLowerCase().includes(this.extractorsFilter.toLowerCase())) : this.extractors;
+    }
   },
 
   methods: {
@@ -187,9 +194,10 @@ export default {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body text-left" id="extractors_body">
+                <input type="text" v-model="extractorsFilter" class="form-control mb-2" placeholder="Search">
                 <p>
                   <span id="extractors_items" class="list-group">
-                    <span class="list-group-item list-group-item-action" v-for="extractor in extractors">
+                    <span class="list-group-item list-group-item-action" v-for="extractor in filteredExtractors">
                       <b>{{ extractor }}</b><br />
                     </span>
                   </span>
