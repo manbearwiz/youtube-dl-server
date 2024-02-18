@@ -37,13 +37,12 @@ pipeline {
                         --platform linux/amd64,linux/arm64,linux/arm/v7 \
                         --build-arg YDLS_VERSION=`git rev-parse --short HEAD` \
                         --build-arg YDLS_RELEASE_DATE="`git log -1 --pretty='format:%cd' --date=format:'%Y-%m-%d %H:%M:%S'`" \
-                        --build-arg YOUTUBE_DL=yt_dlp \
+                        --build-arg YOUTUBE_DL=yt-dlp \
                         --build-arg ATOMICPARSLEY=1 \
                         -t nbr23/youtube-dl-server:yt-dlp \
                         -t nbr23/youtube-dl-server:`git rev-parse --short HEAD`-yt-dlp \
                         -t nbr23/youtube-dl-server:${GIT_COMMIT}-`date +%s`-yt-dlp \
                         -t nbr23/youtube-dl-server:yt-dlp_atomicparsley \
-                        -f Dockerfile-ytdlp \
                         ${ "$GIT_BRANCH" == "master" ? "--push" : ""} .
                     """
             }
@@ -61,6 +60,7 @@ pipeline {
                         --build-arg YDLS_VERSION=`git rev-parse --short HEAD` \
                         --build-arg YDLS_RELEASE_DATE="`git log -1 --pretty='format:%cd' --date=format:'%Y-%m-%d %H:%M:%S'`" \
                         --build-arg ATOMICPARSLEY=1 \
+                        --build-arg YOUTUBE_DL=youtube-dl \
                         -t nbr23/youtube-dl-server:latest \
                         -t nbr23/youtube-dl-server:youtube-dl \
                         -t nbr23/youtube-dl-server:`git rev-parse --short HEAD`-youtube-dl \
