@@ -45,12 +45,13 @@ COPY ./requirements.txt /usr/src/app/
 FROM base as yt-dlp
 
 COPY --from=wheels /out/wheels-yt-dlp /wheels
-
+RUN pip install --no-cache /wheels/*
 RUN pip install --upgrade pip && pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v youtube-dl)
 
 FROM base as youtube-dl
 
-COPY --from=wheels /out/wheels-youtube-dl /wheels
+COPY --from=wheels /out/wheels-youtube-dl /wheels/
+RUN pip install --no-cache /wheels/*
 RUN pip install --upgrade pip && pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v yt-dlp)
 
 FROM ${YOUTUBE_DL}
