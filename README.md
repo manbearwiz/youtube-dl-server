@@ -21,12 +21,15 @@ docker run -d --net="host" --name youtube-dl -v /home/core/youtube-dl:/youtube-d
 
 ### Docker Compose
 
-This is an example service definition that could be put in `docker-compose.yml`. This service uses a VPN client container for its networking.
+This is an example service definition that could be put in `docker-compose.yml`.
+This service uses a VPN client container for its networking and has a cookie file for downloading age-restricted videos.
 
 ```yml
   youtube-dl:
     image: "kmb32123/youtube-dl-server"
     network_mode: "service:vpn"
+    environment:
+      - YDL_COOKIE_FILE=youtube.com_cookies.txt
     volumes:
       - /home/core/youtube-dl:/youtube-dl
     restart: always
