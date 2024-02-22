@@ -13,7 +13,7 @@ RUN npm ci
 COPY ./front /app
 RUN npm run build
 
-FROM python:alpine3.18 as wheels
+FROM python:alpine as wheels
 
 RUN apk add --no-cache g++
 COPY ./requirements.txt .
@@ -22,7 +22,7 @@ RUN pip install --upgrade --no-cache-dir pip \
   && pip wheel --no-cache-dir --wheel-dir /out/wheels-youtube-dl youtube-dl \
   && pip wheel --no-cache-dir --wheel-dir /out/wheels-yt-dlp yt-dlp
 
-FROM python:alpine3.18 as base
+FROM python:alpine as base
 ARG ATOMICPARSLEY=0
 ARG YDLS_VERSION
 ARG YDLS_RELEASE_DATE
@@ -30,7 +30,7 @@ ARG YDLS_RELEASE_DATE
 ENV YDLS_VERSION=$YDLS_VERSION
 ENV YDLS_RELEASE_DATE=$YDLS_RELEASE_DATE
 
-RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 RUN apk add --no-cache ffmpeg tzdata mailcap
 RUN if [ $ATOMICPARSLEY == 1 ]; then apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing atomicparsley; ln /usr/bin/atomicparsley /usr/bin/AtomicParsley || true; fi
 
@@ -61,8 +61,6 @@ COPY ./ydl_server /usr/src/app/ydl_server
 COPY ./youtube-dl-server.py /usr/src/app/
 
 COPY --from=nodebuild /app/dist /usr/src/app/ydl_server/static
-
-WORKDIR /usr/src/app
 
 EXPOSE 8080
 

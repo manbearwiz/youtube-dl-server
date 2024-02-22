@@ -123,12 +123,6 @@ Install the python dependencies from `requirements.txt`:
 pip install -r requirements.txt
 ```
 
-OR, if using `yt-dlp`:
-
-```shell
-pip install -r requirements-yt-dlp.txt
-```
-
 You can run
 [bootstrap.sh](https://github.com/nbr23/youtube-dl-server/blob/master/bootstrap.sh)
 to download the required front-end libraries (jquery, bootstrap).
