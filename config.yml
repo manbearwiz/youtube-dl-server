@@ -3,7 +3,7 @@ ydl_server:   # youtube-dl-server specific settings
   host: 0.0.0.0   # IP youtube-dl-server should bind to
   debug: False    # Enable/Disable debug mode
   metadata_db_path: '/youtube-dl/.ydl-metadata.db' # Path to metadata DB
-  output_playlist: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # Playlist output directory template
+  output_playlist: '/youtube-dl/%(playlist_title)s [%(playlist_id)s]/%(title)s.%(ext)s' # Playlist output directory template
   max_log_entries: 100 # Maximum number of job log history to keep
   forwarded_allow_ips: None # uvicorn Comma seperated list of IPs to trust with proxy headers.
   proxy_headers: True # uvicorn flag Enable/Disable X-Forwarded-Proto, X-Forwarded-For, X-Forwarded-Port to populate remote address info.
