@@ -15,3 +15,16 @@ ydl_options:  # youtube-dl options
   cache-dir: '/youtube-dl/.cache' # youtube-dl cache directory
   ignore-errors: True # instruct youtube-dl to skip errors
   age-limit: 6 # minimal age requirement / parental control setting
+
+profiles:
+  podcast:
+      name: 'Audio Podcasts'
+      ydl_options:
+        output: '/youtube-dl/Podcast/%(title)s [%(id)s].%(ext)s'
+        format: bestaudio/best
+        write-thumbnail: True
+        embed-thumbnail: True
+        add-metadata: True
+        audio-quality: 0
+        extract-audio: True
+        audio-format: mp3

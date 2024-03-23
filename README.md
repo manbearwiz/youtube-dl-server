@@ -84,6 +84,8 @@ ydl_options:
   cache-dir: '/youtube-dl/.cache'
 ```
 
+### Extra options
+
 Additional youtube-dl parameters can be set in the `ydl_options` sections. To
 do this, simply add regular youtube-dl parameters, removing the leading `--`.
 
@@ -100,6 +102,37 @@ ydl_options:
   write-sub: True
   sub-lang: es
 ```
+
+### Profiles
+
+You can also define profiles. They allow you to define configuration sets that can be selected in the UI.
+
+Sample:
+
+```yaml
+profiles:
+  podcast:
+      name: 'Audio Podcasts'
+      ydl_options:
+        output: '/youtube-dl/Podcast/%(title)s [%(id)s].%(ext)s'
+        format: bestaudio/best
+        write-thumbnail: True
+        embed-thumbnail: True
+        add-metadata: True
+        audio-quality: 0
+        extract-audio: True
+        audio-format: mp3
+  philosophy_lectures:
+      name: 'Philosophy Lectures'
+      ydl_options:
+        output: '/youtube-dl/Lectures/Philosophy/%(title)s [%(id)s].%(ext)s'
+        write-thumbnail: True
+        embed-thumbnail: True
+        add-metadata: True
+        verbose: True
+```
+
+![screenshot][3]
 
 ## Python
 
@@ -198,3 +231,4 @@ scenarios.
 
 [1]:youtube-dl-server.png
 [2]:youtube-dl-server-logs.png
+[3]:youtube-dl-server-profiles.png
