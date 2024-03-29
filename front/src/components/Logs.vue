@@ -166,20 +166,20 @@ export default {
               <tr v-if="logs.length === 0">
                 <td colspan="4">No {{ status == null ? '' : status.toLowerCase() + ' ' }}jobs found</td>
               </tr>
-              <tr v-for="log in orderedLogs" :key="log.id">
-                <td @click="showCurrentLogDetails(log.id)">{{ log.last_update }}</td>
-                <td @click="showCurrentLogDetails(log.id)">{{ log.name }}</td>
-                <td @click="showCurrentLogDetails(log.id)">{{ log.format }}</td>
+              <tr @click="showCurrentLogDetails(log.id)" v-for="log in orderedLogs" :key="log.id">
+                <td >{{ log.last_update }}</td>
+                <td>{{ log.name }}</td>
+                <td>{{ log.format }}</td>
                 <td v-if="log.status == 'Failed' || log.status == 'Aborted'">
-                  <span :class=statusToTrClass[log.status]>
-                    <a role="button" aria-label="Retry" @click.prevent="retryDownload(log.id)">{{
+                  <span :class=statusToTrClass[log.status] @click.stop="retryDownload(log.id)">
+                    <a role="button" aria-label="Retry">{{
                       log.status }} / Retry</a>
                   </span>
                 </td>
                 <td v-else-if="log.status == 'Running' || log.status == 'Pending'">
-                  <span :class=statusToTrClass[log.status]>
+                  <span :class=statusToTrClass[log.status] @click.stop="abortDownload(log.id)">
                     {{ log.status }} <a role="button" aria-label="Abort"
-                      @click.prevent="abortDownload(log.id)">&times;</a>
+                     >&times;</a>
                   </span>
                 </td>
                 <td v-else>
