@@ -116,12 +116,12 @@ export default {
             Status {{ ['COMPLETED', 'FAILED', 'PENDING', 'RUNNING', 'ABORTED'].includes(status) ? `(${capitalize(status)})` : '(All)' }}
           </a>
           <ul class="dropdown-menu" aria-labelledby="statusFilterDropDown">
-            <li><a class="dropdown-item" href="/#/logs">All</a></li>
-            <li><a class="dropdown-item" href="/#/logs?status=COMPLETED">Completed</a></li>
-            <li><a class="dropdown-item" href="/#/logs?status=FAILED">Failed</a></li>
-            <li><a class="dropdown-item" href="/#/logs?status=PENDING">Pending</a></li>
-            <li><a class="dropdown-item" href="/#/logs?status=RUNNING">Running</a></li>
-            <li><a class="dropdown-item" href="/#/logs?status=ABORTED">Aborted</a></li>
+            <li><router-link class="dropdown-item" to="/logs">All</router-link></li>
+            <li><router-link class="dropdown-item" to="/logs?status=COMPLETED">Completed</router-link></li>
+            <li><router-link class="dropdown-item" to="/logs?status=FAILED">Failed</router-link></li>
+            <li><router-link class="dropdown-item" to="/logs?status=PENDING">Pending</router-link></li>
+            <li><router-link class="dropdown-item" to="/logs?status=RUNNING">Running</router-link></li>
+            <li><router-link class="dropdown-item" to="/logs?status=ABORTED">Aborted</router-link></li>
           </ul>
         <br />
         <div class="table-responsive">
