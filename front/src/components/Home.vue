@@ -116,6 +116,35 @@ export default {
           this.loading = false;
         });
     },
+    async queueVideo(videoUrl, format) {
+      const url = getAPIUrl('api/downloads', import.meta.env);
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          urls: [videoUrl],
+          format
+        })
+      })
+        .then(response => {
+          if (response.status == 200) {
+            return response.json();
+          }
+          else {
+            throw new Error(response.statusText);
+          }
+        })
+        .then(data => {
+          this.setDismissibleMessage(data.success, data.success ? (this.escapeHtml(videoUrl) + " added to the queue.") : data.error);
+          this.urlBox.value = '';
+        })
+        .catch((error) => {
+          console.error(error);
+          this.setDismissibleMessage(false, 'Could not add the url to the queue.');
+        });
+    },
     async submitVideo() {
       const url = getAPIUrl('api/downloads', import.meta.env);
       fetch(url, {
@@ -240,16 +269,30 @@ export default {
                   <br />
                   <br />
                   <span class="list-group" v-if="get(metadata, '_type', '') === 'playlist'">
-                    <a v-for="entry in get(metadata, 'entries', [])" class="list-group-item list-group-item-action"
-                      target="_blank" :href=entry.url>{{ entry.title
-                      }}</a>
+                    <span v-for="entry in get(metadata, 'entries', [])" class="list-group-item list-group-item-action">
+                      <span class="badge bg-success" role="button" @click="() => {queueVideo(entry.url, selectedFormat.value)}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--bs-white)" class="bi bi-download" viewBox="0 0 16 16">
+                          <path
+                            d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                          <path
+                            d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                        </svg> Queue</span>&nbsp;
+                      <a target="_blank" :href=entry.url>{{ entry.title }}</a>
+                    </span>
                     <br />
                   </span>
                   <span class="list-group" v-else>
-                    <a v-for="format in get(metadata, 'formats', [])" class="list-group-item list-group-item-action"
-                      target="_blank" :href=format.url>
-                      {{ format.ext }} {{ format.format }} - {{ prettySize(format.filesize) }}
-                    </a>
+                    <span v-for="format in get(metadata, 'formats', [])" class="list-group-item list-group-item-action">
+                      <span class="badge bg-success" role="button" @click="() => {queueVideo(get(metadata,
+                        'webpage_url'), format.format_id)}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--bs-white)" class="bi bi-download" viewBox="0 0 16 16">
+                          <path
+                            d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                          <path
+                            d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                        </svg> Queue</span>&nbsp;
+                      <a target="_blank" :href=format.url>{{ format.ext }} {{ format.format }} - {{ prettySize(format.filesize) }}</a>
+                  </span>
                   </span>
                 </p>
               </div>
