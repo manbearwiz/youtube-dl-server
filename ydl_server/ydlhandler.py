@@ -121,22 +121,31 @@ class YdlHandler:
                     )
             self.jobshandler.put((Actions.UPDATE, job))
 
+    def get_format_and_profile(self, format_string):
+        f, p = None, None
+        for s in format_string.split(","):
+            if s.startswith("profile/"):
+                p = s
+            else:
+                f = s
+        return f, p
+
+    def get_profile(self, profile_str):
+        if not profile_str:
+            return {}
+        profile_name = "/".join(profile_str.split("/")[1:])
+        profile = self.app_config.get("profiles", {}).get(profile_name, {}).get('ydl_options')
+        if not profile:
+            raise Exception("Unknown profile ", profile_str)
+        return profile
+
     def get_ydl_options(self, ydl_config, request_options):
         ydl_config = ydl_config.copy()
-        req_format = request_options.get("format")
+        req_format, req_profile = self.get_format_and_profile(request_options.get("format"))
 
-        profile = None
-        if req_format.startswith("profile/"):
-            profile_name = "/".join(req_format.split("/")[1:])
-            profile = (
-                self.app_config.get("profiles", {})
-                .get(profile_name, {})
-                .get("ydl_options")
-            )
-            if not profile:
-                raise Exception("Unknown profile ", profile_name)
-            req_format = profile.get("format")
-            profile = {k: v for k, v in profile.items() if k != "format"}
+        profile = self.get_profile(req_profile)
+        if profile:
+            req_format = profile.get("format") if req_format is None else req_format
 
         if req_format is None:
             req_format = "video/best"
@@ -150,6 +159,7 @@ class YdlHandler:
         else:
             ydl_config.update({"format": req_format})
         if profile:
+            profile = {k: v for k, v in profile.items() if k != "format"}
             ydl_config.update(profile)
         return ydl_config
 

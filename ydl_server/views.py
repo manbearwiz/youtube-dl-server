@@ -198,7 +198,12 @@ async def api_queue_download(request):
         data = await request.json()
     url = data.get("url")
     urls = data.get("urls", [])
-    options = {"format": data.get("format")}
+    profile = data.get("profile")
+    format_str = data.get("format")
+
+    if profile:
+        format_str = ','.join([format_str, profile])
+    options = {"format": format_str}
 
     if url:
         urls.append(url)
@@ -209,7 +214,7 @@ async def api_queue_download(request):
         )
 
     job = Job(
-        ", ".join(urls), Job.PENDING, "", JobType.YDL_DOWNLOAD, data.get("format"), urls
+        ", ".join(urls), Job.PENDING, "", JobType.YDL_DOWNLOAD, format_str, urls
     )
     request.app.state.jobshandler.put((Actions.INSERT, job))
 
