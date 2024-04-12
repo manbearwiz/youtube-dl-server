@@ -122,13 +122,15 @@ class YdlHandler:
             self.jobshandler.put((Actions.UPDATE, job))
 
     def get_format_and_profile(self, format_string):
-        f, p = None, None
+        fmt, audio, profile = None, None, None
         for s in format_string.split(","):
             if s.startswith("profile/"):
-                p = s
+                profile = s
+            elif s.startswith("audio/") or s.startswith("bestaudio/"):
+                audio = s
             else:
-                f = s
-        return f, p
+                fmt = s
+        return fmt, audio, profile
 
     def get_profile(self, profile_str):
         if not profile_str:
@@ -141,23 +143,30 @@ class YdlHandler:
 
     def get_ydl_options(self, ydl_config, request_options):
         ydl_config = ydl_config.copy()
-        req_format, req_profile = self.get_format_and_profile(request_options.get("format"))
+        req_format, req_audio, req_profile = self.get_format_and_profile(request_options.get("format"))
 
         profile = self.get_profile(req_profile)
         if profile:
             req_format = profile.get("format") if req_format is None else req_format
 
-        if req_format is None:
-            req_format = "video/best"
-        if req_format.startswith("audio/"):
+        if req_audio is not None and req_format is None:
             ydl_config.update({"extract-audio": None})
-            ydl_config.update({"audio-format": req_format.split("/")[-1]})
-        elif req_format.startswith("video/"):
-            # youtube-dl downloads BEST video and audio by default
-            if req_format != "video/best":
-                ydl_config.update({"format": req_format.split("/")[-1]})
-        else:
+            ydl_config.update({"audio-format": req_audio.split("/")[-1]})
+
+        if req_format is not None:
+            if req_format == "video/best":
+                req_format = "video/bestvideo"
+            if req_format.startswith("video/"):
+                # youtube-dl downloads BEST video and audio by default
+                if req_format != "video/best":
+                    req_format = req_format.split("/")[-1]
+            if req_audio is not None:
+                req_format = req_format + "+" + req_audio.split("/")[-1]
             ydl_config.update({"format": req_format})
+
+        if req_format is None and req_audio is None:
+            ydl_config.update({"format": "video/best"})
+
         if profile:
             profile = {k: v for k, v in profile.items() if k != "format"}
             ydl_config.update(profile)

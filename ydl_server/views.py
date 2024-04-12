@@ -199,10 +199,13 @@ async def api_queue_download(request):
     url = data.get("url")
     urls = data.get("urls", [])
     profile = data.get("profile")
+    audio_format = data.get("audio_format")
     format_str = data.get("format")
 
     if profile:
         format_str = ','.join([format_str, profile])
+    if audio_format:
+        format_str = ',audio/'.join([format_str, audio_format])
     options = {"format": format_str}
 
     if url:

@@ -116,7 +116,13 @@ export default {
           this.loading = false;
         });
     },
-    async queueVideo(videoUrl, format) {
+    getParamsFromSelection(format) {
+      return {
+        format: format.resolution == "audio only" ? this.selectedFormat.value : format.format_id,
+        audio_format: format.resolution == "audio only" ? format.format_id : null
+      }
+    },
+    async queueVideo(videoUrl, params) {
       const url = getAPIUrl('api/downloads', import.meta.env);
       fetch(url, {
         method: 'POST',
@@ -125,7 +131,7 @@ export default {
         },
         body: JSON.stringify({
           urls: [videoUrl],
-          format
+          ...params
         })
       })
         .then(response => {
@@ -270,7 +276,7 @@ export default {
                   <br />
                   <span class="list-group" v-if="get(metadata, '_type', '') === 'playlist'">
                     <span v-for="entry in get(metadata, 'entries', [])" class="list-group-item list-group-item-action">
-                      <span class="badge bg-success" role="button" @click="() => {queueVideo(entry.url, selectedFormat.value)}">
+                      <span class="badge bg-success" role="button" @click="() => {queueVideo(entry.url, {format: selectedFormat.value})}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--bs-white)" class="bi bi-download" viewBox="0 0 16 16">
                           <path
                             d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
@@ -283,8 +289,9 @@ export default {
                   </span>
                   <span class="list-group" v-else>
                     <span v-for="format in get(metadata, 'formats', [])" class="list-group-item list-group-item-action">
-                      <span class="badge bg-success" role="button" @click="() => {queueVideo(get(metadata,
-                        'webpage_url'), format.format_id)}">
+                      <span class="badge bg-success" role="button" @click="() => {queueVideo(get(metadata, 'webpage_url'),
+                        getParamsFromSelection(format)
+                        )}">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--bs-white)" class="bi bi-download" viewBox="0 0 16 16">
                           <path
                             d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
