@@ -3,7 +3,6 @@ import App from './App.vue';
 import VueCookies from 'vue-cookies'
 import { createRouter, createWebHashHistory } from 'vue-router';
 
-// import 'bootstrap-vue/dist/bootstrap-vue.css';
 import 'bootstrap/dist/css/bootstrap.css';
 
 import './assets/style.css';

@@ -1,5 +1,6 @@
 <script setup>
 import { getAPIUrl } from '../utils';
+import { map, capitalize } from 'lodash'
 </script>
 <script>
 export default {
@@ -11,7 +12,15 @@ export default {
     this.fetchStats();
     this.fetchServerInfo();
   },
-
+  computed: {
+    prettyModule: function () {
+      if (!this.server_info.ydl_module_name) {
+        return ''
+      }
+      const parts = this.server_info.ydl_module_name.split('-')
+      return [capitalize(parts[0]), ...map(parts.slice(1), s => s.toUpperCase())].join('')
+    }
+  },
   methods: {
     async fetchServerInfo() {
       const url = getAPIUrl('api/info', import.meta.env);
@@ -31,13 +40,16 @@ export default {
   <header>
     <nav class="navbar navbar-expand-md navbar-dark">
       <div class="container-fluid">
-        <router-link to="/" class="navbar-brand">YoutubeDL</router-link>
+        <router-link to="/" class="navbar-brand">{{ prettyModule }}</router-link>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsingNavbar"
           aria-controls="collapsingNavbar" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="collapsingNavbar">
           <ul class="navbar-nav me-auto mb-2 mb-md-0">
+            <li class="nav-item">
+              <router-link to="/" class="nav-link">Home</router-link>
+            </li>
             <li class="nav-item">
               <router-link to="/logs" class="nav-link">Logs</router-link>
             </li>

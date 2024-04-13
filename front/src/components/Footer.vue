@@ -38,7 +38,7 @@ export default {
   <footer class="footer text-light text-center">
     <p class="text-muted">
       Drag and Drop the Bookmarklet to your bookmark bar for easy access: <a id="bookmarklet" class="badge text-bg-dark"
-        href="">Youtube-DL</a>
+        href="">{{ server_info.ydl_module_name }}</a>
       <br />
       Powered by
       <a target="_blank" rel="noopener noreferrer" class="text-light" :href="server_info.ydl_module_website">{{

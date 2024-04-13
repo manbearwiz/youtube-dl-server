@@ -15,6 +15,7 @@ export default {
     metadata_list: null,
     loading: false,
     extractorsFilter: '',
+    server_info: {},
   }),
   mounted() {
     this.extractorsModal = new Modal('#extractorsModal');
@@ -24,6 +25,7 @@ export default {
     this.messageList = document.getElementById('message_list');
     this.fetchExtractors();
     this.fetchAvailableFormats();
+    this.fetchServerInfo();
   },
 
   computed: {
@@ -33,6 +35,10 @@ export default {
   },
 
   methods: {
+    async fetchServerInfo() {
+      const url = getAPIUrl('api/info', import.meta.env);
+      this.server_info = await (await fetch(url)).json();
+    },
     prettySize(size_b) {
       if (size_b == null) {
         return "NaN";
@@ -188,7 +194,7 @@ export default {
     <div class="container d-flex flex-column text-light text-center">
       <div class="flex-grow-1"></div>
       <div class="jumbotron bg-transparent flex-grow-1">
-        <h1 class="display-4">youtube-dl</h1>
+        <h1 class="display-4">{{ server_info.ydl_module_name }}</h1>
         <p class="lead">Enter a video URL to download the video to the server. URL can be to YouTube or <a
             class="text-info" @click="showExtractorsModal">any
             other supported site</a>. The server will automatically download the highest quality version available.</p>
