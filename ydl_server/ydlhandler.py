@@ -162,6 +162,8 @@ class YdlHandler:
                     req_format = req_format.split("/")[-1]
             if req_audio is not None:
                 req_format = req_format + "+" + req_audio.split("/")[-1]
+            else:
+                req_format = req_format + "+bestaudio/best"
             ydl_config.update({"format": req_format})
 
         if req_format is None and req_audio is None:
