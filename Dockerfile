@@ -5,7 +5,7 @@
 #
 
 ARG YOUTUBE_DL=yt-dlp
-FROM --platform=$BUILDPLATFORM node:21-alpine as nodebuild
+FROM --platform=$BUILDPLATFORM node:22-alpine as nodebuild
 
 WORKDIR /app
 COPY ./front/package*.json /app
