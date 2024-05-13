@@ -226,7 +226,10 @@ async def api_queue_download(request):
 
 
 async def api_metadata_fetch(request):
-    data = await request.json()
+    if request.headers.get("Content-Type") == "application/x-www-form-urlencoded":
+        data = await request.form()
+    else:
+        data = await request.json()
     url = data.get("url")
     urls = data.get("urls", [])
     if url:
