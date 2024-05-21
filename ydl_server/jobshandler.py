@@ -1,6 +1,6 @@
 from queue import Queue
 from threading import Thread
-from ydl_server.logdb import JobsDB, Actions
+from ydl_server.db import JobsDB, Actions
 
 
 class JobsHandler:

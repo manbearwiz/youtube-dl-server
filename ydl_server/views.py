@@ -3,7 +3,7 @@ from starlette.responses import JSONResponse
 from operator import itemgetter
 from pathlib import Path
 from ydl_server.config import app_config, get_finished_path, get_ydl_formats
-from ydl_server.logdb import JobsDB, Job, Actions, JobType
+from ydl_server.db import JobsDB, Job, Actions, JobType
 from datetime import datetime
 import os
 import signal

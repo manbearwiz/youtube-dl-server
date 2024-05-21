@@ -8,7 +8,7 @@ from time import sleep
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
 
-from ydl_server.logdb import JobsDB, Job, Actions, JobType
+from ydl_server.db import JobsDB, Job, Actions, JobType
 
 
 YDL_MODULES = ["youtube_dl", "youtube_dlc", "yt_dlp"]

@@ -6,6 +6,7 @@ from ydl_server.config import app_config
 
 STATUS_NAME = ["Running", "Completed", "Failed", "Pending", "Aborted"]
 
+SCHEMA_VERSION = 1
 
 class Actions:
     DOWNLOAD = 1
@@ -58,36 +59,72 @@ class Job:
 
 
 class JobsDB:
-    @staticmethod
-    def check_db_latest():
-        conn = sqlite3.connect(
-            "file://%s" % app_config["ydl_server"].get("metadata_db_path"), uri=True
-        )
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA table_info('jobs')")
-        columns = [row[1] for row in cursor.fetchall()]
-        if set(columns) != set(
-            [
-                "id",
-                "name",
-                "status",
-                "format",
-                "log",
-                "last_update",
-                "type",
-                "url",
-                "pid",
-            ]
-        ):
-            print("Outdated jobs table, cleaning up and recreating")
-            cursor.execute("DROP TABLE if exists jobs;")
-        conn.close()
 
     @staticmethod
-    def init_db():
+    def init():
         conn = sqlite3.connect(
             "file://%s" % app_config["ydl_server"].get("metadata_db_path"), uri=True
         )
+        version = JobsDB.db_version(conn)
+        JobsDB.migrate(conn, version)
+        conn.close()
+        
+
+    @staticmethod
+    def db_version(conn):
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='jobs'")
+        table_exists = cursor.fetchone()
+        if not table_exists:
+            return -1
+        cursor.execute("PRAGMA user_version;")
+        version = int(cursor.fetchone()[0])
+        return version
+
+    @staticmethod
+    def migrate(conn, version):
+        print("Migrating database from version %d" % version)
+        match version:
+            case -1:
+                print("No jobs table found, creating")
+                JobsDB.create(conn)
+                return
+            case 0:
+                cursor = conn.cursor()
+                cursor.execute("PRAGMA table_info('jobs')")
+                columns = [row[1] for row in cursor.fetchall()]
+                if set(columns) != set(
+                    [
+                        "id",
+                        "name",
+                        "status",
+                        "format",
+                        "log",
+                        "last_update",
+                        "type",
+                        "url",
+                        "pid",
+                    ]
+                ):
+                    print("Outdated jobs table, cleaning up and recreating")
+                    cursor.execute("DROP TABLE if exists jobs;")
+                    conn.commit()
+                    JobsDB.create(conn)
+                    return
+            case SCHEMA_VERSION:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    PRAGMA user_version = """ + str(SCHEMA_VERSION) + """;
+                    """
+                )
+                conn.commit()
+                return
+        return JobsDB.migrate(conn, version + 1)
+
+
+    @staticmethod
+    def create(conn):
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -105,8 +142,12 @@ class JobsDB:
                 );
             """
         )
+        cursor.execute(
+            """
+            PRAGMA user_version = """ + str(SCHEMA_VERSION) + """;
+            """
+        )
         conn.commit()
-        conn.close()
 
     @staticmethod
     def convert_datetime_to_tz(dt):
