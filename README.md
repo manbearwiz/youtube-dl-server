@@ -13,10 +13,10 @@ Very spartan Web and REST interface for downloading youtube videos onto a server
 
 ### Docker CLI
 
-This example uses the docker run command to create the container to run the app. Here we also use host networking for simplicity. Also note the `-v` argument. This directory will be used to output the resulting videos
+This example uses the docker run command to create the container to run the app. Here we also use host networking for simplicity. Also note the `-v` argument. This directory will be used to output the resulting videos.
 
 ```shell
-docker run -d --net="host" --name youtube-dl -v /home/core/youtube-dl:/youtube-dl kmb32123/youtube-dl-server
+docker run -d --net="host" --name youtube-dl -v /home/core/youtube-dl:/youtube-dl qx6ghqkz/youtube-dl-server
 ```
 
 ### Docker Compose
@@ -41,6 +41,51 @@ YDL_UPDATE_TIME=False python3 -m uvicorn youtube-dl-server:app --port 8123
 ```
 
 In this example, `YDL_UPDATE_TIME=False` is the same as the command line option `--no-mtime`.
+
+### Environment variables
+
+Environment variables can be set to change different settings, for example using docker run.
+
+```shell
+docker run -d \
+  --name youtube-dl \
+  --user 1000:1000 \
+  -p 7080:8080 \
+  --mount type=bind,source='/path/to/videos',target='/youtube-dl' \
+  -v '/path/to/data':'/data' \
+  -e YDL_FORMAT='bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best' \
+  -e YDL_OUTPUT_TEMPLATE='/youtube-dl/%(title).200s.%(ext)s' \
+  -e YDL_ARCHIVE_FILE='/data/archive.txt' \
+  -e YDL_IGNORE_ERRORS=True \
+  -e YDL_WRITE_THUMBNAIL=True \
+  -e YDL_WRITE_SUBTITLES=True \
+  -e YDL_SUBTITLES_FORMAT='srt' \
+  -e YDL_SUBTITLES_LANGS='all' \
+  -e YDL_EMBED_METADATA=True \
+  --restart unless-stopped \
+  qx6ghqkz/youtube-dl-server
+```
+Environment variables can also be placed in a `.env ` file when using `docker compose up`.
+
+| Environment variable | Default value | Notes |
+| --- | --- | --- |
+| YDL_FORMAT | bestvideo+bestaudio/best |
+| YDL_EXTRACT_AUDIO_FORMAT | None | Can be set using the web interface
+| YDL_EXTRACT_AUDIO_QUALITY |192 |
+| YDL_RECODE_VIDEO_FORMAT | None | Can be set using the web interface
+| YDL_OUTPUT_TEMPLATE | /youtube-dl/%(title).200s [%(id)s].%(ext)s |
+| YDL_ARCHIVE_FILE | None |
+| YDL_UPDATE_TIME | True |
+| YDL_IGNORE_ERRORS | True |
+| YDL_RESTRICT_FILENAMES | False |
+| YDL_GEO_BYPASS | False |
+| YDL_WRITE_THUMBNAIL | True
+| YDL_WRITE_SUBTITLES | False |
+| YDL_SUBTITLES_FORMAT | None |
+| YDL_SUBTITLES_LANGS | all |
+| YDL_EMBED_METADATA | False |
+
+For more information on these options, see the [yt-dlp docs](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#usage-and-options) and [YouTubeDL object parameters](https://github.com/yt-dlp/yt-dlp/blob/12b248ce60be1aa1362edd839d915bba70dbee4b/yt_dlp/YoutubeDL.py#L176-L565).
 
 ## Usage
 
