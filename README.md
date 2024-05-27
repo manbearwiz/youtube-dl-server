@@ -25,7 +25,7 @@ This is an example service definition that could be put in `docker-compose.yml`.
 
 ```yml
   youtube-dl:
-    image: "kmb32123/youtube-dl-server"
+    image: "qx6ghqkz/youtube-dl-server"
     network_mode: "service:vpn"
     volumes:
       - /home/core/youtube-dl:/youtube-dl
