@@ -1,5 +1,5 @@
 <script setup>
-import { get } from 'lodash'
+import { get, isEmpty } from 'lodash'
 import { Modal } from 'bootstrap'
 import { getAPIUrl } from '../utils';
 </script>
@@ -41,7 +41,7 @@ export default {
     },
     prettySize(size_b) {
       if (size_b == null) {
-        return "NaN";
+        return undefined;
       }
       var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
       var i = 0;
@@ -304,7 +304,7 @@ export default {
                           <path
                             d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
                         </svg> Queue</span>&nbsp;
-                      <a target="_blank" :href=format.url>{{ format.ext }} {{ format.format }} - {{ prettySize(format.filesize) }}</a>
+                      <a target="_blank" :href=format.url>{{ [format.ext,format.format, prettySize(format.filesize)].filter(x => !isEmpty(x)).join(' - ') }}</a>
                   </span>
                   </span>
                 </p>
