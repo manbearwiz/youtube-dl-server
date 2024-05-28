@@ -1,0 +1,13 @@
+*.bat
+*.png
+
+.git
+.github
+.gitignore
+.vscode
+
+docker-compose*
+Dockerfile*
+LICENSE
+README.md
+SECURITY.md
