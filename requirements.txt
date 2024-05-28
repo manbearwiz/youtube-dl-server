@@ -1,5 +1,5 @@
 starlette==0.37.2
-uvicorn==0.29.0
+uvicorn==0.30.0
 aiofiles==23.2.1
 Jinja2==3.1.4
 PyYAML==6.0.1
