@@ -32,6 +32,7 @@ app_defaults = {
     "YDL_RESTRICT_FILENAMES": config("YDL_RESTRICT_FILENAMES", cast=bool, default=False),
     "YDL_GEO_BYPASS": config("YDL_GEO_BYPASS", cast=bool, default=False),
     "YDL_WRITE_THUMBNAIL": config("YDL_WRITE_THUMBNAIL", cast=bool, default=True),
+    "YDL_THUMBNAIL_FORMAT": config("YDL_THUMBNAIL_FORMAT", default=None),
     "YDL_WRITE_SUBTITLES": config("YDL_WRITE_SUBTITLES", cast=bool, default=False),
     "YDL_SUBTITLES_FORMAT": config("YDL_SUBTITLES_FORMAT", default=None),
     "YDL_SUBTITLES_LANGS": config("YDL_SUBTITLES_LANGS", cast=str, default="all"),
@@ -131,6 +132,15 @@ def get_ydl_options(request_options):
             {
                 "key": "EmbedThumbnail",
                 "already_have_thumbnail": False,
+            }
+        )
+
+    if ydl_vars["YDL_THUMBNAIL_FORMAT"]:
+        postprocessors.append(
+            {
+                "key": "FFmpegThumbnailsConvertor",
+                "format": ydl_vars["YDL_THUMBNAIL_FORMAT"],
+                "when": "before_dl",
             }
         )
 
