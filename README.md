@@ -79,6 +79,7 @@ Environment variables can also be placed in a `.env ` file when using `docker co
 | YDL_RESTRICT_FILENAMES | False |
 | YDL_GEO_BYPASS | False |
 | YDL_WRITE_THUMBNAIL | True
+| YDL_THUMBNAIL_FORMAT | None |
 | YDL_WRITE_SUBTITLES | False |
 | YDL_SUBTITLES_FORMAT | None |
 | YDL_SUBTITLES_LANGS | all |
