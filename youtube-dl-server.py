@@ -171,7 +171,7 @@ def get_ydl_options(request_options):
         "writethumbnail": ydl_vars["YDL_WRITE_THUMBNAIL"],
         "writesubtitles": ydl_vars["YDL_WRITE_SUBTITLES"],
         "subtitlesformat": ydl_vars["YDL_SUBTITLES_FORMAT"],
-        "subtitleslangs": ydl_vars["YDL_SUBTITLES_LANGS"],
+        "subtitleslangs": list(ydl_vars["YDL_SUBTITLES_LANGS"].split(",")),
     }
 
 
