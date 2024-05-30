@@ -47,43 +47,53 @@ Environment variables can be set to change different settings, for example using
 
 ```shell
 docker run -d \
-  --name youtube-dl \
+  --name youtube-dl-server \
   --user 1000:1000 \
-  -p 7080:8080 \
+  -p 8080:8080 \
   --mount type=bind,source='/path/to/videos',target='/youtube-dl' \
   -v '/path/to/data':'/data' \
   -e YDL_FORMAT='bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best' \
+  -e YDL_MERGE_OUTPUT_FORMAT='mp4/mkv' \
   -e YDL_OUTPUT_TEMPLATE='/youtube-dl/%(title).200s.%(ext)s' \
+  -e YDL_NO_PLAYLIST=True \
   -e YDL_ARCHIVE_FILE='/data/archive.txt' \
+  -e YDL_COOKIES_FILE='/data/cookies.txt' \
   -e YDL_IGNORE_ERRORS=True \
   -e YDL_WRITE_THUMBNAIL=True \
+  -e YDL_THUMBNAIL_FORMAT='png/jpg' \
   -e YDL_WRITE_SUBTITLES=True \
-  -e YDL_SUBTITLES_FORMAT='srt' \
-  -e YDL_SUBTITLES_LANGS='all' \
+  -e YDL_SUBTITLES_FORMAT='srt/vtt/best' \
+  -e YDL_CONVERT_SUBTITLES='srt' \
+  -e YDL_SUBTITLES_LANGS='en.*,ja' \
   -e YDL_EMBED_METADATA=True \
   --restart unless-stopped \
   qx6ghqkz/youtube-dl-server
 ```
 Environment variables can also be placed in a `.env ` file when using `docker compose up`.
 
-| Environment variable | Default value | Notes |
-| --- | --- | --- |
-| YDL_FORMAT | bestvideo+bestaudio/best |
-| YDL_EXTRACT_AUDIO_FORMAT | None | Can be set using the web interface
-| YDL_EXTRACT_AUDIO_QUALITY |192 |
-| YDL_RECODE_VIDEO_FORMAT | None | Can be set using the web interface
-| YDL_OUTPUT_TEMPLATE | /youtube-dl/%(title).200s [%(id)s].%(ext)s |
-| YDL_ARCHIVE_FILE | None |
-| YDL_UPDATE_TIME | True |
-| YDL_IGNORE_ERRORS | True |
-| YDL_RESTRICT_FILENAMES | False |
-| YDL_GEO_BYPASS | False |
-| YDL_WRITE_THUMBNAIL | True
-| YDL_THUMBNAIL_FORMAT | None |
-| YDL_WRITE_SUBTITLES | False |
-| YDL_SUBTITLES_FORMAT | None |
-| YDL_SUBTITLES_LANGS | all |
-| YDL_EMBED_METADATA | False |
+| Environment Variable      | Type           | Default Value                                  | Notes                                                |
+| ------------------------- | -------------- |----------------------------------------------- | ---------------------------------------------------- |
+| YDL_FORMAT                | String         | `"bestvideo+bestaudio/best"`                   |                                                      |
+| YDL_EXTRACT_AUDIO_FORMAT  | String         | `None`                                         | Set via web interface                                |
+| YDL_EXTRACT_AUDIO_QUALITY | String         | `"192"`                                        |                                                      |
+| YDL_RECODE_VIDEO_FORMAT   | String         | `None`                                         | Set via web interface                                |
+| YDL_MERGE_OUTPUT_FORMAT   | String         | `None`                                         |                                                      |
+| YDL_OUTPUT_TEMPLATE       | String         | `"/youtube-dl/%(title).200s [%(id)s].%(ext)s"` |                                                      |
+| YDL_NO_PLAYLIST           | Boolean        | `True`                                         | Only download video if URL also references playlist  |
+| YDL_ARCHIVE_FILE          | String         | `None`                                         | Path to download archive, e.g. `"/data/archive.txt"` |
+| YDL_COOKIES_FILE          | String         | `None`                                         | Path to cookie file, e.g. `"/data/cookies.txt"`      |
+| YDL_COOKIES_BROWSER       | String         | `None`                                         | Name of browser, e.g. `"firefox"`                    |
+| YDL_UPDATE_TIME           | Boolean        | `True`                                         |                                                      |
+| YDL_IGNORE_ERRORS         | Boolean/String | `True`                                         | `True/False/"only_download"`                         |
+| YDL_RESTRICT_FILENAMES    | Boolean        | `False`                                        |                                                      |
+| YDL_GEO_BYPASS            | Boolean        | `False`                                        |                                                      |
+| YDL_WRITE_THUMBNAIL       | Boolean        | `True`                                         | Thumbnail will be embedded                           |
+| YDL_THUMBNAIL_FORMAT      | String         | `None`                                         | Image format to download and embed, e.g. `"png/jpg"` |
+| YDL_WRITE_SUBTITLES       | Boolean        | `False`                                        | Subtitles will be embedded                           |
+| YDL_SUBTITLES_FORMAT      | String         | `None`                                         | Subtitle format preference, e.g. `"srt/vtt/best"`    |
+| YDL_CONVERT_SUBTITLES     | String         | `None`                                         | Convert subtitles to format, e.g. `"srt"`            |
+| YDL_SUBTITLES_LANGS       | String         | `"all"`                                        | Can specify multiple, e.g. `"en.*,ja"`               |
+| YDL_EMBED_METADATA        | Boolean        | `False`                                        |                                                      |
 
 For more information on these options, see the [yt-dlp docs](https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#usage-and-options) and [YouTubeDL object parameters](https://github.com/yt-dlp/yt-dlp/blob/12b248ce60be1aa1362edd839d915bba70dbee4b/yt_dlp/YoutubeDL.py#L176-L565).
 
