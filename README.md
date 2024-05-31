@@ -50,21 +50,21 @@ docker run -d \
   --name youtube-dl-server \
   --user 1000:1000 \
   -p 8080:8080 \
-  --mount type=bind,source='/path/to/videos',target='/youtube-dl' \
-  -v '/path/to/data':'/data' \
-  -e YDL_FORMAT='bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best' \
-  -e YDL_MERGE_OUTPUT_FORMAT='mp4/mkv' \
-  -e YDL_OUTPUT_TEMPLATE='/youtube-dl/%(title).200s.%(ext)s' \
+  -v /path/to/data:/data \
+  --mount type=bind,source=/path/to/videos,target=/youtube-dl \
+  -e YDL_FORMAT="bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best" \
+  -e YDL_MERGE_OUTPUT_FORMAT="mp4/mkv" \
+  -e YDL_OUTPUT_TEMPLATE="/youtube-dl/%(title).200s [%(id)s].%(ext)s" \
   -e YDL_NO_PLAYLIST=True \
-  -e YDL_ARCHIVE_FILE='/data/archive.txt' \
-  -e YDL_COOKIES_FILE='/data/cookies.txt' \
+  -e YDL_ARCHIVE_FILE="/data/archive.txt" \
+  -e YDL_COOKIES_FILE="/data/cookies.txt" \
   -e YDL_IGNORE_ERRORS=True \
   -e YDL_WRITE_THUMBNAIL=True \
-  -e YDL_THUMBNAIL_FORMAT='png/jpg' \
+  -e YDL_THUMBNAIL_FORMAT="png/jpg" \
   -e YDL_WRITE_SUBTITLES=True \
-  -e YDL_SUBTITLES_FORMAT='srt/vtt/best' \
-  -e YDL_CONVERT_SUBTITLES='srt' \
-  -e YDL_SUBTITLES_LANGS='en.*,ja' \
+  -e YDL_SUBTITLES_FORMAT="srt/vtt/best" \
+  -e YDL_CONVERT_SUBTITLES="srt" \
+  -e YDL_SUBTITLES_LANGS="en.*,ja" \
   -e YDL_EMBED_METADATA=True \
   --restart unless-stopped \
   qx6ghqkz/youtube-dl-server
