@@ -180,7 +180,10 @@ def get_ydl_options(request_options):
         "format": ydl_vars["YDL_FORMAT"],
         "merge_output_format": ydl_vars["YDL_MERGE_OUTPUT_FORMAT"],
         "postprocessors": postprocessors,
-        "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
+        "outtmpl": {
+            "default": ydl_vars["YDL_OUTPUT_TEMPLATE"],
+            "pl_thumbnail": "",
+        },
         "noplaylist": ydl_vars["YDL_NO_PLAYLIST"],
         "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
         "cookiefile": ydl_vars["YDL_COOKIES_FILE"],
