@@ -68,4 +68,4 @@ ENV YOUTUBE_DL=$YOUTUBE_DL
 ENV YDL_CONFIG_PATH='/app_config'
 CMD [ "python", "-u", "./youtube-dl-server.py" ]
 
-HEALTHCHECK CMD wget 127.0.0.1:8080/api/info --spider -q
+HEALTHCHECK CMD wget 127.0.0.1:8080/api/info --spider -q -Y off
