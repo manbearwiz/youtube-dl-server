@@ -5,7 +5,7 @@
 #
 
 ARG YOUTUBE_DL=yt-dlp
-FROM --platform=$BUILDPLATFORM node:22-alpine as nodebuild
+FROM --platform=$BUILDPLATFORM node:22-alpine AS nodebuild
 
 WORKDIR /app
 COPY ./front/package*.json /app
@@ -13,7 +13,7 @@ RUN npm ci
 COPY ./front /app
 RUN npm run build
 
-FROM python:alpine as wheels
+FROM python:alpine AS wheels
 
 RUN apk add --no-cache g++
 COPY ./requirements.txt .
@@ -22,7 +22,7 @@ RUN pip install --upgrade --no-cache-dir pip \
   && pip wheel --no-cache-dir --wheel-dir /out/wheels-youtube-dl youtube-dl \
   && pip wheel --no-cache-dir --wheel-dir /out/wheels-yt-dlp yt-dlp
 
-FROM python:alpine as base
+FROM python:alpine AS base
 ARG ATOMICPARSLEY=0
 ARG YDLS_VERSION
 ARG YDLS_RELEASE_DATE
@@ -42,13 +42,13 @@ RUN pip install --no-cache /wheels/*
 
 COPY ./requirements.txt /usr/src/app/
 
-FROM base as yt-dlp
+FROM base AS yt-dlp
 
 COPY --from=wheels /out/wheels-yt-dlp /wheels
 RUN pip install --no-cache /wheels/*
 RUN pip install --upgrade pip && pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v youtube-dl)
 
-FROM base as youtube-dl
+FROM base AS youtube-dl
 
 COPY --from=wheels /out/wheels-youtube-dl /wheels/
 RUN pip install --no-cache /wheels/*
