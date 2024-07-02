@@ -17,8 +17,7 @@ FROM python:alpine AS wheels
 
 RUN apk add --no-cache g++
 COPY ./requirements.txt .
-RUN pip install --upgrade --no-cache-dir pip \
-  && pip wheel --no-cache-dir --wheel-dir /out/wheels -r <(cat ./requirements.txt| grep -v youtube-dl | grep -v yt-dlp) \
+RUN pip wheel --no-cache-dir --wheel-dir /out/wheels -r <(cat ./requirements.txt| grep -v youtube-dl | grep -v yt-dlp) \
   && pip wheel --no-cache-dir --wheel-dir /out/wheels-youtube-dl youtube-dl \
   && pip wheel --no-cache-dir --wheel-dir /out/wheels-yt-dlp yt-dlp
 
@@ -46,13 +45,13 @@ FROM base AS yt-dlp
 
 COPY --from=wheels /out/wheels-yt-dlp /wheels
 RUN pip install --no-cache /wheels/*
-RUN pip install --upgrade pip && pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v youtube-dl)
+RUN pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v youtube-dl)
 
 FROM base AS youtube-dl
 
 COPY --from=wheels /out/wheels-youtube-dl /wheels/
 RUN pip install --no-cache /wheels/*
-RUN pip install --upgrade pip && pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v yt-dlp)
+RUN pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v yt-dlp)
 
 FROM ${YOUTUBE_DL}
 

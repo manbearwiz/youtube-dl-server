@@ -25,7 +25,7 @@ pipeline {
                 }
             }
         }
-        stage('Build Youtube-dl yt_dlp Image') {
+        stage('Build yt_dlp Image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_CREDENTIALS_USR', passwordVariable: 'DOCKERHUB_CREDENTIALS_PSW')]) {
                     sh 'docker login -u $DOCKERHUB_CREDENTIALS_USR -p "$DOCKERHUB_CREDENTIALS_PSW"'
