@@ -14,7 +14,7 @@ pipeline {
         stage('Linting') {
             steps {
                 script {
-                    sh "ruff .";
+                    sh "ruff check .";
                 }
             }
         }
