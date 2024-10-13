@@ -63,7 +63,11 @@ def load_config():
                 config_file_path
             )
         )
-        copy_default_config(config_file_path)
+        try:
+            copy_default_config(config_file_path)
+        except Exception:
+            print("Error copying default config file, loading it directly")
+            config_file_path = "./default_config.yml"
     with open(config_file_path) as configfile:
         config = yaml.load(configfile, Loader=yaml.SafeLoader)
 
