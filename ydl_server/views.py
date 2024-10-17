@@ -10,8 +10,7 @@ import signal
 import shutil
 
 
-async def api_finished(request):
-    root_dir = Path(get_finished_path())
+def build_finished_tree(root_dir):
     matches = root_dir.glob("*")
 
     files = [
@@ -21,31 +20,17 @@ async def api_finished(request):
             "created": datetime.fromtimestamp(f1.stat().st_ctime).strftime("%H:%m %D"),
             "size": f1.stat().st_size if not f1.is_dir() else None,
             "directory": f1.is_dir(),
-            "children": sorted(
-                [
-                    {
-                        "name": f2.name,
-                        "size": f2.stat().st_size,
-                        "modified": datetime.fromtimestamp(f2.stat().st_mtime).strftime(
-                            "%H:%m %D"
-                        ),
-                        "created": datetime.fromtimestamp(f2.stat().st_ctime).strftime(
-                            "%H:%m %D"
-                        ),
-                    }
-                    for f2 in f1.iterdir()
-                    if not f2.name.startswith(".")
-                ],
-                key=itemgetter("modified"),
-                reverse=True,
-            )
+            "children": sorted(build_finished_tree(f1), key=itemgetter("modified"), reverse=True)
             if f1.is_dir()
             else None,
         }
         for f1 in matches
         if not f1.name.startswith(".")
     ]
-    return JSONResponse(files)
+    return files
+
+async def api_finished(request):
+    return JSONResponse(build_finished_tree(Path(get_finished_path())))
 
 
 async def api_delete_file(request):
