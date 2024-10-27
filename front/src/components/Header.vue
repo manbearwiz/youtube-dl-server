@@ -1,6 +1,7 @@
 <script setup>
 import { getAPIUrl } from '../utils';
 import { map, capitalize } from 'lodash'
+import { inject } from 'vue'
 </script>
 <script>
 export default {
@@ -10,7 +11,7 @@ export default {
   }),
   mounted() {
     this.fetchStats();
-    this.fetchServerInfo();
+    this.server_info = inject('serverInfo');
   },
   computed: {
     prettyModule: function () {
@@ -22,10 +23,6 @@ export default {
     }
   },
   methods: {
-    async fetchServerInfo() {
-      const url = getAPIUrl('api/info', import.meta.env);
-      this.server_info = await (await fetch(url)).json();
-    },
     async fetchStats() {
       const url = getAPIUrl('api/downloads/stats', import.meta.env);
       this.stats = (await (await fetch(url)).json()).stats || {};

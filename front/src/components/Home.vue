@@ -2,6 +2,7 @@
 import { get, isEmpty } from 'lodash'
 import { Modal } from 'bootstrap'
 import { getAPIUrl } from '../utils';
+import { inject } from 'vue'
 </script>
 
 <script>
@@ -25,7 +26,7 @@ export default {
     this.messageList = document.getElementById('message_list');
     this.fetchExtractors();
     this.fetchAvailableFormats();
-    this.fetchServerInfo();
+    this.server_info = inject('serverInfo');
   },
 
   computed: {
@@ -35,10 +36,6 @@ export default {
   },
 
   methods: {
-    async fetchServerInfo() {
-      const url = getAPIUrl('api/info', import.meta.env);
-      this.server_info = await (await fetch(url)).json();
-    },
     prettySize(size_b) {
       if (size_b == null) {
         return undefined;

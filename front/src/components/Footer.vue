@@ -1,5 +1,5 @@
 <script setup>
-import { getAPIUrl } from '../utils';
+import { inject } from 'vue'
 </script>
 <script>
 export default {
@@ -7,15 +7,10 @@ export default {
     server_info: {},
   }),
   mounted() {
-    this.fetchServerInfo();
     this.setBookmarklet();
+    this.server_info = inject('serverInfo');
   },
-
   methods: {
-    async fetchServerInfo() {
-      const url = getAPIUrl('api/info', import.meta.env);
-      this.server_info = await (await fetch(url)).json();
-    },
     setBookmarklet() {
       let url = window.location.protocol + '//' + window.location.hostname
       if (window.location.port != '') {
