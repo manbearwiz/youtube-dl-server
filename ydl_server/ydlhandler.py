@@ -20,7 +20,14 @@ def get_ydl_website(ydl_module_name):
     info = list(pipshow.search_packages_info([ydl_module_name]))
     if len(info) < 1:
         return ""
-    return getattr(info[0], "home-page", getattr(info[0], "homepage", ""))
+    info = info[0]
+    url = getattr(info, "home-page", None) or  getattr(info, "homepage", None)
+    if not url:
+        urls = getattr(info, "project_urls", None)
+        if urls:
+            urls = {v.split(",")[0].strip(): v.split(",")[1].strip() for v in urls if "," in v}
+            url = urls.get("Homepage") or urls.get("Documentation") or urls.get("Repository")
+    return url
 
 
 def read_proc_stdout(proc, strio):
