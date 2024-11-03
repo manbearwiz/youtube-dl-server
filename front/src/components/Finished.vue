@@ -10,31 +10,18 @@ export default {
     mounted: false,
     sortBy: 'created',
     sortOrder: 'desc',
-    fileTree: [],
   }),
   mounted() {
-    this.fetchFinished().then(() => {
-      this.fileTree = this.buildFileTree(this.orderedFinished)
-    });
+    this.fetchFinished();
     this.mounted = true;
   },
   unmounted() {
     this.mounted = false;
   },
   computed: {
-    orderedFinished: function () {
-      if (this.sortBy === 'modified') {
-        return orderBy(this.finished, e => {
-          return new Date(e.modified)
-        }, this.sortOrder)
-      }
-      if (this.sortBy === 'created') {
-        return orderBy(this.finished, e => {
-          return new Date(e.created)
-        }, this.sortOrder)
-      }
-      return orderBy(this.finished, this.sortBy, this.sortOrder)
-    }
+    fileTreeOrdered() {
+      return this.buildFileTree(this.finished)
+    },
   },
 
   methods: {
@@ -72,8 +59,22 @@ export default {
         }, 5000)
       }
     },
+    order(items) {
+      if (this.sortBy === 'modified') {
+        return orderBy(items, e => {
+          return new Date(e.modified)
+        }, this.sortOrder)
+      }
+      if (this.sortBy === 'created') {
+        return orderBy(items, e => {
+          return new Date(e.created)
+        }, this.sortOrder)
+      }
+      return orderBy(items, this.sortBy, this.sortOrder)
+    },
     buildFileTree(items, parentPath = '') {
-      return items.map(item => {
+      const sortedItems = this.order(items);
+      return sortedItems.map(item => {
         if (item.directory) {
           return {
             ...item,
@@ -81,7 +82,7 @@ export default {
           }
         }
         return item
-      })
+      });
     },
   }
 }
@@ -129,13 +130,8 @@ export default {
           </thead>
 
           <tbody>
-            <FileTreeItem
-              v-for="item in fileTree"
-              :key="item.name"
-              :item="item"
-              :depth="0"
-              @delete="deleteFinishedFile"
-            />
+            <FileTreeItem v-for="item in fileTreeOrdered" :key="item.name" :item="item" :depth="0"
+              @delete="deleteFinishedFile" />
           </tbody>
         </table>
       </div>
