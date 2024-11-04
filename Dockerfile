@@ -18,8 +18,8 @@ FROM python:alpine AS wheels
 RUN apk add --no-cache g++
 COPY ./requirements.txt .
 RUN pip wheel --no-cache-dir --wheel-dir /out/wheels -r <(cat ./requirements.txt| grep -v youtube-dl | grep -v yt-dlp) \
-  && pip wheel --no-cache-dir --wheel-dir /out/wheels-youtube-dl youtube-dl \
-  && pip wheel --no-cache-dir --wheel-dir /out/wheels-yt-dlp yt-dlp
+  && pip wheel --no-cache-dir --wheel-dir /out/wheels-youtube-dl  -r <(cat ./requirements.txt| grep youtube-dl) \
+  && pip wheel --no-cache-dir --wheel-dir /out/wheels-yt-dlp  -r <(cat ./requirements.txt| grep yt-dlp)
 
 FROM python:alpine AS base
 ARG ATOMICPARSLEY=0
