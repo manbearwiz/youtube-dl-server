@@ -6,7 +6,7 @@
 
 Simple Web and REST interface for downloading youtube videos onto a server.
 [`starlette`](https://www.starlette.io/) +
-[`youtube-dl`](https://github.com/rg3/youtube-dl) / [yt-dlp](https://github.com/yt-dlp/yt-dlp)
+[yt-dlp](https://github.com/yt-dlp/yt-dlp) / [`youtube-dl`](https://github.com/rg3/youtube-dl)
 
 Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube-dl-server).
 
@@ -20,8 +20,8 @@ Forked from [manbearwiz/youtube-dl-server](https://github.com/manbearwiz/youtube
 For easier deployment, a docker image is available on
 [dockerhub](https://hub.docker.com/r/nbr23/youtube-dl-server):
 
-- `nbr23/youtube-dl-server:youtube-dl` to use `youtube-dl`
-- `nbr23/youtube-dl-server:yt-dlp` to use `yt-dlp`
+- `nbr23/youtube-dl-server:yt-dlp` or simply `nbr23/youtube-dl-server` to use `yt-dlp`
+- `nbr23/youtube-dl-server:youtube-dl` to use `youtube-dl`. Note that the latest release of `youtube-dl` is pretty [outdated](https://github.com/ytdl-org/youtube-dl/releases/tag/2021.12.17).
 
 ### Docker CLI
 

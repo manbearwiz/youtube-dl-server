@@ -39,6 +39,7 @@ pipeline {
                         --build-arg YDLS_RELEASE_DATE="`git log -1 --pretty='format:%cd' --date=format:'%Y-%m-%d %H:%M:%S'`" \
                         --build-arg YOUTUBE_DL=yt-dlp \
                         --build-arg ATOMICPARSLEY=1 \
+                        -t nbr23/youtube-dl-server:latest \
                         -t nbr23/youtube-dl-server:yt-dlp \
                         -t nbr23/youtube-dl-server:`git rev-parse --short HEAD`-yt-dlp \
                         -t nbr23/youtube-dl-server:${GIT_COMMIT}-`date +%s`-yt-dlp \
@@ -61,7 +62,6 @@ pipeline {
                         --build-arg YDLS_RELEASE_DATE="`git log -1 --pretty='format:%cd' --date=format:'%Y-%m-%d %H:%M:%S'`" \
                         --build-arg ATOMICPARSLEY=1 \
                         --build-arg YOUTUBE_DL=youtube-dl \
-                        -t nbr23/youtube-dl-server:latest \
                         -t nbr23/youtube-dl-server:youtube-dl \
                         -t nbr23/youtube-dl-server:`git rev-parse --short HEAD`-youtube-dl \
                         -t nbr23/youtube-dl-server:${GIT_COMMIT}-`date +%s`-youtube-dl \
