@@ -167,7 +167,7 @@ export default {
             </thead>
             <tbody id="job_logs">
               <tr v-if="logs.length === 0">
-                <td colspan="4">No {{ status == null ? '' : status.toLowerCase() + ' ' }}jobs found</td>
+                <td :colspan="showLogDetails ? 6 : 4">No {{ status == null ? '' : status.toLowerCase() + ' ' }}jobs found</td>
               </tr>
               <tr @click="showCurrentLogDetails(log.id)" v-for="log in orderedLogs" :key="log.id">
                 <td >{{ log.last_update }}</td>
