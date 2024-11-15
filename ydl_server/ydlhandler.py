@@ -1,5 +1,5 @@
 import os
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread
 import io
 import importlib
@@ -104,7 +104,10 @@ class YdlHandler:
     def worker(self, thread_id):
         db = JobsDB(readonly=True)
         while not self.done:
-            job = self.queue.get()
+            try:
+                job = self.queue.get(timeout=1)
+            except Empty:
+                continue
             job_detail = db.get_job_by_id(job.id)
             if not job_detail or job_detail["status"] == "Aborted":
                 self.queue.task_done()

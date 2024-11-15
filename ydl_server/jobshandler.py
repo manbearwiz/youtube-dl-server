@@ -1,4 +1,4 @@
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread
 from ydl_server.db import JobsDB, Actions
 
@@ -26,7 +26,10 @@ class JobsHandler:
     def worker(self, dl_queue):
         db = JobsDB(readonly=False)
         while not self.done:
-            action, job = self.queue.get()
+            try:
+                action, job = self.queue.get(timeout=1)
+            except Empty:
+                continue
             if action == Actions.PURGE_LOGS:
                 db.purge_jobs()
             elif action == Actions.INSERT:

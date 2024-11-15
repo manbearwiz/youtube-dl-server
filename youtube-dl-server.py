@@ -3,6 +3,7 @@ from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 import uvicorn
+import signal
 
 from ydl_server.db import JobsDB
 
@@ -23,8 +24,24 @@ if __name__ == "__main__":
         middleware=middleware,
     )
 
+    app.state.running = True
     app.state.jobshandler = JobsHandler(app_config)
     app.state.ydlhandler = YdlHandler(app_config, app.state.jobshandler)
+
+    def shutdown():
+        if not app.state.running:
+            return
+        print(f"Shutting down...")
+        app.state.jobshandler.finish()
+        app.state.ydlhandler.finish()
+        print("Waiting for workers to wrap up...")
+        app.state.ydlhandler.join()
+        app.state.jobshandler.join()
+        print("Shutdown complete.")
+        app.state.running = False
+
+    signal.signal(signal.SIGINT, lambda sig, frame: shutdown())
+    signal.signal(signal.SIGTERM, lambda sig, frame: shutdown())
 
     app.state.ydlhandler.start()
     print("Started download threads")
@@ -41,8 +58,4 @@ if __name__ == "__main__":
         forwarded_allow_ips=app_config["ydl_server"].get("forwarded_allow_ips", None),
         proxy_headers=app_config["ydl_server"].get("proxy_headers", True),
     )
-
-    app.state.ydlhandler.finish()
-    app.state.jobshandler.finish()
-    app.state.ydlhandler.join()
-    app.state.jobshandler.join()
+    shutdown()
