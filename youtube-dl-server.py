@@ -31,7 +31,7 @@ if __name__ == "__main__":
     def shutdown():
         if not app.state.running:
             return
-        print(f"Shutting down...")
+        print("Shutting down...")
         app.state.jobshandler.finish()
         app.state.ydlhandler.finish()
         print("Waiting for workers to wrap up...")
