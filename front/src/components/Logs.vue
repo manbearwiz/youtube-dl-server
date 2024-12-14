@@ -200,6 +200,7 @@ export default {
           <div class="modal-dialog modal-xl" id='currentLogDetailDialog' style="text-align: left">
             <div class="modal-content">
               <div class="modal-header">
+                <span :class=statusToTrClass[getLogById?.status]>{{ getLogById?.status }}</span>&nbsp;
                 <h1 class="modal-title fs-5" id="currentLogDetailId">{{ getLogById?.name || '' }}</h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
