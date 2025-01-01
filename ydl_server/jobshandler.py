@@ -31,11 +31,13 @@ class JobsHandler:
             except Empty:
                 continue
             if action == Actions.PURGE_LOGS:
-                db.purge_jobs()
+                if db.purge_jobs():
+                    db.vacuum()
             elif action == Actions.INSERT:
-                db.clean_old_jobs(
-                    self.app_config["ydl_server"].get("max_log_entries", 100) - 1
-                )
+                if db.clean_old_jobs(
+                        self.app_config["ydl_server"].get("max_log_entries", 100) - 1
+                    ):
+                    db.vacuum()
                 db.insert_job(job)
                 dl_queue.put(job)
             elif action == Actions.UPDATE:
@@ -56,11 +58,14 @@ class JobsHandler:
                 job_id, pid = job
                 db.set_job_pid(job_id, pid)
             elif action == Actions.CLEAN_LOGS:
-                db.clean_old_jobs()
+                if db.clean_old_jobs():
+                    db.vacuum()
             elif action == Actions.DELETE_LOG_SAFE:
-                db.delete_job_safe(job["id"])
+                if db.delete_job_safe(job["id"]):
+                    db.vacuum()
             elif action == Actions.DELETE_LOG:
-                db.delete_job(job["id"])
+                if db.delete_job(job["id"]):
+                    db.vacuum()
             self.queue.task_done()
 
     def join(self):
