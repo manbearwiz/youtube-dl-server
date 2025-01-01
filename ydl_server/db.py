@@ -1,6 +1,7 @@
 import sqlite3
 import re
 import datetime
+from functools import wraps
 
 from ydl_server.config import app_config
 
@@ -58,6 +59,18 @@ class Job:
         return clean
 
 
+def with_cursor(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        cursor = self.conn.cursor()
+        try:
+            result = f(self, cursor, *args, **kwargs)
+            self.conn.commit()
+            return result
+        finally:
+            cursor.close()
+    return wrapper
+
 class JobsDB:
 
     @staticmethod
@@ -65,9 +78,11 @@ class JobsDB:
         conn = sqlite3.connect(
             "file://%s" % app_config["ydl_server"].get("metadata_db_path"), uri=True
         )
-        version = JobsDB.db_version(conn)
-        JobsDB.migrate(conn, version)
-        conn.close()
+        try:
+            version = JobsDB.db_version(conn)
+            JobsDB.migrate(conn, version)
+        finally:
+            conn.close()
         
 
     @staticmethod
@@ -83,7 +98,7 @@ class JobsDB:
 
     @staticmethod
     def migrate(conn, version):
-        print("Migrating database from version %d" % version)
+        print(f"Migrating database from version {version}")
         match version:
             case -1:
                 print("No jobs table found, creating")
@@ -122,32 +137,34 @@ class JobsDB:
                 return
         return JobsDB.migrate(conn, version + 1)
 
-
     @staticmethod
     def create(conn):
         cursor = conn.cursor()
-        cursor.execute(
-            """
-            CREATE TABLE if not exists jobs
-                (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    status INTEGER NOT NULL,
-                    log TEXT,
-                    format TEXT,
-                    last_update DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    type INTEGER NOT NULL,
-                    url TEXT,
-                    pid INTEGER
-                );
-            """
-        )
-        cursor.execute(
-            """
-            PRAGMA user_version = """ + str(SCHEMA_VERSION) + """;
-            """
-        )
-        conn.commit()
+        try:
+            cursor.execute(
+                """
+                CREATE TABLE if not exists jobs
+                    (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        status INTEGER NOT NULL,
+                        log TEXT,
+                        format TEXT,
+                        last_update DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        type INTEGER NOT NULL,
+                        url TEXT,
+                        pid INTEGER
+                    );
+                """
+            )
+            cursor.execute(
+                """
+                PRAGMA user_version = """ + str(SCHEMA_VERSION) + """;
+                """
+            )
+            conn.commit()
+        finally:
+            cursor.close()
 
     @staticmethod
     def convert_datetime_to_tz(dt):
@@ -167,8 +184,8 @@ class JobsDB:
     def close(self):
         self.conn.close()
 
-    def insert_job(self, job):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def insert_job(self, cursor, job):
         cursor.execute(
             """
             INSERT INTO jobs
@@ -187,10 +204,9 @@ class JobsDB:
             ),
         )
         job.id = cursor.lastrowid
-        self.conn.commit()
 
-    def update_job(self, job):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def update_job(self, cursor, job):
         cursor.execute(
             """
             UPDATE jobs
@@ -199,10 +215,9 @@ class JobsDB:
             """,
             (str(job.status), job.log, str(job.id)),
         )
-        self.conn.commit()
 
-    def set_job_status(self, job_id, status):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def set_job_status(self, cursor, job_id, status):
         cursor.execute(
             """
             UPDATE jobs
@@ -211,10 +226,9 @@ class JobsDB:
             """,
             (str(status), str(job_id)),
         )
-        self.conn.commit()
 
-    def set_job_pid(self, job_id, pid):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def set_job_pid(self, cursor, job_id, pid):
         cursor.execute(
             """
             UPDATE jobs
@@ -223,10 +237,9 @@ class JobsDB:
             """,
             (str(pid), str(job_id)),
         )
-        self.conn.commit()
 
-    def set_job_log(self, job_id, log):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def set_job_log(self, cursor, job_id, log):
         cursor.execute(
             """
             UPDATE jobs
@@ -235,10 +248,9 @@ class JobsDB:
             """,
             (log, str(job_id)),
         )
-        self.conn.commit()
 
-    def set_job_name(self, job_id, name):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def set_job_name(self, cursor, job_id, name):
         cursor.execute(
             """
             UPDATE jobs
@@ -247,34 +259,34 @@ class JobsDB:
             """,
             (name, str(job_id)),
         )
-        self.conn.commit()
 
-    def purge_jobs(self):
-        cursor = self.conn.cursor()
-        cursor.execute("DELETE FROM jobs;")
-        self.conn.commit()
+    def vacuum(self):
+        print("Vacuuming database")
         self.conn.execute("VACUUM")
 
-    def delete_job_safe(self, job_id):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def purge_jobs(self, cursor):
+        cursor.execute("DELETE FROM jobs;")
+        return cursor.rowcount
+
+    @with_cursor
+    def delete_job_safe(self, cursor, job_id):
         cursor.execute(
             "DELETE FROM jobs WHERE id = ? AND ( status = ? OR status = ? );",
             (str(job_id), Job.ABORTED, Job.FAILED),
         )
-        self.conn.commit()
-        self.conn.execute("VACUUM")
+        return cursor.rowcount
 
-    def delete_job(self, job_id):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def delete_job(self, cursor, job_id):
         cursor.execute(
             "DELETE FROM jobs WHERE id = ?;",
             (str(job_id),),
         )
-        self.conn.commit()
-        self.conn.execute("VACUUM")
+        return cursor.rowcount
 
-    def clean_old_jobs(self, limit=10):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def clean_old_jobs(self, cursor, limit=10):
         cursor.execute(
             """
             SELECT last_update
@@ -290,11 +302,10 @@ class JobsDB:
                 "DELETE FROM jobs WHERE last_update < ? AND status != ? and status != ?;",
                 (rows[-1][0], Job.PENDING, Job.RUNNING),
             )
-        self.conn.commit()
-        self.conn.execute("VACUUM")
+            return cursor.rowcount
 
-    def get_job_by_id(self, job_id):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def get_job_by_id(self, cursor, job_id):
         cursor.execute(
             """
             SELECT
@@ -331,8 +342,8 @@ class JobsDB:
             "pid": pid,
         }
 
-    def get_jobs_with_logs(self, limit=50, status=None):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def get_jobs_with_logs(self, cursor, limit=50, status=None):
         status = STATUS_NAME.index(status.capitalize()) if status and status.capitalize() in STATUS_NAME else -1
         if status >= 0:
             cursor.execute(
@@ -385,8 +396,8 @@ class JobsDB:
             )
         return rows
 
-    def get_jobs(self, limit=50, status=None):
-        cursor = self.conn.cursor()
+    @with_cursor
+    def get_jobs(self, cursor, limit=50, status=None):
         status = STATUS_NAME.index(status.capitalize()) if status and status.capitalize() in STATUS_NAME else -1
         if status >= 0:
             cursor.execute(
