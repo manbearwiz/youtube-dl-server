@@ -27,6 +27,7 @@ export default {
     this.fetchExtractors();
     this.fetchAvailableFormats();
     this.server_info = inject('serverInfo');
+    this.urlBox.focus();
   },
 
   computed: {
