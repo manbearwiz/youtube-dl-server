@@ -111,7 +111,10 @@ async def api_logs(request):
                 )
         )
     return JSONResponse(
-        db.get_jobs(app_config["ydl_server"].get("max_log_entries", 100))
+        db.get_jobs(
+            app_config["ydl_server"].get("max_log_entries", 100),
+            request.query_params.get("status", None)
+            )
     )
 
 
