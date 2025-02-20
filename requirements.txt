@@ -4,5 +4,5 @@ aiofiles==24.1.0
 Jinja2==3.1.5
 PyYAML==6.0.2
 youtube-dl==2021.12.17
-yt-dlp[default]==2025.1.26
+yt-dlp[default]==2025.2.19
 python-multipart==0.0.20
