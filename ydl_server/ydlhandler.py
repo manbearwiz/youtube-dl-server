@@ -15,7 +15,11 @@ YDL_MODULES = ["youtube_dl", "youtube_dlc", "yt_dlp"]
 
 
 def get_ydl_website(ydl_module_name):
-    import pip._internal.commands.show as pipshow
+    try:
+        import pip._internal.commands.show as pipshow
+    except ModuleNotFoundError:
+        print("Module not found, skipping get_ydl_website")
+        return None
 
     info = list(pipshow.search_packages_info([ydl_module_name]))
     if len(info) < 1:
