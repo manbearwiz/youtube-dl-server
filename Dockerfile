@@ -13,15 +13,30 @@ RUN npm ci
 COPY ./front /app
 RUN npm run build
 
-FROM python:alpine AS wheels
+FROM python:alpine AS venv
+ENV PYTHON_ENV="/usr/local/python-env"
 
 RUN apk add --no-cache g++
 COPY ./requirements.txt .
-RUN pip wheel --no-cache-dir --wheel-dir /out/wheels -r <(cat ./requirements.txt| grep -v youtube-dl | grep -v yt-dlp) \
-  && pip wheel --no-cache-dir --wheel-dir /out/wheels-youtube-dl  -r <(cat ./requirements.txt| grep youtube-dl) \
-  && pip wheel --no-cache-dir --wheel-dir /out/wheels-yt-dlp  -r <(cat ./requirements.txt| grep yt-dlp)
+RUN pip install uv --break-system-packages && \
+    uv venv $PYTHON_ENV && \
+    source $PYTHON_ENV/bin/activate && \
+    uv pip install -r <(cat ./requirements.txt| grep -v youtube-dl | grep -v yt-dlp) && \
+    uv pip install pip
+
+FROM venv AS venv-yt-dlp
+
+RUN source $PYTHON_ENV/bin/activate && \
+  uv pip install -r <(cat ./requirements.txt| grep yt-dlp)
+
+FROM venv AS venv-youtube-dl
+
+RUN source $PYTHON_ENV/bin/activate && \
+  uv pip install -r <(cat ./requirements.txt| grep youtube-dl)
+
 
 FROM python:alpine AS base
+ENV PYTHON_ENV="/usr/local/python-env"
 ARG ATOMICPARSLEY=0
 ARG YDLS_VERSION
 ARG YDLS_RELEASE_DATE
@@ -30,28 +45,17 @@ ENV YDLS_VERSION=$YDLS_VERSION
 ENV YDLS_RELEASE_DATE=$YDLS_RELEASE_DATE
 
 WORKDIR /usr/src/app
-RUN apk add --no-cache ffmpeg tzdata mailcap
-RUN if [ $ATOMICPARSLEY == 1 ]; then apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing atomicparsley; ln /usr/bin/atomicparsley /usr/bin/AtomicParsley || true; fi
+RUN apk add --no-cache ffmpeg tzdata mailcap && \
+  if [ $ATOMICPARSLEY == 1 ]; then apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing atomicparsley; ln /usr/bin/atomicparsley /usr/bin/AtomicParsley || true; fi
 
 VOLUME "/youtube-dl"
 VOLUME "/app_config"
 
-COPY --from=wheels /out/wheels /wheels
-RUN pip install --no-cache /wheels/*
-
-COPY ./requirements.txt /usr/src/app/
-
 FROM base AS yt-dlp
-
-COPY --from=wheels /out/wheels-yt-dlp /wheels
-RUN pip install --no-cache /wheels/*
-RUN pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v youtube-dl)
+COPY --from=venv-yt-dlp $PYTHON_ENV $PYTHON_ENV
 
 FROM base AS youtube-dl
-
-COPY --from=wheels /out/wheels-youtube-dl /wheels/
-RUN pip install --no-cache /wheels/*
-RUN pip install --no-cache-dir -r <(cat /usr/src/app/requirements.txt| grep -v yt-dlp)
+COPY --from=venv-youtube-dl $PYTHON_ENV $PYTHON_ENV
 
 FROM ${YOUTUBE_DL}
 
@@ -65,6 +69,8 @@ EXPOSE 8080
 
 ENV YOUTUBE_DL=$YOUTUBE_DL
 ENV YDL_CONFIG_PATH='/app_config'
+ENV PATH="${PYTHON_ENV}/bin:$PATH"
+
 CMD [ "python", "-u", "./youtube-dl-server.py" ]
 
 HEALTHCHECK CMD wget 127.0.0.1:8080/api/info --spider -q -Y off
