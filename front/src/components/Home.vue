@@ -13,6 +13,7 @@ export default {
     extractorsModal: null,
     urlBox: null,
     selectedFormat: null,
+    default_format: null,
     metadata_list: null,
     loading: false,
     extractorsFilter: '',
@@ -36,6 +37,13 @@ export default {
     }
   },
 
+  watch: {
+    '$route.query': {
+      handler: 'loadUrlParams',
+      immediate: true
+    }
+  },
+
   methods: {
     prettySize(size_b) {
       if (size_b == null) {
@@ -51,6 +59,19 @@ export default {
         size_b = size_b / 1024;
       }
       return Number((size_b).toFixed(2)) + ' ' + sizes[i - 1];
+    },
+    loadUrlParams() {
+      if (this.$route.query.format) {
+        this.default_format = this.$route.query.format;
+      }
+    },
+    updateUrlParameterFormat(format) {
+      const currentQuery = {...this.$route.query};
+      currentQuery.format = format;
+      this.$router.push({
+        path: this.$route.path,
+        query: currentQuery
+      });
     },
     escapeHtml(string) {
       return String(string).replace(/[&<>"'`=\/]/g, function (s) {
@@ -87,6 +108,10 @@ export default {
     async fetchAvailableFormats() {
       const url = getAPIUrl('api/formats', import.meta.env);
       this.formats = await (await fetch(url)).json()
+      this.loadUrlParams();
+      if (!this.default_format) {
+        this.default_format = this.formats.ydl_default_format
+      }
     },
     async inspectVideo() {
       this.loading = true;
@@ -200,10 +225,10 @@ export default {
           <div class="input-group">
             <input name="url" type="url" class="form-control" placeholder="URL" aria-label="URL"
               @keydown.enter.exact.prevent="submitVideo()" id="url" autocomplete="off" autofocus />
-            <select class="custom-select" name="format" id="format">
+            <select class="custom-select" name="format" id="format" @change="updateUrlParameterFormat($event.target.value)">
               <optgroup v-for="category, category_name in formats.ydl_formats" :label="category_name">
                 <option v-for="format_name, format in category" :value="format"
-                  :selected="formats.ydl_default_format == format">
+                  :selected="default_format == format">
                   {{ format_name }}
                 </option>
               </optgroup>
