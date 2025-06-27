@@ -189,12 +189,13 @@ async def api_queue_download(request):
     profile = data.get("profile")
     audio_format = data.get("audio_format")
     format_str = data.get("format")
+    force_generic_extractor = data.get("force_generic_extractor", False)
 
     if profile:
         format_str = ','.join([format_str, profile])
     if audio_format:
         format_str = ',audio/'.join([format_str, audio_format])
-    options = {"format": format_str}
+    options = {"format": format_str, "force_generic_extractor": force_generic_extractor}
 
     if url:
         urls.append(url)
@@ -207,6 +208,7 @@ async def api_queue_download(request):
     job = Job(
         ", ".join(urls), Job.PENDING, "", JobType.YDL_DOWNLOAD, format_str, urls
     )
+    job.force_generic_extractor = force_generic_extractor
     request.app.state.jobshandler.put((Actions.INSERT, job))
 
     print("Added url " + ",".join(urls) + " to the download queue")
@@ -220,9 +222,10 @@ async def api_metadata_fetch(request):
         data = await request.json()
     url = data.get("url")
     urls = data.get("urls", [])
+    force_generic_extractor = data.get("force_generic_extractor", False)
     if url:
         urls.append(url)
-    rc, stdout = request.app.state.ydlhandler.fetch_metadata(urls)
+    rc, stdout = request.app.state.ydlhandler.fetch_metadata(urls, force_generic_extractor=force_generic_extractor)
     if rc == 0:
         return JSONResponse(stdout)
     return JSONResponse({"success": False}, status_code=404)

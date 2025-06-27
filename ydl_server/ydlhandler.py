@@ -195,9 +195,12 @@ class YdlHandler:
             self.jobshandler.put((Actions.SET_LOG, (job.id, job.log)))
             sleep(3)
 
-    def fetch_metadata(self, url):
+    def fetch_metadata(self, url, force_generic_extractor=False):
         ydl_opts = self.app_config.get("ydl_options", {})
-        cmd = self.get_ydl_full_cmd(ydl_opts, url, ["-J", "--flat-playlist"])
+        extra_opts = ["-J", "--flat-playlist"]
+        if force_generic_extractor:
+            extra_opts.append("--force-generic-extractor")
+        cmd = self.get_ydl_full_cmd(ydl_opts, url, extra_opts)
 
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
         stdout, stderr = proc.communicate()
@@ -225,9 +228,13 @@ class YdlHandler:
         ydl_opts = self.get_ydl_options(
             self.app_config.get("ydl_options", {}), request_options
         )
-        cmd = self.get_ydl_full_cmd(ydl_opts, job.url)
+        extra_opts = []
+        force_generic = getattr(job, "force_generic_extractor", False)
+        if force_generic:
+            extra_opts.append("--force-generic-extractor")
+        cmd = self.get_ydl_full_cmd(ydl_opts, job.url, extra_opts)
 
-        rc, metadata = self.fetch_metadata(job.url)
+        rc, metadata = self.fetch_metadata(job.url, force_generic_extractor=force_generic)
         if rc != 0:
             job.log = Job.clean_logs(metadata)
             job.status = Job.FAILED
@@ -248,7 +255,7 @@ class YdlHandler:
                 }
             )
 
-        cmd = self.get_ydl_full_cmd(ydl_opts, job.url)
+        cmd = self.get_ydl_full_cmd(ydl_opts, job.url, extra_opts)
 
         proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
         self.jobshandler.put((Actions.SET_PID, (job.id, proc.pid)))

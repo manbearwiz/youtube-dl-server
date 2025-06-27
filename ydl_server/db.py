@@ -7,7 +7,7 @@ from ydl_server.config import app_config
 
 STATUS_NAME = ["Running", "Completed", "Failed", "Pending", "Aborted"]
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 class Actions:
     DOWNLOAD = 1
@@ -36,7 +36,7 @@ class Job:
     PENDING = 3
     ABORTED = 4
 
-    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1, pid=0):
+    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1, pid=0, force_generic_extractor=False):
         self.id = id
         self.name = name
         self.status = status
@@ -46,6 +46,7 @@ class Job:
         self.type = jobtype
         self.url = url
         self.pid = pid
+        self.force_generic_extractor = force_generic_extractor
 
     @staticmethod
     def clean_logs(logs):
@@ -72,6 +73,7 @@ def with_cursor(f):
     return wrapper
 
 class JobsDB:
+    SCHEMA_VERSION = SCHEMA_VERSION
 
     @staticmethod
     def init():
@@ -108,8 +110,7 @@ class JobsDB:
                 cursor = conn.cursor()
                 cursor.execute("PRAGMA table_info('jobs')")
                 columns = [row[1] for row in cursor.fetchall()]
-                if set(columns) != set(
-                    [
+                if set(columns) != set([
                         "id",
                         "name",
                         "status",
@@ -119,19 +120,38 @@ class JobsDB:
                         "type",
                         "url",
                         "pid",
-                    ]
-                ):
+                    ]):
                     print("Outdated jobs table, cleaning up and recreating")
                     cursor.execute("DROP TABLE if exists jobs;")
                     conn.commit()
                     JobsDB.create(conn)
                     return
-            case SCHEMA_VERSION:
+                if "force_generic_extractor" not in columns:
+                    print("Adding force_generic_extractor column to jobs table")
+                    cursor.execute("ALTER TABLE jobs ADD COLUMN force_generic_extractor INTEGER DEFAULT 0;")
+                    conn.commit()
+                cursor.execute(
+                    f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
+                )
+                conn.commit()
+                return
+            case 1:
+                cursor = conn.cursor()
+                cursor.execute("PRAGMA table_info('jobs')")
+                columns = [row[1] for row in cursor.fetchall()]
+                if "force_generic_extractor" not in columns:
+                    print("Adding force_generic_extractor column to jobs table")
+                    cursor.execute("ALTER TABLE jobs ADD COLUMN force_generic_extractor INTEGER DEFAULT 0;")
+                    conn.commit()
+                cursor.execute(
+                    f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
+                )
+                conn.commit()
+                return
+            case JobsDB.SCHEMA_VERSION:
                 cursor = conn.cursor()
                 cursor.execute(
-                    """
-                    PRAGMA user_version = """ + str(SCHEMA_VERSION) + """;
-                    """
+                    f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
                 )
                 conn.commit()
                 return
@@ -153,14 +173,13 @@ class JobsDB:
                         last_update DATETIME DEFAULT CURRENT_TIMESTAMP,
                         type INTEGER NOT NULL,
                         url TEXT,
-                        pid INTEGER
+                        pid INTEGER,
+                        force_generic_extractor INTEGER DEFAULT 0
                     );
                 """
             )
             cursor.execute(
-                """
-                PRAGMA user_version = """ + str(SCHEMA_VERSION) + """;
-                """
+                f"PRAGMA user_version = {SCHEMA_VERSION};"
             )
             conn.commit()
         finally:
@@ -189,9 +208,9 @@ class JobsDB:
         cursor.execute(
             """
             INSERT INTO jobs
-                (name, status, log, format, type, url, pid)
+                (name, status, log, format, type, url, pid, force_generic_extractor)
             VALUES
-                (?, ?, ?, ?, ?, ?, ?);
+                (?, ?, ?, ?, ?, ?, ?, ?);
             """,
             (
                 job.name,
@@ -201,6 +220,7 @@ class JobsDB:
                 str(job.type),
                 "\n".join(job.url),
                 job.pid,
+                int(getattr(job, "force_generic_extractor", False)),
             ),
         )
         job.id = cursor.lastrowid
@@ -210,10 +230,10 @@ class JobsDB:
         cursor.execute(
             """
             UPDATE jobs
-            SET status = ?, log = ?, last_update = datetime() \
+            SET status = ?, log = ?, last_update = datetime(), force_generic_extractor = ? \
             WHERE id = ?;
             """,
-            (str(job.status), job.log, str(job.id)),
+            (str(job.status), job.log, int(getattr(job, "force_generic_extractor", False)), str(job.id)),
         )
 
     @with_cursor
@@ -309,7 +329,7 @@ class JobsDB:
         cursor.execute(
             """
             SELECT
-                id, name, status, log, last_update, format, type, url, pid
+                id, name, status, log, last_update, format, type, url, pid, force_generic_extractor
             FROM
                 jobs
             WHERE id = ?;
@@ -329,6 +349,7 @@ class JobsDB:
             jobtype,
             url,
             pid,
+            force_generic_extractor,
         ) = row
         return {
             "id": job_id,
@@ -340,6 +361,7 @@ class JobsDB:
             "type": jobtype,
             "urls": url.split("\n"),
             "pid": pid,
+            "force_generic_extractor": bool(force_generic_extractor),
         }
 
     @with_cursor
@@ -349,7 +371,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, log, last_update, format, type, url, pid
+                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor
                 FROM
                     jobs
                 WHERE
@@ -362,7 +384,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, log, last_update, format, type, url, pid
+                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor
                 FROM
                     jobs
                 ORDER BY last_update DESC LIMIT ?;
@@ -380,6 +402,7 @@ class JobsDB:
             jobtype,
             url,
             pid,
+            force_generic_extractor,
         ) in cursor.fetchall():
             rows.append(
                 {
@@ -392,6 +415,7 @@ class JobsDB:
                     "type": jobtype,
                     "urls": url.split("\n"),
                     "pid": pid,
+                    "force_generic_extractor": bool(force_generic_extractor),
                 }
             )
         return rows
@@ -403,7 +427,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, last_update, format, type, url, pid
+                    id, name, status, last_update, format, type, url, pid, force_generic_extractor
                 FROM
                     jobs
                 WHERE
@@ -416,7 +440,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, last_update, format, type, url, pid
+                    id, name, status, last_update, format, type, url, pid, force_generic_extractor
                 FROM
                     jobs
                 ORDER BY last_update DESC LIMIT ?;
@@ -433,6 +457,7 @@ class JobsDB:
             jobtype,
             url,
             pid,
+            force_generic_extractor,
         ) in cursor.fetchall():
             rows.append(
                 {
@@ -444,6 +469,7 @@ class JobsDB:
                     "type": jobtype,
                     "urls": url.split("\n"),
                     "pid": pid,
+                    "force_generic_extractor": bool(force_generic_extractor),
                 }
             )
         return rows

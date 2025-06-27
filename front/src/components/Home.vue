@@ -18,6 +18,7 @@ export default {
     loading: false,
     extractorsFilter: '',
     server_info: {},
+    forceGenericExtractor: false,
   }),
   mounted() {
     this.extractorsModal = new Modal('#extractorsModal');
@@ -123,6 +124,7 @@ export default {
         },
         body: JSON.stringify({
           urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
+          force_generic_extractor: this.forceGenericExtractor
         })
       })
         .then(response => {
@@ -160,7 +162,8 @@ export default {
         },
         body: JSON.stringify({
           urls: [videoUrl],
-          ...params
+          ...params,
+          force_generic_extractor: this.forceGenericExtractor
         })
       })
         .then(response => {
@@ -189,7 +192,8 @@ export default {
         },
         body: JSON.stringify({
           urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
-          format: this.selectedFormat.value
+          format: this.selectedFormat.value,
+          force_generic_extractor: this.forceGenericExtractor
         })
       })
         .then(response => {
@@ -243,6 +247,12 @@ export default {
                   <span class="visually-hidden">Loading...</span>
                 </span>
               </button>
+          </div>
+          <div class="form-check mt-2 text-start">
+            <input class="form-check-input" type="checkbox" id="forceGenericExtractor" v-model="forceGenericExtractor">
+            <label class="form-check-label" for="forceGenericExtractor">
+              Force generic extractor
+            </label>
           </div>
         </div>
         <br />
