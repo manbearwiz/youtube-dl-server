@@ -12,11 +12,11 @@ function getAPIUrl(path, env) {
 }
 
 function saveConfig(key, value) {
-  $cookies.set(key, value, -1, '/', '', true, 'Strict');
+  localStorage.setItem(key, value);
 }
 
 function getConfig(key, defaultValue) {
-  return $cookies.get(key) || defaultValue;
+  return localStorage.getItem(key) || defaultValue;
 }
 
 
