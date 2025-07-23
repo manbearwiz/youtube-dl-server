@@ -1,4 +1,4 @@
-starlette==0.46.2
+starlette==0.47.2
 uvicorn==0.34.2
 aiofiles==24.1.0
 Jinja2==3.1.6
