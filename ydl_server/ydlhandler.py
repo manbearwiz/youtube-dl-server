@@ -254,6 +254,14 @@ class YdlHandler:
                     )
                 }
             )
+        elif job.extra_params.get("title") and ydl_opts.get("output"):
+            output_template_parts = ydl_opts.get("output").split("/")
+            output_template = '/'.join(output_template_parts[:-1]) + f"/{job.extra_params.get("title")}.%(ext)s"
+            ydl_opts.update(
+                {
+                    "output": output_template,
+                }
+            )
 
         cmd = self.get_ydl_full_cmd(ydl_opts, job.url, extra_opts)
 
@@ -294,8 +302,10 @@ class YdlHandler:
                 int(pending["type"]),
                 pending["format"],
                 pending["urls"],
+                extra_params=pending.get("extra_params", {})
             )
             job.id = pending["id"]
+            job.force_generic_extractor = pending.get("force_generic_extractor", False)
             self.jobshandler.put((Actions.RESUME, job))
 
     def join(self):

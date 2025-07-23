@@ -1,7 +1,7 @@
 <script setup>
 import { get, isEmpty } from 'lodash'
 import { Modal } from 'bootstrap'
-import { getAPIUrl } from '../utils';
+import { getAPIUrl, saveConfig, getConfig } from '../utils';
 import { inject } from 'vue'
 </script>
 
@@ -19,6 +19,8 @@ export default {
     extractorsFilter: '',
     server_info: {},
     forceGenericExtractor: false,
+    downloadName: '',
+    showAdvancedOptions: false,
   }),
   mounted() {
     this.extractorsModal = new Modal('#extractorsModal');
@@ -30,6 +32,14 @@ export default {
     this.fetchAvailableFormats();
     this.server_info = inject('serverInfo');
     this.urlBox.focus();
+    this.showAdvancedOptions = getConfig('showAdvancedOptions', 'false') === 'true';
+
+    this.$nextTick(() => {
+      const details = document.getElementById('advancedOptionsDetails');
+      if (details) {
+        details.open = this.showAdvancedOptions;
+      }
+    });
   },
 
   computed: {
@@ -124,7 +134,8 @@ export default {
         },
         body: JSON.stringify({
           urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
-          force_generic_extractor: this.forceGenericExtractor
+          force_generic_extractor: this.forceGenericExtractor,
+          ...(this.downloadName && { output: this.downloadName })
         })
       })
         .then(response => {
@@ -163,7 +174,6 @@ export default {
         body: JSON.stringify({
           urls: [videoUrl],
           ...params,
-          force_generic_extractor: this.forceGenericExtractor
         })
       })
         .then(response => {
@@ -185,6 +195,10 @@ export default {
     },
     async submitVideo() {
       const url = getAPIUrl('api/downloads', import.meta.env);
+      const extra_params = {};
+      if (this.downloadName) {
+        extra_params.title = this.downloadName;
+      }
       fetch(url, {
         method: 'POST',
         headers: {
@@ -193,7 +207,8 @@ export default {
         body: JSON.stringify({
           urls: this.urlBox.value.trim().split('\n').join(' ').split(' '),
           format: this.selectedFormat.value,
-          force_generic_extractor: this.forceGenericExtractor
+          force_generic_extractor: this.forceGenericExtractor,
+          extra_params: extra_params,
         })
       })
         .then(response => {
@@ -212,6 +227,10 @@ export default {
           console.error(error);
           this.setDismissibleMessage(false, 'Could not add the url to the queue.');
         });
+    },
+    toggleAdvancedOptions(event) {
+      this.showAdvancedOptions = event.target.open;
+      saveConfig('showAdvancedOptions', this.showAdvancedOptions.toString());
     }
   }
 }
@@ -248,11 +267,25 @@ export default {
                 </span>
               </button>
           </div>
-          <div class="form-check mt-2 text-start">
-            <input class="form-check-input" type="checkbox" id="forceGenericExtractor" v-model="forceGenericExtractor">
-            <label class="form-check-label" for="forceGenericExtractor">
-              Force generic extractor
-            </label>
+          <div class="mt-3">
+            <details class="text-start" id="advancedOptionsDetails" @toggle="toggleAdvancedOptions">
+              <summary class="text-info" style="cursor: pointer; user-select: none;">Advanced Options</summary>
+              <div class="mt-2 p-3 border rounded bg-dark">
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" id="forceGenericExtractor" v-model="forceGenericExtractor">
+                  <label class="form-check-label" for="forceGenericExtractor">
+                    Force generic extractor
+                  </label>
+                </div>
+                <div class="mb-2">
+                  <label for="downloadName" class="form-label text-light">Custom download name:</label>
+                  <input type="text" class="form-control" id="downloadName" v-model="downloadName" placeholder="%(title)s.%(ext)s">
+                  <div class="form-text text-muted">
+                    Use yt-dlp output template format. Leave empty for default naming.
+                  </div>
+                </div>
+              </div>
+            </details>
           </div>
         </div>
         <br />

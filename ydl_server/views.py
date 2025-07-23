@@ -164,8 +164,9 @@ async def api_jobs_retry(request):
         return JSONResponse({"success": False}, status_code=404)
 
     new_job = Job(
-        job["name"], Job.PENDING, "", JobType.YDL_DOWNLOAD, job["format"], job["urls"]
+        job["name"], Job.PENDING, "", JobType.YDL_DOWNLOAD, job["format"], job["urls"], extra_params=job.get("extra_params", {})
     )
+    new_job.force_generic_extractor = job.get("force_generic_extractor", False)
 
     request.app.state.jobshandler.put((Actions.DELETE_LOG_SAFE, job))
     request.app.state.jobshandler.put((Actions.INSERT, new_job))
@@ -205,8 +206,10 @@ async def api_queue_download(request):
             {"success": False, "error": "'url' and 'urls' query parameters omitted"}
         )
 
+    extra_params = data.get("extra_params", {})
+
     job = Job(
-        ", ".join(urls), Job.PENDING, "", JobType.YDL_DOWNLOAD, format_str, urls
+        ", ".join(urls), Job.PENDING, "", JobType.YDL_DOWNLOAD, format_str, urls, extra_params=extra_params
     )
     job.force_generic_extractor = force_generic_extractor
     request.app.state.jobshandler.put((Actions.INSERT, job))

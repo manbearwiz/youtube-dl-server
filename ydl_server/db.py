@@ -1,13 +1,14 @@
 import sqlite3
 import re
 import datetime
+import json
 from functools import wraps
 
 from ydl_server.config import app_config
 
 STATUS_NAME = ["Running", "Completed", "Failed", "Pending", "Aborted"]
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 class Actions:
     DOWNLOAD = 1
@@ -36,7 +37,7 @@ class Job:
     PENDING = 3
     ABORTED = 4
 
-    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1, pid=0, force_generic_extractor=False):
+    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1, pid=0, force_generic_extractor=False, extra_params={}):
         self.id = id
         self.name = name
         self.status = status
@@ -47,6 +48,7 @@ class Job:
         self.url = url
         self.pid = pid
         self.force_generic_extractor = force_generic_extractor
+        self.extra_params = extra_params
 
     @staticmethod
     def clean_logs(logs):
@@ -148,6 +150,19 @@ class JobsDB:
                 )
                 conn.commit()
                 return
+            case 2:
+                cursor = conn.cursor()
+                cursor.execute("PRAGMA table_info('jobs')")
+                columns = [row[1] for row in cursor.fetchall()]
+                if "extra_params" not in columns:
+                    print("Adding extra_params column to jobs table")
+                    cursor.execute("ALTER TABLE jobs ADD COLUMN extra_params TEXT DEFAULT '{}';") 
+                    conn.commit()
+                cursor.execute(
+                    f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
+                )
+                conn.commit()
+                return
             case JobsDB.SCHEMA_VERSION:
                 cursor = conn.cursor()
                 cursor.execute(
@@ -174,7 +189,8 @@ class JobsDB:
                         type INTEGER NOT NULL,
                         url TEXT,
                         pid INTEGER,
-                        force_generic_extractor INTEGER DEFAULT 0
+                        force_generic_extractor INTEGER DEFAULT 0,
+                        extra_params TEXT DEFAULT '{}'
                     );
                 """
             )
@@ -208,9 +224,9 @@ class JobsDB:
         cursor.execute(
             """
             INSERT INTO jobs
-                (name, status, log, format, type, url, pid, force_generic_extractor)
+                (name, status, log, format, type, url, pid, force_generic_extractor, extra_params)
             VALUES
-                (?, ?, ?, ?, ?, ?, ?, ?);
+                (?, ?, ?, ?, ?, ?, ?, ?, ?);
             """,
             (
                 job.name,
@@ -221,6 +237,7 @@ class JobsDB:
                 "\n".join(job.url),
                 job.pid,
                 int(getattr(job, "force_generic_extractor", False)),
+                json.dumps(getattr(job, "extra_params", {})),
             ),
         )
         job.id = cursor.lastrowid
@@ -230,10 +247,10 @@ class JobsDB:
         cursor.execute(
             """
             UPDATE jobs
-            SET status = ?, log = ?, last_update = datetime(), force_generic_extractor = ? \
+            SET status = ?, log = ?, last_update = datetime(), force_generic_extractor = ?, extra_params = ? \
             WHERE id = ?;
             """,
-            (str(job.status), job.log, int(getattr(job, "force_generic_extractor", False)), str(job.id)),
+            (str(job.status), job.log, int(getattr(job, "force_generic_extractor", False)), json.dumps(getattr(job, "extra_params", {})), str(job.id)),
         )
 
     @with_cursor
@@ -329,7 +346,7 @@ class JobsDB:
         cursor.execute(
             """
             SELECT
-                id, name, status, log, last_update, format, type, url, pid, force_generic_extractor
+                id, name, status, log, last_update, format, type, url, pid, force_generic_extractor, extra_params
             FROM
                 jobs
             WHERE id = ?;
@@ -350,6 +367,7 @@ class JobsDB:
             url,
             pid,
             force_generic_extractor,
+            extra_params,
         ) = row
         return {
             "id": job_id,
@@ -362,6 +380,7 @@ class JobsDB:
             "urls": url.split("\n"),
             "pid": pid,
             "force_generic_extractor": bool(force_generic_extractor),
+            "extra_params": json.loads(extra_params or '{}'),
         }
 
     @with_cursor
@@ -371,7 +390,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor
+                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor, extra_params
                 FROM
                     jobs
                 WHERE
@@ -384,7 +403,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor
+                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor, extra_params
                 FROM
                     jobs
                 ORDER BY last_update DESC LIMIT ?;
@@ -403,6 +422,7 @@ class JobsDB:
             url,
             pid,
             force_generic_extractor,
+            extra_params,
         ) in cursor.fetchall():
             rows.append(
                 {
@@ -416,6 +436,7 @@ class JobsDB:
                     "urls": url.split("\n"),
                     "pid": pid,
                     "force_generic_extractor": bool(force_generic_extractor),
+                    "extra_params": json.loads(extra_params or '{}'),
                 }
             )
         return rows
@@ -427,7 +448,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, last_update, format, type, url, pid, force_generic_extractor
+                    id, name, status, last_update, format, type, url, pid, force_generic_extractor, extra_params
                 FROM
                     jobs
                 WHERE
@@ -440,7 +461,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, last_update, format, type, url, pid, force_generic_extractor
+                    id, name, status, last_update, format, type, url, pid, force_generic_extractor, extra_params
                 FROM
                     jobs
                 ORDER BY last_update DESC LIMIT ?;
@@ -458,6 +479,7 @@ class JobsDB:
             url,
             pid,
             force_generic_extractor,
+            extra_params,
         ) in cursor.fetchall():
             rows.append(
                 {
@@ -470,6 +492,7 @@ class JobsDB:
                     "urls": url.split("\n"),
                     "pid": pid,
                     "force_generic_extractor": bool(force_generic_extractor),
+                    "extra_params": json.loads(extra_params or '{}'),
                 }
             )
         return rows
