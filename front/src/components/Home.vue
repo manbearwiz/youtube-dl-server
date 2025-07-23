@@ -26,6 +26,7 @@ export default {
     this.extractorsModal = new Modal('#extractorsModal');
     this.metadataModal = new Modal('#metadataModal');
     this.urlBox = document.getElementById('url');
+    this.downloadNameBox = document.getElementById('downloadName');
     this.selectedFormat = document.getElementById('format');
     this.messageList = document.getElementById('message_list');
     this.fetchExtractors();
@@ -222,6 +223,7 @@ export default {
         .then(data => {
           this.setDismissibleMessage(data.success, data.success ? (this.escapeHtml(this.urlBox.value) + " added to the list.") : data.error);
           this.urlBox.value = '';
+          this.downloadNameBox.value = '';
         })
         .catch((error) => {
           console.error(error);
@@ -279,10 +281,7 @@ export default {
                 </div>
                 <div class="mb-2">
                   <label for="downloadName" class="form-label text-light">Override video title:</label>
-                  <input type="text" class="form-control" id="downloadName" v-model="downloadName" placeholder="Video title">
-                  <div class="form-text text-muted">
-                    Force a title for the video.
-                  </div>
+                  <input type="text" class="form-control" id="downloadName" v-model="downloadName" placeholder="Force a title for the video">
                 </div>
               </div>
             </details>
