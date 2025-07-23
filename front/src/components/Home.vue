@@ -278,10 +278,10 @@ export default {
                   </label>
                 </div>
                 <div class="mb-2">
-                  <label for="downloadName" class="form-label text-light">Custom download name:</label>
-                  <input type="text" class="form-control" id="downloadName" v-model="downloadName" placeholder="%(title)s.%(ext)s">
+                  <label for="downloadName" class="form-label text-light">Override video title:</label>
+                  <input type="text" class="form-control" id="downloadName" v-model="downloadName" placeholder="Video title">
                   <div class="form-text text-muted">
-                    Use yt-dlp output template format. Leave empty for default naming.
+                    Force a title for the video.
                   </div>
                 </div>
               </div>
