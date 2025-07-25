@@ -53,7 +53,7 @@ export default {
   },
   methods: {
     getFormatBadgeClass(format) {
-      return format.startsWith('profile/') ? 'badge bg-warning me-1' : 'badge bg-success me-1'
+      return format?.startsWith('profile/') ? 'badge bg-warning me-1' : 'badge bg-success me-1'
     },
     showCurrentLogDetails(logId) {
       this.currentLogDetailId = logId
@@ -172,7 +172,7 @@ export default {
               <tr @click="showCurrentLogDetails(log.id)" v-for="log in orderedLogs" :key="log.id">
                 <td >{{ log.last_update }}</td>
                 <td>{{ log.name }}</td>
-                <td><span v-for='fmt in log.format.split(",")' :class=getFormatBadgeClass(fmt)>{{ fmt }}</span></td>
+                <td><span v-for='fmt in log.format?.split(",")' :class=getFormatBadgeClass(fmt)>{{ fmt }}</span></td>
                 <td v-if="log.status == 'Failed' || log.status == 'Aborted'">
                   <span :class=statusToTrClass[log.status] @click.stop="retryDownload(log.id)">
                     <a role="button" aria-label="Retry">{{
