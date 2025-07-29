@@ -12,21 +12,24 @@ import shutil
 
 def build_finished_tree(root_dir):
     matches = root_dir.glob("*")
-
-    files = [
-        {
+    files = []
+    for f1 in matches:
+        if f1.name.startswith("."):
+            continue
+        try:
+            stat = f1.stat()
+            is_dir = f1.is_dir()
+        except Exception as e:
+            print(f"Error accessing {f1} - {e}")
+        file_info = {
             "name": f1.name,
-            "modified": datetime.fromtimestamp(f1.stat().st_mtime).strftime("%H:%m %D"),
-            "created": datetime.fromtimestamp(f1.stat().st_ctime).strftime("%H:%m %D"),
-            "size": f1.stat().st_size if not f1.is_dir() else None,
-            "directory": f1.is_dir(),
-            "children": sorted(build_finished_tree(f1), key=itemgetter("modified"), reverse=True)
-            if f1.is_dir()
-            else None,
+            "modified": datetime.fromtimestamp(stat.st_mtime).strftime("%H:%m %D") if stat else None,
+            "created": datetime.fromtimestamp(stat.st_ctime).strftime("%H:%m %D") if stat else None,
+            "size": stat.st_size if not stat and f1.is_dir() else None,
+            "directory": is_dir == True,
+            "children": sorted(build_finished_tree(f1), key=itemgetter("modified"), reverse=True) if is_dir else None,
         }
-        for f1 in matches
-        if not f1.name.startswith(".")
-    ]
+        files.append(file_info)
     return files
 
 async def api_finished(request):
@@ -49,7 +52,7 @@ async def api_delete_file(request):
     except OSError as e:
         print(e)
         return JSONResponse(
-            {"success": False, "message": "Could not delete the specified file"}
+            {"success": False, "message": f"Could not delete the specified file (Err {e.errno or 'unknown'})"}
         )
 
     return JSONResponse({"success": True, "message": "File deleted"})

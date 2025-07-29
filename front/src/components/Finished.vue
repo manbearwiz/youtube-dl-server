@@ -10,6 +10,7 @@ export default {
     mounted: false,
     sortBy: 'created',
     sortOrder: 'desc',
+    toasts: [],
   }),
   mounted() {
     this.fetchFinished();
@@ -42,13 +43,30 @@ export default {
     },
     async deleteFinishedFile(file_name) {
       const url = getAPIUrl(`api/finished/${file_name}`);
-      fetch(url, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
+      try {
+        const response = await fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        const result = await response.json();
+        if (!result.success) {
+          this.showToast(result.message || 'Could not delete the file.', false);
+        } else {
+          this.showToast(result.message || 'File deleted successfully.', true);
         }
-      })
+      } catch (error) {
+        this.showToast(error.message || 'Network error while deleting file.', false);
+      }
       this.fetchFinished(true)
+    },
+    showToast(message, success = true) {
+      const id = Date.now() + Math.random();
+      this.toasts.push({ id, message, success });
+      setTimeout(() => {
+        this.toasts = this.toasts.filter(t => t.id !== id);
+      }, 5000);
     },
     async fetchFinished(once = false) {
       const url = getAPIUrl(`api/finished`);
@@ -90,6 +108,21 @@ export default {
 <template>
   <div class="content">
     <div class="container text-light">
+      <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <div v-for="toast in toasts" :key="toast.id" class="toast show" :style="{
+          minWidth: '250px',
+          background: toast.success ? '#198754' : '#dc3545',
+          color: 'white',
+          marginBottom: '10px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          borderRadius: '6px',
+          padding: '16px',
+          fontWeight: 'bold',
+        }">
+          <span>{{ toast.success ? 'Success' : 'Error' }}: </span>{{ toast.message }}
+        </div>
+      </div>
+
       <div class="row">
         <h1 class="display-4 text-center">Finished Files</h1>
       </div>
