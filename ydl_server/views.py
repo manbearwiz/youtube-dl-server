@@ -14,6 +14,7 @@ def build_finished_tree(root_dir):
     matches = root_dir.glob("*")
     files = []
     for f1 in matches:
+        stat, is_dir = None, False
         if f1.name.startswith("."):
             continue
         try:
@@ -25,7 +26,7 @@ def build_finished_tree(root_dir):
             "name": f1.name,
             "modified": datetime.fromtimestamp(stat.st_mtime).strftime("%H:%m %D") if stat else None,
             "created": datetime.fromtimestamp(stat.st_ctime).strftime("%H:%m %D") if stat else None,
-            "size": stat.st_size if not stat and f1.is_dir() else None,
+            "size": stat.st_size if stat and not f1.is_dir() else None,
             "directory": is_dir,
             "children": sorted(build_finished_tree(f1), key=itemgetter("modified"), reverse=True) if is_dir else None,
         }
