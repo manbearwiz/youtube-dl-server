@@ -42,7 +42,7 @@ export default {
       return Number((size_b).toFixed(2)) + ' ' + sizes[i - 1];
     },
     async deleteFinishedFile(file_name) {
-      const url = getAPIUrl(`api/finished/${file_name}`);
+      const url = getAPIUrl(`api/finished/${encodeURIComponent(file_name)}`);
       try {
         const response = await fetch(url, {
           method: 'DELETE',
