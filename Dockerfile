@@ -8,7 +8,8 @@ FROM python:alpine
 
 RUN apk add --no-cache \
   ffmpeg \
-  tzdata
+  tzdata \
+  deno
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
