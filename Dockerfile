@@ -53,6 +53,7 @@ VOLUME "/app_config"
 
 FROM base AS yt-dlp
 COPY --from=venv-yt-dlp $PYTHON_ENV $PYTHON_ENV
+RUN apk add --no-cache deno
 
 FROM base AS youtube-dl
 COPY --from=venv-youtube-dl $PYTHON_ENV $PYTHON_ENV
