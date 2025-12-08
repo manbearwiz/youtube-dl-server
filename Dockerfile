@@ -52,8 +52,9 @@ VOLUME "/youtube-dl"
 VOLUME "/app_config"
 
 FROM base AS yt-dlp
+ARG TARGETPLATFORM
 COPY --from=venv-yt-dlp $PYTHON_ENV $PYTHON_ENV
-RUN apk add --no-cache deno
+RUN if [ "$TARGETPLATFORM" != "linux/arm/v7" ]; then apk add --no-cache deno; fi
 
 FROM base AS youtube-dl
 COPY --from=venv-youtube-dl $PYTHON_ENV $PYTHON_ENV
