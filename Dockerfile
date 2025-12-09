@@ -6,21 +6,17 @@
 
 FROM python:alpine
 
+RUN apk add --no-cache ffmpeg tzdata
+
 # Install JS runtime for yt-dlp based on architecture
-# deno is available on: x86_64 (amd64), aarch64 (arm64)
-# nodejs fallback for: armv7, armhf, armv6, armel and other architectures
-RUN apk add --no-cache ffmpeg tzdata && \
-  ARCH=$(apk --print-arch) && \
-  case "$ARCH" in \
-    x86_64|aarch64) \
-      apk add --no-cache deno \
-      ;; \
-    *) \
+ARG TARGETARCH
+RUN if [ "$TARGETARCH" = "amd64" ] || [ "$TARGETARCH" = "arm64" ]; then \
+      apk add --no-cache deno; \
+    else \
       apk add --no-cache nodejs && \
       mkdir -p /etc/yt-dlp && \
-      echo "--js-runtimes node" > /etc/yt-dlp/config \
-      ;; \
-  esac
+      echo "--js-runtimes node" > /etc/yt-dlp/config; \
+    fi
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
