@@ -1,4 +1,4 @@
-aiofiles==24.1.0
+aiofiles==25.1.0
 Jinja2==3.1.6
 python-multipart==0.0.20
 starlette==0.50.0
