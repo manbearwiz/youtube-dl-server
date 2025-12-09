@@ -6,7 +6,18 @@
 
 FROM python:alpine
 
-RUN apk add --no-cache ffmpeg tzdata
+# Install common dependencies shared across all architectures
+# ffmpeg, tzdata, and common JS runtime dependencies
+RUN apk add --no-cache \
+  ffmpeg \
+  tzdata \
+  ca-certificates \
+  libgcc \
+  libstdc++ \
+  icu-libs \
+  simdutf \
+  sqlite-libs \
+  zstd-libs
 
 # Install JS runtime for yt-dlp based on architecture
 ARG TARGETARCH
