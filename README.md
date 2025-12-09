@@ -19,6 +19,17 @@ This example uses the docker run command to create the container to run the app.
 docker run -d --net="host" --name youtube-dl -v /home/core/youtube-dl:/youtube-dl kmb32123/youtube-dl-server
 ```
 
+To provide custom yt-dlp configuration (e.g., authentication, custom options), mount a config directory:
+
+```shell
+docker run -d --net="host" --name youtube-dl \
+  -v /home/core/youtube-dl:/youtube-dl \
+  -v /home/core/yt-dlp-config:/root/.config/yt-dlp \
+  kmb32123/youtube-dl-server
+```
+
+Place your `config` file in `/home/core/yt-dlp-config/` with yt-dlp options (one per line). See [yt-dlp configuration documentation](https://github.com/yt-dlp/yt-dlp#configuration) for details.
+
 ### Docker Compose
 
 This is an example service definition that could be put in `docker-compose.yml`. This service uses a VPN client container for its networking.
@@ -29,6 +40,7 @@ This is an example service definition that could be put in `docker-compose.yml`.
     network_mode: "service:vpn"
     volumes:
       - /home/core/youtube-dl:/youtube-dl
+      - /home/core/yt-dlp-config:/root/.config/yt-dlp  # optional: custom yt-dlp config
     restart: always
 ```
 
