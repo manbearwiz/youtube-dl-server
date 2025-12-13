@@ -6,18 +6,10 @@
 
 FROM python:alpine
 
-# Install common dependencies shared across all architectures
-# ffmpeg, tzdata, and common JS runtime dependencies
 RUN apk add --no-cache \
   ffmpeg \
   tzdata \
-  ca-certificates \
-  libgcc \
-  libstdc++ \
-  icu-libs \
-  simdutf \
-  sqlite-libs \
-  zstd-libs
+  nodejs
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
@@ -29,15 +21,9 @@ RUN apk --update-cache add --virtual build-dependencies gcc libc-dev make \
 
 COPY . /usr/src/app
 
-# Install JS runtime for yt-dlp based on architecture (at end to maximize cache reuse)
-ARG TARGETARCH
-RUN if [ "$TARGETARCH" = "amd64" ] || [ "$TARGETARCH" = "arm64" ]; then \
-      apk add --no-cache deno; \
-    else \
-      apk add --no-cache nodejs && \
-      mkdir -p /etc/yt-dlp && \
-      echo "--js-runtimes node" > /etc/yt-dlp/config; \
-    fi
+# Create yt-dlp config directory and set Node.js as the JavaScript runtime
+RUN mkdir -p /etc/yt-dlp && \
+  echo "--js-runtimes node" > /etc/yt-dlp/config
 
 EXPOSE 8080
 
