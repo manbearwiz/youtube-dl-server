@@ -10,7 +10,13 @@ FROM python:3.12-slim AS builder
 WORKDIR /usr/src/app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --root-user-action=ignore --prefix=/install -r requirements.txt
+
+# Install build dependencies and Python packages in one layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && pip install --no-cache-dir --root-user-action=ignore --prefix=/install -r requirements.txt \
+    && apt-get purge -y --auto-remove build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Runtime stage
 FROM python:alpine
