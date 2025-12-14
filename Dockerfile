@@ -4,33 +4,39 @@
 # https://github.com/manbearwiz/youtube-dl-server-dockerfile
 #
 
+# Build stage
+FROM python:3.12-slim AS builder
+
+WORKDIR /usr/src/app
+
+COPY requirements.txt .
+
+# Install build dependencies and Python packages in one layer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && pip install --no-cache-dir --root-user-action=ignore --prefix=/install -r requirements.txt \
+    && apt-get purge -y --auto-remove build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Runtime stage
 FROM python:alpine
 
-# Install JS runtime for yt-dlp based on architecture
-# deno is available on: x86_64 (amd64), aarch64 (arm64)
-# nodejs fallback for: armv7, armhf, armv6, armel and other architectures
-RUN apk add --no-cache ffmpeg tzdata && \
-  ARCH=$(apk --print-arch) && \
-  case "$ARCH" in \
-    x86_64|aarch64) \
-      apk add --no-cache deno \
-      ;; \
-    *) \
-      apk add --no-cache nodejs && \
-      mkdir -p /etc/yt-dlp && \
-      echo "--js-runtimes node" > /etc/yt-dlp/config \
-      ;; \
-  esac
+RUN apk add --no-cache \
+  ffmpeg \
+  tzdata \
+  nodejs
+
+# Copy Python packages from builder
+COPY --from=builder /install /usr/local
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-COPY requirements.txt /usr/src/app/
-RUN apk --update-cache add --virtual build-dependencies gcc libc-dev make \
-  && pip install --no-cache-dir -r requirements.txt \
-  && apk del build-dependencies
-
 COPY . /usr/src/app
+
+# Create yt-dlp config directory and set Node.js as the JavaScript runtime
+RUN mkdir -p /etc/yt-dlp && \
+  echo "--js-runtimes node" > /etc/yt-dlp/config
 
 EXPOSE 8080
 
