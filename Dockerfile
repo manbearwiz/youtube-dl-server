@@ -4,6 +4,15 @@
 # https://github.com/manbearwiz/youtube-dl-server-dockerfile
 #
 
+# Build stage
+FROM python:3.12-slim AS builder
+
+WORKDIR /usr/src/app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --root-user-action=ignore --prefix=/install -r requirements.txt
+
+# Runtime stage
 FROM python:alpine
 
 RUN apk add --no-cache \
@@ -11,13 +20,11 @@ RUN apk add --no-cache \
   tzdata \
   nodejs
 
+# Copy Python packages from builder
+COPY --from=builder /install /usr/local
+
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
-
-COPY requirements.txt /usr/src/app/
-RUN apk --update-cache add --virtual build-dependencies gcc libc-dev make \
-  && pip install --no-cache-dir -r requirements.txt \
-  && apk del build-dependencies
 
 COPY . /usr/src/app
 
