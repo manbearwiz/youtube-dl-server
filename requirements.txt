@@ -1,6 +1,6 @@
 aiofiles==25.1.0
 Jinja2==3.1.6
-python-multipart==0.0.20
+python-multipart==0.0.21
 starlette==0.50.0
 uvicorn[standard]==0.34.2; platform_machine == 'x86_64'
 uvicorn==0.34.3; platform_machine != 'x86_64'
