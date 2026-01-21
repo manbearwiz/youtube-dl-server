@@ -118,7 +118,7 @@ def get_ydl_options(request_options):
             }
         )
 
-    return {
+    options = {
         "format": ydl_vars["YDL_FORMAT"],
         "postprocessors": postprocessors,
         "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
@@ -126,6 +126,10 @@ def get_ydl_options(request_options):
         "updatetime": ydl_vars["YDL_UPDATE_TIME"] == "True",
     }
 
+    if ydl_vars["YDL_COOKIE_FILE"]:
+        options["cookiefile"] = f"/youtube-dl/{ydl_vars['YDL_COOKIE_FILE']}"
+
+    return options
 
 def download(url, request_options):
     with YoutubeDL(get_ydl_options(request_options)) as ydl:

@@ -32,12 +32,15 @@ Place your `config` file in `/home/core/yt-dlp-config/` with yt-dlp options (one
 
 ### Docker Compose
 
-This is an example service definition that could be put in `docker-compose.yml`. This service uses a VPN client container for its networking.
+This is an example service definition that could be put in `docker-compose.yml`.
+This service uses a VPN client container for its networking and has a cookie file for downloading age-restricted videos.
 
 ```yml
   youtube-dl:
     image: "kmb32123/youtube-dl-server"
     network_mode: "service:vpn"
+    environment:
+      - YDL_COOKIE_FILE=youtube.com_cookies.txt
     volumes:
       - /home/core/youtube-dl:/youtube-dl
       - /home/core/yt-dlp-config:/root/.config/yt-dlp  # optional: custom yt-dlp config
