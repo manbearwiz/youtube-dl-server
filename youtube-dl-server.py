@@ -21,13 +21,27 @@ app_defaults = {
         "YDL_EXTRACT_AUDIO_QUALITY", cast=str, default="192"
     ),
     "YDL_RECODE_VIDEO_FORMAT": config("YDL_RECODE_VIDEO_FORMAT", default=None),
+    "YDL_MERGE_OUTPUT_FORMAT": config("YDL_MERGE_OUTPUT_FORMAT", default=None),
     "YDL_OUTPUT_TEMPLATE": config(
         "YDL_OUTPUT_TEMPLATE",
         cast=str,
         default="/youtube-dl/%(title).200s [%(id)s].%(ext)s",
     ),
+    "YDL_NO_PLAYLIST": config("YDL_NO_PLAYLIST", cast=bool, default=True),
     "YDL_ARCHIVE_FILE": config("YDL_ARCHIVE_FILE", default=None),
+    "YDL_COOKIES_FILE": config("YDL_COOKIES_FILE", default=None),
+    "YDL_COOKIES_BROWSER": config("YDL_COOKIES_BROWSER", default=None),
     "YDL_UPDATE_TIME": config("YDL_UPDATE_TIME", cast=bool, default=True),
+    "YDL_IGNORE_ERRORS": config("YDL_IGNORE_ERRORS", default=True),
+    "YDL_RESTRICT_FILENAMES": config("YDL_RESTRICT_FILENAMES", cast=bool, default=False),
+    "YDL_GEO_BYPASS": config("YDL_GEO_BYPASS", cast=bool, default=False),
+    "YDL_WRITE_THUMBNAIL": config("YDL_WRITE_THUMBNAIL", cast=bool, default=True),
+    "YDL_THUMBNAIL_FORMAT": config("YDL_THUMBNAIL_FORMAT", default=None),
+    "YDL_WRITE_SUBTITLES": config("YDL_WRITE_SUBTITLES", cast=bool, default=False),
+    "YDL_SUBTITLES_FORMAT": config("YDL_SUBTITLES_FORMAT", default=None),
+    "YDL_CONVERT_SUBTITLES": config("YDL_CONVERT_SUBTITLES", default=None),
+    "YDL_SUBTITLES_LANGS": config("YDL_SUBTITLES_LANGS", cast=str, default="all"),
+    "YDL_EMBED_METADATA": config("YDL_EMBED_METADATA", cast=bool, default=False),
 }
 
 
@@ -118,12 +132,70 @@ def get_ydl_options(request_options):
             }
         )
 
+    if ydl_vars["YDL_WRITE_THUMBNAIL"] == True:
+        postprocessors.append(
+            {
+                "key": "EmbedThumbnail",
+                "already_have_thumbnail": False,
+            }
+        )
+
+    if ydl_vars["YDL_THUMBNAIL_FORMAT"]:
+        postprocessors.append(
+            {
+                "key": "FFmpegThumbnailsConvertor",
+                "format": ydl_vars["YDL_THUMBNAIL_FORMAT"],
+                "when": "before_dl",
+            }
+        )
+
+    if ydl_vars["YDL_WRITE_SUBTITLES"] == True:
+        postprocessors.append(
+            {
+                "key": "FFmpegEmbedSubtitle",
+                "already_have_subtitle": False,
+            }
+        )
+
+    if ydl_vars["YDL_CONVERT_SUBTITLES"]:
+        postprocessors.append(
+            {
+                "key": "FFmpegSubtitlesConvertor",
+                "format": ydl_vars["YDL_CONVERT_SUBTITLES"],
+                "when": "post_process",
+            }
+        )
+
+    if ydl_vars["YDL_EMBED_METADATA"] == True:
+        postprocessors.append(
+            {
+                "key": "FFmpegMetadata",
+                "add_infojson": "if_exists",
+                "add_metadata": True,
+                "add_chapters": True,
+            }
+        )
+
     return {
         "format": ydl_vars["YDL_FORMAT"],
+        "merge_output_format": ydl_vars["YDL_MERGE_OUTPUT_FORMAT"],
         "postprocessors": postprocessors,
-        "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
+        "outtmpl": {
+            "default": ydl_vars["YDL_OUTPUT_TEMPLATE"],
+            "pl_thumbnail": "",
+        },
+        "noplaylist": ydl_vars["YDL_NO_PLAYLIST"],
         "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
+        "cookiefile": ydl_vars["YDL_COOKIES_FILE"],
+        "cookiesfrombrowser": ydl_vars["YDL_COOKIES_BROWSER"],
         "updatetime": ydl_vars["YDL_UPDATE_TIME"] == "True",
+        "ignoreerrors": ydl_vars["YDL_IGNORE_ERRORS"],
+        "restrictfilenames": ydl_vars["YDL_RESTRICT_FILENAMES"],
+        "geo_bypass": ydl_vars["YDL_GEO_BYPASS"],
+        "writethumbnail": ydl_vars["YDL_WRITE_THUMBNAIL"],
+        "writesubtitles": ydl_vars["YDL_WRITE_SUBTITLES"],
+        "subtitlesformat": ydl_vars["YDL_SUBTITLES_FORMAT"],
+        "subtitleslangs": list(ydl_vars["YDL_SUBTITLES_LANGS"].split(",")),
     }
 
 
