@@ -90,6 +90,7 @@ async def api_list_formats(request):
 async def api_queue_size(request):
     db = JobsDB(readonly=True)
     jobs = db.get_jobs(app_config["ydl_server"].get("max_log_entries", 100))
+    db.close()
     return JSONResponse(
         {
             "success": True,
@@ -107,19 +108,14 @@ async def api_queue_size(request):
 
 async def api_logs(request):
     db = JobsDB(readonly=True)
+    limit = app_config["ydl_server"].get("max_log_entries", 100)
+    status = request.query_params.get("status", None)
     if request.query_params.get("show_logs", "1") in ["1", "true"]:
-        return JSONResponse(
-            db.get_jobs_with_logs(
-                app_config["ydl_server"].get("max_log_entries", 100),
-                request.query_params.get("status", None)
-                )
-        )
-    return JSONResponse(
-        db.get_jobs(
-            app_config["ydl_server"].get("max_log_entries", 100),
-            request.query_params.get("status", None)
-            )
-    )
+        result = db.get_jobs_with_logs(limit, status)
+    else:
+        result = db.get_jobs(limit, status)
+    db.close()
+    return JSONResponse(result)
 
 
 async def api_logs_purge(request):
@@ -136,6 +132,7 @@ async def api_jobs_stop(request):
     db = JobsDB(readonly=True)
     job_id = request.path_params["job_id"]
     job = db.get_job_by_id(job_id)
+    db.close()
 
     if not job:
         return JSONResponse({"success": False}, status_code=404)
@@ -164,6 +161,7 @@ async def api_jobs_retry(request):
     db = JobsDB(readonly=True)
     job_id = request.path_params["job_id"]
     job = db.get_job_by_id(job_id)
+    db.close()
     if not job:
         return JSONResponse({"success": False}, status_code=404)
 
