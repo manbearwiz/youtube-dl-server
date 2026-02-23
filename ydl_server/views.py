@@ -89,18 +89,14 @@ async def api_list_formats(request):
 
 async def api_queue_size(request):
     db = JobsDB(readonly=True)
-    jobs = db.get_jobs(app_config["ydl_server"].get("max_log_entries", 100))
+    counts = db.get_job_counts()
     db.close()
     return JSONResponse(
         {
             "success": True,
             "stats": {
                 "queue": request.app.state.ydlhandler.queue.qsize(),
-                "pending": len([job for job in jobs if job["status"] == "Pending"]),
-                "running": len([job for job in jobs if job["status"] == "Running"]),
-                "completed": len([job for job in jobs if job["status"] == "Completed"]),
-                "failed": len([job for job in jobs if job["status"] == "Failed"]),
-                "aborted": len([job for job in jobs if job["status"] == "Aborted"]),
+                **counts,
             },
         }
     )

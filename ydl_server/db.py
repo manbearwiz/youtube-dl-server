@@ -496,3 +496,9 @@ class JobsDB:
                 }
             )
         return rows
+
+    @with_cursor
+    def get_job_counts(self, cursor):
+        cursor.execute("SELECT status, COUNT(*) FROM jobs GROUP BY status;")
+        counts = {row[0]: row[1] for row in cursor.fetchall()}
+        return {name.lower(): counts.get(i, 0) for i, name in enumerate(STATUS_NAME)}
