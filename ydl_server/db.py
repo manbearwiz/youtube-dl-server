@@ -230,10 +230,10 @@ class JobsDB:
             """,
             (
                 job.name,
-                str(job.status),
+                job.status,
                 job.log,
                 job.format,
-                str(job.type),
+                job.type,
                 "\n".join(job.url),
                 job.pid,
                 int(getattr(job, "force_generic_extractor", False)),
@@ -250,7 +250,7 @@ class JobsDB:
             SET status = ?, log = ?, last_update = datetime(), force_generic_extractor = ?, extra_params = ? \
             WHERE id = ?;
             """,
-            (str(job.status), job.log, int(getattr(job, "force_generic_extractor", False)), json.dumps(getattr(job, "extra_params", {})), str(job.id)),
+            (job.status, job.log, int(getattr(job, "force_generic_extractor", False)), json.dumps(getattr(job, "extra_params", {})), job.id),
         )
 
     @with_cursor
@@ -261,7 +261,7 @@ class JobsDB:
             SET status = ?, last_update = datetime() \
             WHERE id = ?;
             """,
-            (str(status), str(job_id)),
+            (status, job_id),
         )
 
     @with_cursor
@@ -272,7 +272,7 @@ class JobsDB:
             SET pid = ?, last_update = datetime() \
             WHERE id = ?;
             """,
-            (str(pid), str(job_id)),
+            (pid, job_id),
         )
 
     @with_cursor
@@ -283,7 +283,7 @@ class JobsDB:
             SET log = ?, last_update = datetime() \
             WHERE id = ?;
             """,
-            (log, str(job_id)),
+            (log, job_id),
         )
 
     @with_cursor
@@ -294,7 +294,7 @@ class JobsDB:
             SET name = ?, last_update = datetime() \
             WHERE id = ?;
             """,
-            (name, str(job_id)),
+            (name, job_id),
         )
 
     def vacuum(self):
@@ -310,7 +310,7 @@ class JobsDB:
     def delete_job_safe(self, cursor, job_id):
         cursor.execute(
             "DELETE FROM jobs WHERE id = ? AND ( status = ? OR status = ? );",
-            (str(job_id), Job.ABORTED, Job.FAILED),
+            (job_id, Job.ABORTED, Job.FAILED),
         )
         return cursor.rowcount
 
@@ -318,7 +318,7 @@ class JobsDB:
     def delete_job(self, cursor, job_id):
         cursor.execute(
             "DELETE FROM jobs WHERE id = ?;",
-            (str(job_id),),
+            (job_id,),
         )
         return cursor.rowcount
 
@@ -331,7 +331,7 @@ class JobsDB:
             ORDER BY last_update DESC
             LIMIT ?;
             """,
-            (str(limit),),
+            (limit,),
         )
         rows = list(cursor.fetchall())
         if len(rows) > 0:
@@ -397,7 +397,7 @@ class JobsDB:
                     status = ?
                 ORDER BY last_update DESC LIMIT ?;
                 """,
-                (status, str(limit),),
+                (status, limit,),
             )
         else:
             cursor.execute(
@@ -408,7 +408,7 @@ class JobsDB:
                     jobs
                 ORDER BY last_update DESC LIMIT ?;
                 """,
-                (str(limit),),
+                (limit,),
             )
         rows = []
         for (
@@ -455,7 +455,7 @@ class JobsDB:
                     status = ?
                 ORDER BY last_update DESC LIMIT ?;
                 """,
-                (status, str(limit),),
+                (status, limit,),
             )
         else:
             cursor.execute(
@@ -466,7 +466,7 @@ class JobsDB:
                     jobs
                 ORDER BY last_update DESC LIMIT ?;
                 """,
-                (str(limit),),
+                (limit,),
             )
         rows = []
         for (
