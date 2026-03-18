@@ -1,5 +1,6 @@
 <script setup>
 import { orderBy } from 'lodash'
+import { Modal } from 'bootstrap'
 import { getAPIUrl } from '../utils'
 import FileTreeItem from './FileTreeItem.vue'
 </script>
@@ -11,6 +12,7 @@ export default {
     sortBy: 'created',
     sortOrder: 'desc',
     toasts: [],
+    pendingDeleteFile: null,
   }),
   mounted() {
     this.fetchFinished();
@@ -41,8 +43,13 @@ export default {
       }
       return Number((size_b).toFixed(2)) + ' ' + sizes[i - 1];
     },
-    async deleteFinishedFile(file_name) {
-      const url = getAPIUrl(`api/finished/${encodeURIComponent(file_name)}`);
+    deleteFinishedFile(file_name) {
+      this.pendingDeleteFile = file_name;
+      new Modal('#deleteConfirmModal').show();
+    },
+    async confirmDelete() {
+      const url = getAPIUrl(`api/finished/${encodeURIComponent(this.pendingDeleteFile)}`);
+      this.pendingDeleteFile = null;
       try {
         const response = await fetch(url, {
           method: 'DELETE',
@@ -150,6 +157,23 @@ export default {
               @delete="deleteFinishedFile" />
           </tbody>
         </table>
+      </div>
+      <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Delete file</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              Are you sure you want to delete <strong>{{ pendingDeleteFile }}</strong>?
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button class="btn btn-danger" data-bs-dismiss="modal" @click="confirmDelete">Delete</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
