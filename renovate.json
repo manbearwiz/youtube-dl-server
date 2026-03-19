@@ -2,7 +2,6 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:base", "schedule:daily"],
   "dependencyDashboard": false,
-  "onboarding": false,
   "packageRules": [
     {
       "matchManagers": ["pip_requirements"],
