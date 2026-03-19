@@ -45,7 +45,11 @@ export default {
     },
     deleteFinishedFile(file_name) {
       this.pendingDeleteFile = file_name;
-      new Modal('#deleteConfirmModal').show();
+      const modalEl = document.getElementById('deleteConfirmModal');
+      modalEl.addEventListener('shown.bs.modal', () => {
+        this.$refs.deleteBtn.focus();
+      }, { once: true });
+      new Modal(modalEl).show();
     },
     async confirmDelete() {
       const url = getAPIUrl(`api/finished/${encodeURIComponent(this.pendingDeleteFile)}`);
@@ -170,7 +174,7 @@ export default {
             </div>
             <div class="modal-footer">
               <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button class="btn btn-danger" data-bs-dismiss="modal" @click="confirmDelete">Delete</button>
+              <button ref="deleteBtn" class="btn btn-danger" data-bs-dismiss="modal" @click="confirmDelete">Delete</button>
             </div>
           </div>
         </div>
