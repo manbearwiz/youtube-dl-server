@@ -5,7 +5,7 @@
   "packageRules": [
     {
       "matchManagers": ["pip_requirements"],
-      "matchPackageNames": ["yt-dlp"],
+      "matchPackageNames": ["yt-dlp","yt-dlp[default]"],
       "automerge": true,
       "automergeType": "pr",
       "automergeStrategy": "rebase"
