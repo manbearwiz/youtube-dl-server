@@ -11,24 +11,28 @@ import shutil
 
 
 def build_finished_tree(root_dir):
-    matches = root_dir.glob("*")
+    try:
+        entries = list(os.scandir(root_dir))
+    except OSError as e:
+        print(f"Error scanning {root_dir} - {e}")
+        return []
     files = []
-    for f1 in matches:
-        stat, is_dir = None, False
-        if f1.name.startswith("."):
+    for entry in entries:
+        if entry.name.startswith("."):
             continue
+        stat, is_dir = None, False
         try:
-            stat = f1.stat()
-            is_dir = f1.is_dir()
+            stat = entry.stat()
+            is_dir = entry.is_dir()
         except Exception as e:
-            print(f"Error accessing {f1} - {e}")
+            print(f"Error accessing {entry.path} - {e}")
         file_info = {
-            "name": f1.name,
+            "name": entry.name,
             "modified": datetime.fromtimestamp(stat.st_mtime).strftime("%H:%m %D") if stat else None,
             "created": datetime.fromtimestamp(stat.st_ctime).strftime("%H:%m %D") if stat else None,
-            "size": stat.st_size if stat and not f1.is_dir() else None,
+            "size": stat.st_size if stat and not is_dir else None,
             "directory": is_dir,
-            "children": sorted(build_finished_tree(f1), key=itemgetter("modified"), reverse=True) if is_dir else None,
+            "children": sorted(build_finished_tree(entry.path), key=itemgetter("modified"), reverse=True) if is_dir else None,
         }
         files.append(file_info)
     return files
