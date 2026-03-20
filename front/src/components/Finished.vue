@@ -3,6 +3,7 @@ import { orderBy } from 'lodash'
 import { Modal } from 'bootstrap'
 import { getAPIUrl } from '../utils'
 import FileTreeItem from './FileTreeItem.vue'
+import SvgIcon from './SvgIcon.vue'
 </script>
 <script>
 export default {
@@ -122,7 +123,7 @@ export default {
       <div class="row align-items-center mb-2">
         <h1 class="display-4 text-center col">Finished Files</h1>
         <div class="col-auto">
-          <button class="btn btn-secondary" @click="fetchFinished">Refresh</button>
+          <button class="btn btn-secondary" @click="fetchFinished" title="Refresh"><SvgIcon name="refresh" /></button>
         </div>
       </div>
       <div class="table-responsive">
