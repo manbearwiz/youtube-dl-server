@@ -8,7 +8,6 @@ import FileTreeItem from './FileTreeItem.vue'
 export default {
   data: () => ({
     finished: [],
-    mounted: false,
     sortBy: 'created',
     sortOrder: 'desc',
     toasts: [],
@@ -16,10 +15,6 @@ export default {
   }),
   mounted() {
     this.fetchFinished();
-    this.mounted = true;
-  },
-  unmounted() {
-    this.mounted = false;
   },
   computed: {
     fileTreeOrdered() {
@@ -70,7 +65,7 @@ export default {
       } catch (error) {
         this.showToast(error.message || 'Network error while deleting file.', false);
       }
-      this.fetchFinished(true)
+      this.fetchFinished()
     },
     showToast(message, success = true) {
       const id = Date.now() + Math.random();
@@ -79,14 +74,9 @@ export default {
         this.toasts = this.toasts.filter(t => t.id !== id);
       }, 5000);
     },
-    async fetchFinished(once = false) {
+    async fetchFinished() {
       const url = getAPIUrl(`api/finished`);
       this.finished = await (await fetch(url)).json()
-      if (!once && this.mounted) {
-        setTimeout(() => {
-          this.fetchFinished()
-        }, 5000)
-      }
     },
     order(items) {
       if (this.sortBy === 'modified') {
@@ -129,8 +119,11 @@ export default {
         </div>
       </div>
 
-      <div class="row">
-        <h1 class="display-4 text-center">Finished Files</h1>
+      <div class="row align-items-center mb-2">
+        <h1 class="display-4 text-center col">Finished Files</h1>
+        <div class="col-auto">
+          <button class="btn btn-secondary" @click="fetchFinished">Refresh</button>
+        </div>
       </div>
       <div class="table-responsive">
         <table class="table file-tree-table text-left">
