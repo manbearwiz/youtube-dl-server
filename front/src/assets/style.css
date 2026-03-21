@@ -498,6 +498,33 @@ div.input-group > input.form-control::placeholder {
   color: var(--t-text);
 }
 
+#extractors_dialog {
+  max-width: 560px;
+}
+
+#extractors_body {
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+#extractors_items {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+}
+
+#extractors_items .list-group-item {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0 !important;
+}
+
+#extractors_items mark {
+  background-color: var(--t-warning);
+  color: var(--t-text-on-warning);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
 .modal-content {
   background-color: var(--t-surface-1);
   color: var(--t-text);

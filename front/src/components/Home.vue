@@ -17,6 +17,8 @@ export default {
     metadata_list: null,
     loading: false,
     extractorsFilter: '',
+    extractorsPageSize: 200,
+    intersectionObserver: null,
     server_info: {},
     forceGenericExtractor: false,
     downloadName: '',
@@ -42,9 +44,17 @@ export default {
     }
   },
 
+  beforeUnmount() {
+    if (this.intersectionObserver) this.intersectionObserver.disconnect();
+  },
+
   computed: {
     filteredExtractors() {
       return this.extractorsFilter ? this.extractors.filter(extractor => extractor.toLowerCase().includes(this.extractorsFilter.toLowerCase())) : this.extractors;
+    },
+    visibleExtractors() {
+      if (this.extractorsFilter) return this.filteredExtractors;
+      return this.filteredExtractors.slice(0, this.extractorsPageSize);
     }
   },
 
@@ -52,7 +62,13 @@ export default {
     '$route.query': {
       handler: 'loadUrlParams',
       immediate: true
-    }
+    },
+    extractorsFilter() {
+      this.extractorsPageSize = 200;
+    },
+    extractorsPageSize() {
+      this.$nextTick(() => this.setupScrollObserver());
+    },
   },
 
   methods: {
@@ -93,6 +109,7 @@ export default {
     },
     showExtractorsModal() {
       this.extractorsModal.show();
+      this.$nextTick(() => this.setupScrollObserver());
     },
     showMetadataModal() {
       this.metadataModal.show();
@@ -214,6 +231,24 @@ export default {
           this.showToast('Could not add the url to the queue.', false);
         });
     },
+    setupScrollObserver() {
+      if (this.intersectionObserver) {
+        this.intersectionObserver.disconnect();
+        this.intersectionObserver = null;
+      }
+      const sentinel = this.$refs.scrollSentinel;
+      if (!sentinel) return;
+      this.intersectionObserver = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) this.extractorsPageSize += 200; },
+        { root: document.getElementById('extractors_body'), threshold: 0 }
+      );
+      this.intersectionObserver.observe(sentinel);
+    },
+    highlightMatch(text, query) {
+      if (!query) return text;
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+    },
     toggleAdvancedOptions() {
       this.showAdvancedOptions = !this.showAdvancedOptions;
       saveConfig('showAdvancedOptions', this.showAdvancedOptions.toString());
@@ -298,14 +333,17 @@ export default {
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-left" id="extractors_body">
-              <input type="text" v-model="extractorsFilter" class="form-control mb-2" placeholder="Search">
-              <p>
-                <span id="extractors_items" class="list-group">
-                  <span class="list-group-item list-group-item-action" v-for="extractor in filteredExtractors">
-                    <b>{{ extractor }}</b><br />
-                  </span>
+              <input type="text" v-model="extractorsFilter" class="form-control mb-1" placeholder="Search">
+              <div class="text-muted small mb-2">
+                <span v-if="extractorsFilter">{{ filteredExtractors.length }} of {{ extractors.length }}</span>
+                <span v-else>{{ extractors.length }} extractors</span>
+              </div>
+              <span id="extractors_items" class="list-group">
+                <span class="list-group-item list-group-item-action" v-for="extractor in visibleExtractors" :key="extractor">
+                  <span v-html="highlightMatch(extractor, extractorsFilter)"></span>
                 </span>
-              </p>
+              </span>
+              <div ref="scrollSentinel" v-if="!extractorsFilter && extractors.length > extractorsPageSize"></div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
