@@ -7,6 +7,7 @@ from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Route
 from starlette.templating import Jinja2Templates
 from starlette.background import BackgroundTask
+from starlette.status import HTTP_303_SEE_OTHER
 
 from yt_dlp import YoutubeDL, version
 
