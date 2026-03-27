@@ -1,7 +1,6 @@
 import sys
 import subprocess
 
-from starlette.status import HTTP_303_SEE_OTHER
 from starlette.applications import Starlette
 from starlette.config import Config
 from starlette.responses import JSONResponse, RedirectResponse
@@ -33,7 +32,7 @@ app_defaults = {
 
 async def dl_queue_list(request):
     return templates.TemplateResponse(
-        "index.html", {"request": request, "ytdlp_version": version.__version__}
+        {"ytdlp_version": version.__version__}, "index.html"
     )
 
 
@@ -82,6 +81,12 @@ def update():
         print(e.output)
 
 
+async def lifespan(app):
+    print("Updating yt-dlp to the newest version")
+    update()
+    yield
+
+
 def get_ydl_options(request_options):
     request_vars = {
         "YDL_EXTRACT_AUDIO_FORMAT": None,
@@ -123,7 +128,7 @@ def get_ydl_options(request_options):
         "postprocessors": postprocessors,
         "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
         "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
-        "updatetime": ydl_vars["YDL_UPDATE_TIME"] == "True",
+        "updatetime": ydl_vars["YDL_UPDATE_TIME"],
     }
 
 
@@ -139,7 +144,4 @@ routes = [
     Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
 ]
 
-app = Starlette(debug=True, routes=routes)
-
-print("Updating youtube-dl to the newest version")
-update()
+app = Starlette(debug=True, routes=routes, lifespan=lifespan)
