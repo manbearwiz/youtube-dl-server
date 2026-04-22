@@ -65,16 +65,6 @@ export default {
       this.finished = await (await fetch(url)).json()
     },
     order(items) {
-      if (this.sortBy === 'modified') {
-        return orderBy(items, e => {
-          return new Date(e.modified)
-        }, this.sortOrder)
-      }
-      if (this.sortBy === 'created') {
-        return orderBy(items, e => {
-          return new Date(e.created)
-        }, this.sortOrder)
-      }
       return orderBy(items, this.sortBy, this.sortOrder)
     },
     buildFileTree(items, parentPath = '') {

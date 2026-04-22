@@ -10,8 +10,8 @@
       </td>
       <td :style="{ paddingLeft: (depth * 1.5 + 0.75) + 'rem' }"><b>{{ depth > 0 ? '\u21b3 ' : ''}}{{ item.name }}</b></td>
       <td class="col-size"></td>
-      <td class="col-date">{{ item.modified }}</td>
-      <td class="col-date">{{ item.created }}</td>
+      <td class="col-date">{{ formatDate(item.modified) }}</td>
+      <td class="col-date">{{ formatDate(item.created) }}</td>
     </tr>
     <template v-if="item.directory && isOpen">
       <FileTreeItem
@@ -34,8 +34,8 @@
       </td>
       <td :style="{ paddingLeft: (depth * 1.5 + 0.75) + 'rem' }">{{ depth > 0 ? '\u21b3 ' : ''}}<a :href="`api/finished/${encodeURIComponent(fullPath)}`">{{ item.name }}</a></td>
       <td class="col-size">{{ prettySize(item.size) }}</td>
-      <td class="col-date">{{ item.modified }}</td>
-      <td class="col-date">{{ item.created }}</td>
+      <td class="col-date">{{ formatDate(item.modified) }}</td>
+      <td class="col-date">{{ formatDate(item.created) }}</td>
     </tr>
 </template>
 
@@ -65,6 +65,12 @@ export default {
       if (this.item.directory) {
         this.isOpen = !this.isOpen
       }
+    },
+    formatDate(ts) {
+      if (ts == null) return '';
+      const d = new Date(ts * 1000);
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(d.getHours())}:${pad(d.getMinutes())} ${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
     },
     prettySize(size_b) {
       if (size_b == null) {

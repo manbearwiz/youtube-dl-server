@@ -1,10 +1,8 @@
 from starlette.responses import JSONResponse
 
-from operator import itemgetter
 from pathlib import Path
 from ydl_server.config import app_config, get_finished_path, get_ydl_formats
 from ydl_server.db import JobsDB, Job, Actions, JobType
-from datetime import datetime
 import os
 import signal
 import shutil
@@ -28,11 +26,11 @@ def build_finished_tree(root_dir):
             print(f"Error accessing {entry.path} - {e}")
         file_info = {
             "name": entry.name,
-            "modified": datetime.fromtimestamp(stat.st_mtime).strftime("%H:%M %m/%d") if stat else None,
-            "created": datetime.fromtimestamp(stat.st_ctime).strftime("%H:%M %m/%d") if stat else None,
+            "modified": stat.st_mtime if stat else None,
+            "created": stat.st_ctime if stat else None,
             "size": stat.st_size if stat and not is_dir else None,
             "directory": is_dir,
-            "children": sorted(build_finished_tree(entry.path), key=itemgetter("modified"), reverse=True) if is_dir else None,
+            "children": build_finished_tree(entry.path) if is_dir else None,
         }
         files.append(file_info)
     return files
