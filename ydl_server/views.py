@@ -28,8 +28,8 @@ def build_finished_tree(root_dir):
             print(f"Error accessing {entry.path} - {e}")
         file_info = {
             "name": entry.name,
-            "modified": datetime.fromtimestamp(stat.st_mtime).strftime("%H:%m %D") if stat else None,
-            "created": datetime.fromtimestamp(stat.st_ctime).strftime("%H:%m %D") if stat else None,
+            "modified": datetime.fromtimestamp(stat.st_mtime).strftime("%H:%M %m/%d") if stat else None,
+            "created": datetime.fromtimestamp(stat.st_ctime).strftime("%H:%M %m/%d") if stat else None,
             "size": stat.st_size if stat and not is_dir else None,
             "directory": is_dir,
             "children": sorted(build_finished_tree(entry.path), key=itemgetter("modified"), reverse=True) if is_dir else None,

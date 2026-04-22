@@ -326,20 +326,14 @@ class JobsDB:
     def clean_old_jobs(self, cursor, limit=10):
         cursor.execute(
             """
-            SELECT last_update
-            FROM jobs
-            ORDER BY last_update DESC
-            LIMIT ?;
+            DELETE FROM jobs
+            WHERE id NOT IN (
+                SELECT id FROM jobs ORDER BY last_update DESC LIMIT ?
+            ) AND status != ? AND status != ?;
             """,
-            (limit,),
+            (limit, Job.PENDING, Job.RUNNING),
         )
-        rows = list(cursor.fetchall())
-        if len(rows) > 0:
-            cursor.execute(
-                "DELETE FROM jobs WHERE last_update < ? AND status != ? and status != ?;",
-                (rows[-1][0], Job.PENDING, Job.RUNNING),
-            )
-            return cursor.rowcount
+        return cursor.rowcount
 
     @with_cursor
     def get_job_by_id(self, cursor, job_id):

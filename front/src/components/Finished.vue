@@ -24,21 +24,6 @@ export default {
   },
 
   methods: {
-    prettySize(size_b) {
-      if (size_b == null) {
-        return "NaN";
-      }
-      var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-      var i = 0;
-      for (i = 0; i < sizes.length; i++) {
-        if (size_b < 1024) {
-          i++;
-          break
-        }
-        size_b = size_b / 1024;
-      }
-      return Number((size_b).toFixed(2)) + ' ' + sizes[i - 1];
-    },
     deleteFinishedFile(file_name) {
       this.pendingDeleteFile = file_name;
       const modalEl = document.getElementById('deleteConfirmModal');
@@ -104,8 +89,13 @@ export default {
         return item
       });
     },
-    sortClass(field, direction) {
-      return ['sort-arrow', { active: this.sortBy === field && this.sortOrder === direction }];
+    setSort(field) {
+      if (this.sortBy === field) {
+        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+      } else {
+        this.sortBy = field;
+        this.sortOrder = field === 'name' ? 'asc' : 'desc';
+      }
     },
   }
 }
@@ -131,28 +121,29 @@ export default {
           <thead>
             <tr>
               <th class="col-action">Action</th>
-              <th>Name
-                <a :class="sortClass('name', 'asc')" href="#" @click.prevent="sortBy = 'name'; sortOrder = 'asc'">&uarr;</a>
-                <a :class="sortClass('name', 'desc')" href="#" @click.prevent="sortBy = 'name'; sortOrder = 'desc'">&darr;</a>
+              <th class="sortable-header" @click="setSort('name')">Name
+                <span v-if="sortBy === 'name'" class="sort-chevron" :class="{ flipped: sortOrder === 'asc' }">▾</span>
               </th>
-              <th class="col-size">Size
-                <a :class="sortClass('size', 'asc')" href="#" @click.prevent="sortBy = 'size'; sortOrder = 'asc'">&uarr;</a>
-                <a :class="sortClass('size', 'desc')" href="#" @click.prevent="sortBy = 'size'; sortOrder = 'desc'">&darr;</a>
+              <th class="col-size sortable-header" @click="setSort('size')">Size
+                <span v-if="sortBy === 'size'" class="sort-chevron" :class="{ flipped: sortOrder === 'asc' }">▾</span>
               </th>
-              <th class="col-date">Upload Date
-                <a :class="sortClass('modified', 'asc')" href="#" @click.prevent="sortBy = 'modified'; sortOrder = 'asc'">&uarr;</a>
-                <a :class="sortClass('modified', 'desc')" href="#" @click.prevent="sortBy = 'modified'; sortOrder = 'desc'">&darr;</a>
+              <th class="col-date sortable-header" @click="setSort('modified')">Modified
+                <span v-if="sortBy === 'modified'" class="sort-chevron" :class="{ flipped: sortOrder === 'asc' }">▾</span>
               </th>
-              <th class="col-date">Fetch Date
-                <a :class="sortClass('created', 'asc')" href="#" @click.prevent="sortBy = 'created'; sortOrder = 'asc'">&uarr;</a>
-                <a :class="sortClass('created', 'desc')" href="#" @click.prevent="sortBy = 'created'; sortOrder = 'desc'">&darr;</a>
+              <th class="col-date sortable-header" @click="setSort('created')">Downloaded
+                <span v-if="sortBy === 'created'" class="sort-chevron" :class="{ flipped: sortOrder === 'asc' }">▾</span>
               </th>
             </tr>
           </thead>
 
-          <tbody>
+          <tbody v-if="fileTreeOrdered.length > 0">
             <FileTreeItem v-for="item in fileTreeOrdered" :key="item.name" :item="item" :depth="0"
               @delete="deleteFinishedFile" />
+          </tbody>
+          <tbody v-else>
+            <tr>
+              <td colspan="5" class="text-center text-muted" style="padding: 2rem;">No finished files found.</td>
+            </tr>
           </tbody>
         </table>
       </div>

@@ -2,7 +2,7 @@
     <tr :class="{ 'directory': item.directory }" @click="toggleDirectory" v-if="item.directory" style="cursor: pointer;">
       <td class="col-action file-tree-actions">
         <a type="button">
-          <SvgIcon name="folder-plus" color="var(--bs-teal)" />
+          <SvgIcon :name="isOpen ? 'folder-open' : 'folder'" color="var(--bs-teal)" />
         </a>
         <a href="#" @click.stop.prevent="$emit('delete', item.name)">
           <SvgIcon name="trash" color="var(--bs-red)" />
@@ -20,7 +20,7 @@
         :item="child"
         :depth="depth + 1"
         :parent-path="parentPath ? `${parentPath}/${item.name}` : item.name"
-        @delete="$emit('delete', `${parentPath}/${item.name}/${$event}`)"
+        @delete="$emit('delete', parentPath ? `${parentPath}/${item.name}/${$event}` : `${item.name}/${$event}`)"
       />
     </template>
     <tr v-else-if="!item.directory">
@@ -68,7 +68,7 @@ export default {
     },
     prettySize(size_b) {
       if (size_b == null) {
-        return "NaN";
+        return '';
       }
       var sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
       var i = 0;
