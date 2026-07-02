@@ -4,8 +4,19 @@ from pathlib import Path
 from ydl_server.config import app_config, get_finished_path, get_ydl_formats
 from ydl_server.db import JobsDB, Job, Actions, JobType
 import os
+import re
 import signal
 import shutil
+
+
+TIMESTAMP_RE = re.compile(r"^(\d+(\.\d+)?|(\d+:)?[0-5]?\d:[0-5]?\d(\.\d+)?)$")
+
+
+def parse_timestamp(ts):
+    seconds = 0.0
+    for part in ts.split(":"):
+        seconds = seconds * 60 + float(part)
+    return seconds
 
 
 def build_finished_tree(root_dir):
@@ -59,6 +70,47 @@ async def api_delete_file(request):
         )
 
     return JSONResponse({"success": True, "message": "File deleted"})
+
+
+async def api_cut_file(request):
+    fname = request.path_params["fname"]
+    data = await request.json()
+    start = str(data.get("start") or "0")
+    end = data.get("end") or None
+    mode = data.get("mode", "fast")
+    output = (data.get("output") or "").strip()
+
+    src = os.path.realpath(os.path.join(get_finished_path(), fname))
+    if os.path.commonprefix((src, get_finished_path())) != get_finished_path():
+        return JSONResponse({"success": False, "message": "Invalid filename"})
+    if not os.path.isfile(src):
+        return JSONResponse({"success": False, "message": "File not found"})
+
+    if not output or "/" in output or output.startswith("."):
+        return JSONResponse({"success": False, "message": "Invalid output filename"})
+    dst = os.path.join(os.path.dirname(src), output)
+    if os.path.exists(dst):
+        return JSONResponse({"success": False, "message": "Output file already exists"})
+
+    if not TIMESTAMP_RE.match(start) or (end and not TIMESTAMP_RE.match(str(end))):
+        return JSONResponse({"success": False, "message": "Invalid timestamp"})
+    if end and parse_timestamp(str(end)) <= parse_timestamp(start):
+        return JSONResponse({"success": False, "message": "End time must be after start time"})
+    if mode not in ("fast", "precise"):
+        return JSONResponse({"success": False, "message": "Invalid mode"})
+
+    job = Job(
+        "Cut {} [{} - {}]".format(fname, start, end or "end"),
+        Job.PENDING,
+        "",
+        JobType.FFMPEG_CUT,
+        None,
+        [fname],
+        extra_params={"start": start, "end": end, "mode": mode, "output": output},
+    )
+    request.app.state.jobshandler.put((Actions.INSERT, job))
+
+    return JSONResponse({"success": True, "output": output})
 
 
 async def api_list_extractors(request):
@@ -164,7 +216,7 @@ async def api_jobs_retry(request):
         return JSONResponse({"success": False}, status_code=404)
 
     new_job = Job(
-        job["name"], Job.PENDING, "", JobType.YDL_DOWNLOAD, job["format"], job["urls"], extra_params=job.get("extra_params", {})
+        job["name"], Job.PENDING, "", int(job["type"]), job["format"], job["urls"], extra_params=job.get("extra_params", {})
     )
     new_job.force_generic_extractor = job.get("force_generic_extractor", False)
 

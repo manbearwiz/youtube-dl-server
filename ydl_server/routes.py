@@ -43,6 +43,12 @@ routes = [
         methods=["DELETE"],
     ),
     Route(
+        "/api/finished/{fname:path}/cut",
+        views.api_cut_file,
+        name="api_cut_file",
+        methods=["POST"],
+    ),
+    Route(
         "/api/jobs/{job_id:str}/stop",
         views.api_jobs_stop,
         name="api_jobs_stop",

@@ -21,12 +21,16 @@
         :depth="depth + 1"
         :parent-path="parentPath ? `${parentPath}/${item.name}` : item.name"
         @delete="$emit('delete', parentPath ? `${parentPath}/${item.name}/${$event}` : `${item.name}/${$event}`)"
+        @cut="$emit('cut', parentPath ? `${parentPath}/${item.name}/${$event}` : `${item.name}/${$event}`)"
       />
     </template>
     <tr v-else-if="!item.directory">
       <td class="col-action file-tree-actions">
         <a :href="`api/finished/${encodeURIComponent(fullPath)}`" download>
           <SvgIcon name="download" color="var(--bs-teal)" />
+        </a>
+        <a v-if="isMedia" href="#" @click.prevent="$emit('cut', item.name)" style="cursor: pointer;" title="Cut">
+          <SvgIcon name="scissors" color="var(--bs-orange)" />
         </a>
         <a href="#" @click.prevent="$emit('delete', item.name)" style="cursor: pointer;">
           <SvgIcon name="trash" color="var(--bs-red)" />
@@ -58,6 +62,11 @@ export default {
   computed: {
     fullPath() {
       return this.parentPath ? `${this.parentPath}/${this.item.name}` : this.item.name
+    },
+    isMedia() {
+      const ext = this.item.name.split('.').pop().toLowerCase();
+      return ['mp4', 'mkv', 'webm', 'avi', 'mov', 'flv', 'ts', 'm4v',
+        'mp3', 'm4a', 'aac', 'ogg', 'opus', 'flac', 'wav'].includes(ext);
     }
   },
   methods: {

@@ -8,6 +8,7 @@ from time import sleep
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
 
+from ydl_server.config import get_finished_path
 from ydl_server.db import JobsDB, Job, Actions, JobType
 
 
@@ -119,20 +120,22 @@ class YdlHandler:
             job.status = Job.RUNNING
             self.jobshandler.put((Actions.SET_STATUS, (job.id, job.status)))
             self.queue.task_done()
-            if job.type == JobType.YDL_DOWNLOAD:
-                output = io.StringIO()
-                try:
+            output = io.StringIO()
+            try:
+                if job.type == JobType.YDL_DOWNLOAD:
                     self.download(job, {"format": job.format}, output)
-                except Exception as e:
-                    job.status = Job.FAILED
-                    job.log = "Error during download task:\n{}:\n\t{}".format(
+                elif job.type == JobType.FFMPEG_CUT:
+                    self.cut(job, output)
+            except Exception as e:
+                job.status = Job.FAILED
+                job.log = "Error during download task:\n{}:\n\t{}".format(
+                    type(e).__name__, str(e)
+                )
+                print(
+                    "Error during download task:\n{}:\n\t{}".format(
                         type(e).__name__, str(e)
                     )
-                    print(
-                        "Error during download task:\n{}:\n\t{}".format(
-                            type(e).__name__, str(e)
-                        )
-                    )
+                )
             self.jobshandler.put((Actions.UPDATE, job))
 
     def get_format_and_profile(self, format_string):
@@ -294,6 +297,45 @@ class YdlHandler:
             job.status = Job.FAILED
             print(
                 "Error in download process (RC=" + str(rc) + "):\n" + output.getvalue()
+            )
+        stdout_thread.join()
+
+    def cut(self, job, output):
+        params = job.extra_params
+        src = os.path.realpath(os.path.join(get_finished_path(), job.url[0]))
+        if os.path.commonprefix((src, get_finished_path())) != get_finished_path():
+            raise Exception("Invalid source file path")
+        if not os.path.isfile(src):
+            raise Exception("Source file not found: %s" % job.url[0])
+        dst = os.path.join(os.path.dirname(src), params["output"])
+
+        cmd = ["ffmpeg", "-nostdin", "-hide_banner", "-y", "-ss", str(params.get("start") or "0")]
+        if params.get("end"):
+            cmd.extend(["-to", str(params["end"])])
+        cmd.extend(["-i", src])
+        if params.get("mode", "fast") == "fast":
+            cmd.extend(["-c", "copy", "-avoid_negative_ts", "make_zero"])
+        cmd.append(dst)
+
+        output.write("[cut] {}\n".format(" ".join(cmd)))
+        proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
+        self.jobshandler.put((Actions.SET_PID, (job.id, proc.pid)))
+        stdout_thread = Thread(
+            target=self.download_log_update, args=(job, proc, output)
+        )
+        stdout_thread.start()
+
+        rc = proc.wait()
+        read_proc_stdout(proc, output)
+        job.log = Job.clean_logs(output.getvalue())
+        if rc == 0:
+            job.status = Job.COMPLETED
+        else:
+            job.status = Job.FAILED
+            if os.path.isfile(dst):
+                os.remove(dst)
+            print(
+                "Error in cut process (RC=" + str(rc) + "):\n" + output.getvalue()
             )
         stdout_thread.join()
 

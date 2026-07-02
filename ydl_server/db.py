@@ -28,6 +28,7 @@ class Actions:
 class JobType:
     YDL_DOWNLOAD = 0
     YDL_UPDATE = 1
+    FFMPEG_CUT = 2
 
 
 class Job:

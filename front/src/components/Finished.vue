@@ -3,6 +3,7 @@ import { orderBy } from 'lodash'
 import { Modal } from 'bootstrap'
 import { getAPIUrl } from '../utils'
 import FileTreeItem from './FileTreeItem.vue'
+import CutModal from './CutModal.vue'
 import SvgIcon from './SvgIcon.vue'
 </script>
 <script>
@@ -24,6 +25,12 @@ export default {
   },
 
   methods: {
+    cutFinishedFile(file_name) {
+      this.$refs.cutModal.open(file_name);
+    },
+    onCutQueued(output) {
+      this.showToast(`Cut queued as ${output} — check the Logs page for progress.`, true);
+    },
     deleteFinishedFile(file_name) {
       this.pendingDeleteFile = file_name;
       const modalEl = document.getElementById('deleteConfirmModal');
@@ -128,7 +135,7 @@ export default {
 
           <tbody v-if="fileTreeOrdered.length > 0">
             <FileTreeItem v-for="item in fileTreeOrdered" :key="item.name" :item="item" :depth="0"
-              @delete="deleteFinishedFile" />
+              @delete="deleteFinishedFile" @cut="cutFinishedFile" />
           </tbody>
           <tbody v-else>
             <tr>
@@ -137,6 +144,7 @@ export default {
           </tbody>
         </table>
       </div>
+      <CutModal ref="cutModal" @queued="onCutQueued" />
       <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
           <div class="modal-content">
