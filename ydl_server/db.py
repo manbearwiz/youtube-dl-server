@@ -170,7 +170,35 @@ class JobsDB:
                 )
                 conn.commit()
                 return
-        return JobsDB.migrate(conn, version + 1)
+            case _:
+                print(f"Unknown database version {version}, checking schema")
+                cursor = conn.cursor()
+                cursor.execute("PRAGMA table_info('jobs')")
+                columns = [row[1] for row in cursor.fetchall()]
+                required = {
+                    "id",
+                    "name",
+                    "status",
+                    "format",
+                    "log",
+                    "last_update",
+                    "type",
+                    "url",
+                    "pid",
+                    "force_generic_extractor",
+                    "extra_params",
+                }
+                if not required.issubset(columns):
+                    print("Incompatible jobs table, cleaning up and recreating")
+                    cursor.execute("DROP TABLE if exists jobs;")
+                    conn.commit()
+                    JobsDB.create(conn)
+                    return
+                cursor.execute(
+                    f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
+                )
+                conn.commit()
+                return
 
     @staticmethod
     def create(conn):
