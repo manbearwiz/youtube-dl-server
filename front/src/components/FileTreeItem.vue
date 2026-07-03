@@ -2,10 +2,10 @@
     <tr :class="{ 'directory': item.directory }" @click="toggleDirectory" v-if="item.directory" style="cursor: pointer;">
       <td class="col-action file-tree-actions">
         <a type="button">
-          <SvgIcon :name="isOpen ? 'folder-open' : 'folder'" color="var(--bs-teal)" />
+          <SvgIcon :name="isOpen ? 'folder-open' : 'folder'" color="var(--bs-teal)" size="14" />
         </a>
         <a href="#" @click.stop.prevent="$emit('delete', item.name)">
-          <SvgIcon name="trash" color="var(--bs-red)" />
+          <SvgIcon name="trash" color="var(--bs-red)" size="14" />
         </a>
       </td>
       <td :style="{ paddingLeft: (depth * 1.5 + 0.75) + 'rem' }"><b>{{ depth > 0 ? '\u21b3 ' : ''}}{{ item.name }}</b></td>
@@ -27,13 +27,13 @@
     <tr v-else-if="!item.directory">
       <td class="col-action file-tree-actions">
         <a :href="`api/finished/${encodeURIComponent(fullPath)}`" download>
-          <SvgIcon name="download" color="var(--bs-teal)" />
+          <SvgIcon name="download" color="var(--bs-teal)" size="14" />
         </a>
         <a v-if="isMedia" href="#" @click.prevent="$emit('cut', item.name)" style="cursor: pointer;" title="Cut">
-          <SvgIcon name="scissors" color="var(--bs-orange)" />
+          <SvgIcon name="scissors" color="var(--bs-orange)" size="14" />
         </a>
         <a href="#" @click.prevent="$emit('delete', item.name)" style="cursor: pointer;">
-          <SvgIcon name="trash" color="var(--bs-red)" />
+          <SvgIcon name="trash" color="var(--bs-red)" size="14" />
         </a>
       </td>
       <td :style="{ paddingLeft: (depth * 1.5 + 0.75) + 'rem' }">{{ depth > 0 ? '\u21b3 ' : ''}}<a :href="`api/finished/${encodeURIComponent(fullPath)}`">{{ item.name }}</a></td>
