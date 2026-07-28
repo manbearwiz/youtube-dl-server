@@ -1,7 +1,12 @@
 from starlette.responses import JSONResponse
 
 from pathlib import Path
-from ydl_server.config import app_config, get_finished_path, get_ydl_formats
+from ydl_server.config import (
+    app_config,
+    get_finished_path,
+    get_ydl_formats,
+    get_ui_aliases,
+)
 from ydl_server.db import JobsDB, Job, Actions, JobType
 import os
 import re
@@ -134,6 +139,7 @@ async def api_list_formats(request):
     return JSONResponse(
         {
             "ydl_formats": get_ydl_formats(app_config),
+            "ydl_aliases": get_ui_aliases(app_config),
             "ydl_default_format": app_config["ydl_server"].get(
                 "default_format", "video/best"
             ),
@@ -240,12 +246,18 @@ async def api_queue_download(request):
     url = data.get("url")
     urls = data.get("urls", [])
     profile = data.get("profile")
+    aliases = data.get("aliases", [])
     audio_format = data.get("audio_format")
     format_str = data.get("format")
     force_generic_extractor = data.get("force_generic_extractor", False)
 
+    if isinstance(aliases, str):
+        aliases = [a for a in aliases.split(",") if a]
+
     if profile:
         format_str = ','.join([format_str, profile])
+    if aliases:
+        format_str = ','.join([format_str] + ["alias/{}".format(a) for a in aliases])
     if audio_format:
         format_str = ',audio/'.join([format_str, audio_format])
     options = {"format": format_str, "force_generic_extractor": force_generic_extractor}

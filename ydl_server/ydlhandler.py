@@ -139,15 +139,17 @@ class YdlHandler:
             self.jobshandler.put((Actions.UPDATE, job))
 
     def get_format_and_profile(self, format_string):
-        fmt, audio, profile = None, None, None
+        fmt, audio, profile, aliases = None, None, None, []
         for s in format_string.split(","):
             if s.startswith("profile/"):
                 profile = s
+            elif s.startswith("alias/"):
+                aliases.append(s)
             elif s.startswith("audio/") or s.startswith("bestaudio/"):
                 audio = s
             else:
                 fmt = s
-        return fmt, audio, profile
+        return fmt, audio, profile, aliases
 
     def get_profile(self, profile_str):
         if not profile_str:
@@ -158,13 +160,26 @@ class YdlHandler:
             raise Exception("Unknown profile ", profile_str)
         return profile
 
+    def get_aliases(self, alias_strs):
+        options = {}
+        for alias_str in alias_strs:
+            alias_name = "/".join(alias_str.split("/")[1:])
+            alias = self.app_config.get("aliases", {}).get(alias_name, {}).get("ydl_options")
+            if not alias:
+                raise Exception("Unknown alias ", alias_str)
+            options.update(alias)
+        return options
+
     def get_ydl_options(self, ydl_config, request_options):
         ydl_config = ydl_config.copy()
-        req_format, req_audio, req_profile = self.get_format_and_profile(request_options.get("format"))
+        req_format, req_audio, req_profile, req_aliases = self.get_format_and_profile(request_options.get("format"))
 
         profile = self.get_profile(req_profile)
+        aliases = self.get_aliases(req_aliases)
         if profile:
             req_format = profile.get("format") if req_format is None else req_format
+        if aliases:
+            req_format = aliases.get("format") if req_format is None else req_format
 
         if req_audio is not None and req_format is None:
             ydl_config.update({"extract-audio": None})
@@ -189,6 +204,9 @@ class YdlHandler:
         if profile:
             profile = {k: v for k, v in profile.items() if k != "format"}
             ydl_config.update(profile)
+        if aliases:
+            aliases = {k: v for k, v in aliases.items() if k != "format"}
+            ydl_config.update(aliases)
         return ydl_config
 
     def download_log_update(self, job, proc, strio):

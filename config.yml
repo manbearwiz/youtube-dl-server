@@ -16,15 +16,24 @@ ydl_options:  # youtube-dl options
   ignore-errors: True # instruct youtube-dl to skip errors
   age-limit: 6 # minimal age requirement / parental control setting
 
-profiles:
-  podcast:
-      name: 'Audio Podcasts'
+aliases:  # reusable ydl_options sets, usable from profiles and from the download form
+  mp3:
+      name: 'MP3 audio'
       ydl_options:
-        output: '/youtube-dl/Podcast/%(title)s [%(id)s].%(ext)s'
         format: bestaudio/best
-        write-thumbnail: True
-        embed-thumbnail: True
-        add-metadata: True
         audio-quality: 0
         extract-audio: True
         audio-format: mp3
+  thumbnails:
+      name: 'Thumbnails'
+      ydl_options:
+        write-thumbnail: True
+        embed-thumbnail: True
+
+profiles:
+  podcast:
+      name: 'Audio Podcasts'
+      use: [mp3, thumbnails]
+      ydl_options:
+        output: '/youtube-dl/Podcast/%(title)s [%(id)s].%(ext)s'
+        add-metadata: True

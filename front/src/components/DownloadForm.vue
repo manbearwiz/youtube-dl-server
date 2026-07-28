@@ -28,6 +28,8 @@ export default {
     extractorsPageSize: 200,
     intersectionObserver: null,
     forceGenericExtractor: false,
+    aliases: {},
+    selectedAliases: [],
     downloadName: '',
     showAdvancedOptions: false,
     toasts: [],
@@ -122,6 +124,7 @@ export default {
     async fetchAvailableFormats() {
       const url = getAPIUrl('api/formats', import.meta.env);
       this.formats = await (await fetch(url)).json();
+      this.aliases = this.formats.ydl_aliases || {};
       this.loadUrlParams();
       if (!this.default_format) {
         this.default_format = this.formats.ydl_default_format;
@@ -164,7 +167,7 @@ export default {
       fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls: [videoUrl], ...params })
+        body: JSON.stringify({ urls: [videoUrl], aliases: this.selectedAliases, ...params })
       })
         .then(response => {
           if (response.status == 200) return response.json();
@@ -189,6 +192,7 @@ export default {
         body: JSON.stringify({
           urls: this.$refs.urlBox.value.trim().split('\n').join(' ').split(' '),
           format: this.$refs.selectedFormat.value,
+          aliases: this.selectedAliases,
           force_generic_extractor: this.forceGenericExtractor,
           extra_params: extra_params,
         })
@@ -201,6 +205,7 @@ export default {
           this.showToast(data.success ? (this.$refs.urlBox.value + " added to the list.") : data.error, data.success);
           this.$refs.urlBox.value = '';
           this.downloadName = '';
+          this.selectedAliases = [];
         })
         .catch((error) => {
           console.error(error);
@@ -280,6 +285,14 @@ export default {
             <label class="form-check-label" :for="'forceGenericExtractor-' + uid">
               Force generic extractor
             </label>
+          </div>
+          <div class="mb-2" v-if="Object.keys(aliases).length">
+            <label class="form-label">Option groups:</label>
+            <div class="form-check" v-for="alias_name, alias in aliases" :key="alias">
+              <input class="form-check-input" type="checkbox" :id="'alias-' + alias + '-' + uid"
+                :value="alias" v-model="selectedAliases">
+              <label class="form-check-label" :for="'alias-' + alias + '-' + uid">{{ alias_name }}</label>
+            </div>
           </div>
           <div class="mb-2">
             <label :for="'downloadName-' + uid" class="form-label">Override video title:</label>

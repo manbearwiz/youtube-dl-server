@@ -150,6 +150,45 @@ profiles:
 
 ![screenshot][3]
 
+### Option groups (aliases)
+
+Aliases are named `ydl_options` sets that can be shared between profiles, avoiding
+duplication. A profile pulls them in with `use:`, and they can also be ticked
+individually in the Advanced Options section of the download form.
+
+```yaml
+aliases:
+  mp3:
+      name: 'MP3 audio'      # optional label shown in the UI, defaults to the key
+      ydl_options:
+        format: bestaudio/best
+        extract-audio: True
+        audio-format: mp3
+  thumbnails:
+      name: 'Thumbnails'
+      ydl_options:
+        write-thumbnail: True
+        embed-thumbnail: True
+  podcast_base:
+      ui: False              # building block: usable with `use:`, hidden from the UI
+      use: [mp3, thumbnails]
+      ydl_options:
+        add-metadata: True
+
+profiles:
+  podcast:
+      name: 'Audio Podcasts'
+      use: [podcast_base]
+      ydl_options:
+        output: '/youtube-dl/Podcast/%(title)s [%(id)s].%(ext)s'
+```
+
+Aliases may reference other aliases through their own `use:` list. Options are merged
+in this order, the last one winning: `ydl_options`, then the profile (its aliases in
+listed order, then its own `ydl_options`), then the aliases selected in the form.
+Unknown aliases and recursive `use:` chains are rejected when the configuration is
+loaded, at server startup.
+
 ## Python
 
 Requires Python ^3.8.
@@ -211,6 +250,7 @@ Accepted body fields:
 | `urls` | array | Multiple URLs to download as one job |
 | `format` | string | Format string (see formats below) |
 | `profile` | string | Profile name from config |
+| `aliases` | array | Alias names from config to apply on top of the profile |
 | `audio_format` | string | Audio format (e.g. `mp3`, `aac`) |
 | `force_generic_extractor` | bool | Force use of the generic extractor |
 | `extra_params` | object | Extra parameters; `title` key overrides the output filename |

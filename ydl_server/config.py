@@ -34,6 +34,54 @@ def get_ydl_formats(app_config):
     return YDL_FORMATS
 
 
+def get_ui_aliases(app_config):
+    return {
+        key: alias.get("name", key)
+        for key, alias in app_config.get("aliases", {}).items()
+        if alias.get("ui", True)
+    }
+
+
+def normalize_use(use):
+    if use is None:
+        return []
+    if isinstance(use, str):
+        return [use]
+    return list(use)
+
+
+def expand_alias(name, aliases, stack):
+    if name in stack:
+        raise Exception(
+            "Recursive alias definition: {}".format(" -> ".join(stack + [name]))
+        )
+    if name not in aliases:
+        raise Exception("Unknown alias '{}'".format(name))
+    alias = aliases[name]
+    options = expand_uses(alias.get("use"), aliases, stack + [name])
+    options.update(alias.get("ydl_options", {}))
+    return options
+
+
+def expand_uses(use, aliases, stack):
+    options = {}
+    for name in normalize_use(use):
+        options.update(expand_alias(name, aliases, stack))
+    return options
+
+
+def resolve_aliases(config):
+    aliases = config.get("aliases") or {}
+    for name, alias in aliases.items():
+        alias["ydl_options"] = expand_alias(name, aliases, [])
+        alias.pop("use", None)
+    for name, profile in (config.get("profiles") or {}).items():
+        options = expand_uses(profile.get("use"), aliases, [])
+        options.update(profile.get("ydl_options", {}))
+        profile["ydl_options"] = options
+        profile.pop("use", None)
+
+
 def copy_default_config(config_file_path):
     try:
         shutil.copy("./default_config.yml", config_file_path)
@@ -70,6 +118,9 @@ def load_config():
             config_file_path = "./default_config.yml"
     with open(config_file_path) as configfile:
         config = yaml.load(configfile, Loader=yaml.SafeLoader)
+
+    if config is not None:
+        resolve_aliases(config)
 
     return config
 
