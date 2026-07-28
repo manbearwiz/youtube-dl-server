@@ -16,6 +16,8 @@ export default {
     error: null,
     previewFailed: false,
     submitting: false,
+    previewEndTime: null,
+    buffering: false,
   }),
   mounted() {
     this.modal = new Modal(this.$refs.modalEl);
@@ -43,6 +45,8 @@ export default {
       this.error = null;
       this.previewFailed = false;
       this.submitting = false;
+      this.previewEndTime = null;
+      this.buffering = false;
       const name = filePath.split('/').pop();
       const dot = name.lastIndexOf('.');
       this.output = dot > 0 ? `${name.slice(0, dot)}_cut${name.slice(dot)}` : `${name}_cut`;
@@ -65,6 +69,24 @@ export default {
       const secs = this.parseTime(value);
       if (secs != null && this.$refs.player) {
         this.$refs.player.currentTime = secs;
+      }
+    },
+    jumpToStart() {
+      this.seekTo(this.start || '0');
+    },
+    previewClip() {
+      const player = this.$refs.player;
+      if (!player) return;
+      const startSecs = this.parseTime(this.start || '0') ?? 0;
+      this.previewEndTime = this.end ? this.parseTime(this.end) : null;
+      player.currentTime = startSecs;
+      player.play();
+    },
+    onTimeUpdate() {
+      const player = this.$refs.player;
+      if (this.previewEndTime != null && player && player.currentTime >= this.previewEndTime) {
+        player.pause();
+        this.previewEndTime = null;
       }
     },
     formatTime(secs) {
@@ -141,11 +163,20 @@ export default {
         </div>
         <div class="modal-body">
           <template v-if="filePath">
-            <audio v-if="isAudio" ref="player" :src="mediaUrl" controls class="w-100 mb-3"
-              @loadedmetadata="onLoadedMetadata" @error="previewFailed = true"></audio>
-            <video v-else ref="player" :src="mediaUrl" controls class="w-100 mb-3"
-              style="max-height: 320px; background: #000;"
-              @loadedmetadata="onLoadedMetadata" @error="previewFailed = true"></video>
+            <div class="position-relative mb-3">
+              <audio v-if="isAudio" ref="player" :src="mediaUrl" controls preload="auto" class="w-100"
+                @loadedmetadata="onLoadedMetadata" @error="previewFailed = true" @timeupdate="onTimeUpdate"
+                @waiting="buffering = true" @playing="buffering = false" @pause="buffering = false"></audio>
+              <video v-else ref="player" :src="mediaUrl" controls preload="auto" class="w-100"
+                style="max-height: 320px; background: #000;"
+                @loadedmetadata="onLoadedMetadata" @error="previewFailed = true" @timeupdate="onTimeUpdate"
+                @waiting="buffering = true" @playing="buffering = false" @pause="buffering = false"></video>
+              <div v-if="buffering" class="position-absolute top-50 start-50 translate-middle">
+                <div class="spinner-border text-light" role="status">
+                  <span class="visually-hidden">Buffering...</span>
+                </div>
+              </div>
+            </div>
           </template>
           <div v-if="previewFailed" class="alert alert-warning">
             Preview is not supported for this file format in your browser — enter the times manually.
@@ -160,6 +191,10 @@ export default {
               <button class="btn btn-outline-secondary" :disabled="previewFailed"
                 @click="setFromPlayhead('start')">Set from playhead</button>
             </div>
+            <div class="col-auto">
+              <button class="btn btn-outline-secondary" :disabled="previewFailed"
+                @click="jumpToStart">Jump to start</button>
+            </div>
           </div>
           <div class="row g-2 align-items-center mb-3">
             <label class="col-2 col-form-label">End</label>
@@ -170,6 +205,10 @@ export default {
               <button class="btn btn-outline-secondary" :disabled="previewFailed"
                 @click="setFromPlayhead('end')">Set from playhead</button>
             </div>
+          </div>
+          <div class="mb-3">
+            <button class="btn btn-outline-primary" :disabled="previewFailed"
+              @click="previewClip">Preview clip</button>
           </div>
 
           <div class="mb-3">
