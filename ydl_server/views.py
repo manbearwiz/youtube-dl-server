@@ -6,6 +6,7 @@ from ydl_server.config import (
     get_finished_path,
     get_ydl_formats,
     get_ui_aliases,
+    resolve_finished_file,
 )
 from ydl_server.db import JobsDB, Job, Actions, JobType
 import os
@@ -24,12 +25,17 @@ def parse_timestamp(ts):
     return seconds
 
 
-def build_finished_tree(root_dir):
+MAX_TREE_DEPTH = 32
+
+
+def build_finished_tree(root_dir, seen=None, depth=0):
     try:
         entries = list(os.scandir(root_dir))
     except OSError as e:
         print(f"Error scanning {root_dir} - {e}")
         return []
+    if seen is None:
+        seen = set()
     files = []
     for entry in entries:
         if entry.name.startswith("."):
@@ -40,16 +46,28 @@ def build_finished_tree(root_dir):
             is_dir = entry.is_dir()
         except Exception as e:
             print(f"Error accessing {entry.path} - {e}")
+        children = None
+        if is_dir:
+            children = []
+            key = (stat.st_dev, stat.st_ino) if stat else None
+            if (
+                depth < MAX_TREE_DEPTH
+                and key not in seen
+                and resolve_finished_file(entry.path) is not None
+            ):
+                seen.add(key)
+                children = build_finished_tree(entry.path, seen, depth + 1)
         file_info = {
             "name": entry.name,
             "modified": stat.st_mtime if stat else None,
             "created": stat.st_ctime if stat else None,
             "size": stat.st_size if stat and not is_dir else None,
             "directory": is_dir,
-            "children": build_finished_tree(entry.path) if is_dir else None,
+            "children": children,
         }
         files.append(file_info)
     return files
+
 
 async def api_finished(request):
     return JSONResponse(build_finished_tree(Path(get_finished_path())))
@@ -59,8 +77,8 @@ async def api_delete_file(request):
     fname = request.path_params["fname"]
     if not fname:
         return JSONResponse({"success": False, "message": "No filename specified"})
-    fname = os.path.realpath(os.path.join(get_finished_path(), fname))
-    if os.path.commonprefix((fname, get_finished_path())) != get_finished_path():
+    fname = resolve_finished_file(fname)
+    if fname is None:
         return JSONResponse({"success": False, "message": "Invalid filename"})
     fname = Path(fname)
     try:
@@ -85,8 +103,8 @@ async def api_cut_file(request):
     mode = data.get("mode", "fast")
     output = (data.get("output") or "").strip()
 
-    src = os.path.realpath(os.path.join(get_finished_path(), fname))
-    if os.path.commonprefix((src, get_finished_path())) != get_finished_path():
+    src = resolve_finished_file(fname)
+    if src is None:
         return JSONResponse({"success": False, "message": "Invalid filename"})
     if not os.path.isfile(src):
         return JSONResponse({"success": False, "message": "File not found"})

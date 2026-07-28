@@ -8,7 +8,7 @@ from time import sleep
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
 
-from ydl_server.config import get_finished_path
+from ydl_server.config import resolve_finished_file
 from ydl_server.db import JobsDB, Job, Actions, JobType
 
 
@@ -320,8 +320,8 @@ class YdlHandler:
 
     def cut(self, job, output):
         params = job.extra_params
-        src = os.path.realpath(os.path.join(get_finished_path(), job.url[0]))
-        if os.path.commonprefix((src, get_finished_path())) != get_finished_path():
+        src = resolve_finished_file(job.url[0])
+        if src is None:
             raise Exception("Invalid source file path")
         if not os.path.isfile(src):
             raise Exception("Source file not found: %s" % job.url[0])

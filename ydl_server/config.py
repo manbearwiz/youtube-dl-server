@@ -1,6 +1,22 @@
 import os
 import yaml
 import shutil
+from functools import cache
+
+YDL_PATH_TYPES = (
+    "home",
+    "temp",
+    "chapter",
+    "description",
+    "annotation",
+    "infojson",
+    "link",
+    "pl_thumbnail",
+    "pl_description",
+    "pl_infojson",
+    "subtitle",
+    "thumbnail",
+)
 
 YDL_FORMATS = {
     "Video": {
@@ -125,16 +141,56 @@ def load_config():
     return config
 
 
-def get_finished_path():
-    finished_path = []
-    for s in app_config["ydl_options"].get("output").split("/"):
-        if "%" in s and "%%" not in s:
+def get_static_prefix(output_template):
+    prefix = []
+    for s in output_template.split("/"):
+        if "%" in s.replace("%%", ""):
             break
-        finished_path.append(s)
-    finished_path = "/".join(finished_path) + "/"
-    if not os.path.isdir(finished_path):
-        os.mkdir(finished_path, 0o755)
-    return finished_path
+        prefix.append(s)
+    if prefix == [""]:
+        return "/"
+    return "/".join(prefix)
+
+
+def get_paths_home():
+    paths = app_config["ydl_options"].get("paths")
+    if not paths:
+        return None
+    path_type, sep, path = str(paths).partition(":")
+    if not sep:
+        return paths
+    if path_type == "home":
+        return path
+    if path_type in YDL_PATH_TYPES:
+        return None
+    return paths
+
+
+@cache
+def get_finished_path():
+    prefix = get_static_prefix(app_config["ydl_options"].get("output"))
+    if not os.path.isabs(prefix):
+        prefix = os.path.join(get_paths_home() or os.getcwd(), prefix)
+    finished_path = os.path.normpath(prefix)
+    if finished_path == os.path.sep:
+        raise Exception(
+            "Could not determine the download directory from ydl_options.output "
+            "('{}'): it resolves to the filesystem root. Set ydl_options.paths, or "
+            "give ydl_options.output a static directory prefix.".format(
+                app_config["ydl_options"].get("output")
+            )
+        )
+    os.makedirs(finished_path, mode=0o755, exist_ok=True)
+    return finished_path + "/"
+
+
+def resolve_finished_file(fname):
+    """Resolve fname within the finished directory, or None if it escapes it."""
+    root = os.path.realpath(get_finished_path())
+    path = os.path.realpath(os.path.join(root, fname))
+    if path != root and os.path.commonpath((path, root)) != root:
+        return None
+    return path
 
 
 app_config = load_config()
@@ -146,3 +202,5 @@ if (
     or app_config["ydl_options"].get("output") is None
 ):
     raise Exception("Invalid configuration file")
+
+get_finished_path()

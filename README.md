@@ -120,6 +120,19 @@ ydl_options:
   sub-lang: es
 ```
 
+The download directory listed in the Finished tab is derived from the static part of
+`output`, before the first template variable. If `output` is relative, it is resolved
+against `paths` (yt-dlp's `--paths`, `home:` prefix supported):
+
+```yaml
+ydl_options:
+  paths: '/youtube-dl'
+  output: '%(title)s [%(id)s].%(ext)s'
+```
+
+`output` must resolve to a directory other than the filesystem root, otherwise the server
+refuses to start.
+
 ### Profiles
 
 Profiles are named configuration sets selectable in the UI. Each profile can
