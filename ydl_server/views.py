@@ -294,10 +294,10 @@ async def api_queue_download(request):
         ", ".join(urls), Job.PENDING, "", JobType.YDL_DOWNLOAD, format_str, urls, extra_params=extra_params
     )
     job.force_generic_extractor = force_generic_extractor
-    request.app.state.jobshandler.put((Actions.INSERT, job))
+    request.app.state.jobshandler.insert_and_wait(job)
 
     print("Added url " + ",".join(urls) + " to the download queue")
-    return JSONResponse({"success": True, "urls": urls, "options": options})
+    return JSONResponse({"success": True, "urls": urls, "options": options, "job_id": job.id})
 
 
 async def api_metadata_fetch(request):

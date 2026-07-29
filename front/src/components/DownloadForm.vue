@@ -109,12 +109,15 @@ export default {
       currentQuery.format = format;
       this.$router.push({ path: this.$route.path, query: currentQuery });
     },
-    showToast(message, success) {
+    showToast(message, success, jobId) {
       const id = Date.now() + Math.random();
-      this.toasts.push({ id, message, success });
+      this.toasts.push({ id, message, success, jobId });
       setTimeout(() => {
         this.toasts = this.toasts.filter(t => t.id !== id);
       }, 5000);
+    },
+    goToJob(jobId) {
+      this.$router.push({ path: '/logs', query: { job: jobId } });
     },
     showExtractorsModal() {
       this.extractorsModal.show();
@@ -185,7 +188,7 @@ export default {
           throw new Error(response.statusText);
         })
         .then(data => {
-          this.showToast(data.success ? (videoUrl + " added to the queue.") : data.error, data.success);
+          this.showToast(data.success ? (videoUrl + " added to the queue.") : data.error, data.success, data.job_id);
           this.$refs.urlBox.value = '';
         })
         .catch((error) => {
@@ -216,7 +219,7 @@ export default {
           throw new Error(response.statusText);
         })
         .then(data => {
-          this.showToast(data.success ? (this.$refs.urlBox.value + " added to the list.") : data.error, data.success);
+          this.showToast(data.success ? (this.$refs.urlBox.value + " added to the list.") : data.error, data.success, data.job_id);
           this.$refs.urlBox.value = '';
           this.downloadName = '';
           this.selectedAliases = [];
@@ -261,7 +264,9 @@ export default {
   <div>
     <div class="toast-container">
       <div v-for="toast in toasts" :key="toast.id"
-        class="toast show toast-item" :class="toast.success ? 'toast-success' : 'toast-error'">
+        class="toast show toast-item"
+        :class="[toast.success ? 'toast-success' : 'toast-error', toast.jobId > 0 ? 'toast-clickable' : '']"
+        @click="toast.jobId > 0 && goToJob(toast.jobId)">
         <span>{{ toast.success ? 'Success' : 'Error' }}: </span>{{ toast.message }}
       </div>
     </div>

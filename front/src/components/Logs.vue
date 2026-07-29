@@ -34,6 +34,9 @@ export default {
     this.mounted = true;
     this.status = this.$route.query.status;
     this.fetchLogs();
+    if (this.$route.query.job) {
+      this.showCurrentLogDetails(Number(this.$route.query.job));
+    }
   },
   unmounted() {
     this.mounted = false;

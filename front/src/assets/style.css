@@ -587,6 +587,14 @@ div.input-group > input.form-control::placeholder {
   background-color: var(--t-danger);
 }
 
+.toast-clickable {
+  cursor: pointer;
+}
+
+.toast-clickable:hover {
+  filter: brightness(1.1);
+}
+
 .sort-arrow {
   text-decoration: none;
   color: var(--t-text-muted);

@@ -1,5 +1,5 @@
 from queue import Queue, Empty
-from threading import Thread
+from threading import Thread, Event
 from ydl_server.db import JobsDB, Actions
 
 
@@ -20,6 +20,11 @@ class JobsHandler:
     def put(self, obj):
         self.queue.put(obj)
 
+    def insert_and_wait(self, job, timeout=5):
+        event = Event()
+        self.queue.put((Actions.INSERT, job, event))
+        event.wait(timeout)
+
     def finish(self):
         self.done = True
 
@@ -27,9 +32,11 @@ class JobsHandler:
         db = JobsDB(readonly=False)
         while not self.done:
             try:
-                action, job = self.queue.get(timeout=1)
+                item = self.queue.get(timeout=1)
             except Empty:
                 continue
+            action, job = item[0], item[1]
+            event = item[2] if len(item) > 2 else None
             if action == Actions.PURGE_LOGS:
                 if db.purge_jobs():
                     db.vacuum()
@@ -39,6 +46,8 @@ class JobsHandler:
                     ):
                     db.vacuum()
                 db.insert_job(job)
+                if event:
+                    event.set()
                 dl_queue.put(job)
             elif action == Actions.UPDATE:
                 db.update_job(job)
