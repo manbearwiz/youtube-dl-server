@@ -25,6 +25,11 @@ def parse_timestamp(ts):
     return seconds
 
 
+def prefix_format(prefix, value):
+    """Namespace a format segment, tolerating callers that already prefixed it."""
+    return value if value.startswith(prefix + "/") else "{}/{}".format(prefix, value)
+
+
 MAX_TREE_DEPTH = 32
 
 
@@ -273,11 +278,13 @@ async def api_queue_download(request):
         aliases = [a for a in aliases.split(",") if a]
 
     if profile:
-        format_str = ','.join([format_str, profile])
+        format_str = ','.join(filter(None, [format_str, prefix_format("profile", profile)]))
     if aliases:
-        format_str = ','.join([format_str] + ["alias/{}".format(a) for a in aliases])
+        format_str = ','.join(filter(None, [format_str] + [prefix_format("alias", a) for a in aliases]))
     if audio_format:
-        format_str = ',audio/'.join([format_str, audio_format])
+        format_str = ','.join(filter(None, [format_str, prefix_format("audio", audio_format)]))
+    if not format_str:
+        format_str = app_config["ydl_server"].get("default_format", "video/best")
     options = {"format": format_str, "force_generic_extractor": force_generic_extractor}
 
     if url:

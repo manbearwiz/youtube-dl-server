@@ -140,7 +140,7 @@ class YdlHandler:
 
     def get_format_and_profile(self, format_string):
         fmt, audio, profile, aliases = None, None, None, []
-        for s in format_string.split(","):
+        for s in filter(None, (format_string or "").split(",")):
             if s.startswith("profile/"):
                 profile = s
             elif s.startswith("alias/"):
