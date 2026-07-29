@@ -41,8 +41,14 @@ export default {
     this.advancedCollapse = new Collapse(this.$refs.advancedCollapseEl, { toggle: false });
     this.fetchExtractors();
     this.fetchAvailableFormats();
+    this.forceGenericExtractor = getConfig('defaultForceGenericExtractor', 'false') === 'true';
+    try {
+      this.selectedAliases = JSON.parse(getConfig('defaultAliases', '[]'));
+    } catch {
+      this.selectedAliases = [];
+    }
     this.showAdvancedOptions = getConfig('showAdvancedOptions', 'false') === 'true';
-    if (this.showAdvancedOptions) {
+    if (this.showAdvancedOptions || this.forceGenericExtractor || this.selectedAliases.length) {
       this.$nextTick(() => this.advancedCollapse.show());
     }
     if (this.autofocus) {
@@ -125,9 +131,14 @@ export default {
       const url = getAPIUrl('api/formats', import.meta.env);
       this.formats = await (await fetch(url)).json();
       this.aliases = this.formats.ydl_aliases || {};
+      this.selectedAliases = this.selectedAliases.filter(alias => alias in this.aliases);
       this.loadUrlParams();
       if (!this.default_format) {
-        this.default_format = this.formats.ydl_default_format;
+        this.default_format = getConfig('defaultFormat', null) || this.formats.ydl_default_format;
+      }
+      if (!this.showAdvancedOptions && this.selectedAliases.length) {
+        this.showAdvancedOptions = true;
+        this.$nextTick(() => this.advancedCollapse.show());
       }
     },
     async inspectVideo() {
@@ -186,6 +197,9 @@ export default {
       const url = getAPIUrl('api/downloads', import.meta.env);
       const extra_params = {};
       if (this.downloadName) extra_params.title = this.downloadName;
+      saveConfig('defaultFormat', this.$refs.selectedFormat.value);
+      saveConfig('defaultAliases', JSON.stringify(this.selectedAliases));
+      saveConfig('defaultForceGenericExtractor', this.forceGenericExtractor.toString());
       fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
