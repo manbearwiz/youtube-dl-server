@@ -3,6 +3,7 @@ from queue import Queue, Empty
 from threading import Thread
 import io
 import importlib
+from importlib import metadata
 import json
 import shlex
 from time import sleep
@@ -28,21 +29,19 @@ SENSITIVE_OPTS = {
 
 def get_ydl_website(ydl_module_name):
     try:
-        import pip._internal.commands.show as pipshow
-    except ModuleNotFoundError:
-        print("Module not found, skipping get_ydl_website")
-        return None
-
-    info = list(pipshow.search_packages_info([ydl_module_name]))
-    if len(info) < 1:
+        meta = metadata.metadata(ydl_module_name)
+    except metadata.PackageNotFoundError:
+        print("Package {} not found, skipping get_ydl_website".format(ydl_module_name))
         return ""
-    info = info[0]
-    url = getattr(info, "home-page", None) or  getattr(info, "homepage", None)
+
+    url = meta.get("Home-page")
     if not url:
-        urls = getattr(info, "project_urls", None)
-        if urls:
-            urls = {v.split(",")[0].strip(): v.split(",")[1].strip() for v in urls if "," in v}
-            url = urls.get("Homepage") or urls.get("Documentation") or urls.get("Repository")
+        urls = {
+            entry.split(",", 1)[0].strip(): entry.split(",", 1)[1].strip()
+            for entry in meta.get_all("Project-URL") or []
+            if "," in entry
+        }
+        url = urls.get("Homepage") or urls.get("Documentation") or urls.get("Repository")
     return url
 
 
