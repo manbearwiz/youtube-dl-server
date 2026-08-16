@@ -244,8 +244,12 @@ async def api_jobs_retry(request):
     if not job:
         return JSONResponse({"success": False}, status_code=404)
 
+    extra_params = job.get("extra_params", {})
+    # An explicit retry gets a fresh scheduling budget
+    extra_params.pop("schedule_attempts", None)
+
     new_job = Job(
-        job["name"], Job.PENDING, "", int(job["type"]), job["format"], job["urls"], extra_params=job.get("extra_params", {})
+        job["name"], Job.PENDING, "", int(job["type"]), job["format"], job["urls"], extra_params=extra_params
     )
     new_job.force_generic_extractor = job.get("force_generic_extractor", False)
 

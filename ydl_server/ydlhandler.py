@@ -5,7 +5,9 @@ import io
 import importlib
 from importlib import metadata
 import json
+import re
 import shlex
+import time
 from time import sleep
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
@@ -15,6 +17,17 @@ from ydl_server.db import JobsDB, Job, Actions, JobType
 
 
 YDL_MODULES = ["youtube_dl", "youtube_dlc", "yt_dlp"]
+
+# Fallback when an extractor announces an upcoming event without a release timestamp
+UPCOMING_DELAY_RE = re.compile(
+    r"(?:will begin in|begins in|premieres in|starts in)\s+(\d+)\s+(second|minute|hour|day)s?",
+    re.IGNORECASE,
+)
+
+DELAY_UNIT_SECONDS = {"second": 1, "minute": 60, "hour": 3600, "day": 86400}
+
+SCHEDULE_MIN_DELAY = 300
+SCHEDULE_RELEASE_BUFFER = 60
 
 SENSITIVE_OPTS = {
     "--username",
@@ -43,6 +56,14 @@ def get_ydl_website(ydl_module_name):
         }
         url = urls.get("Homepage") or urls.get("Documentation") or urls.get("Repository")
     return url
+
+
+def parse_upcoming_delay(output):
+    """Seconds since epoch derived from a 'will begin in X hours' message, or None."""
+    match = UPCOMING_DELAY_RE.search(output or "")
+    if not match:
+        return None
+    return int(time.time()) + int(match.group(1)) * DELAY_UNIT_SECONDS[match.group(2).lower()]
 
 
 def read_proc_stdout(proc, strio):
@@ -249,6 +270,69 @@ class YdlHandler:
 
         return 0, [json.loads(s) for s in stdout.decode().strip().split("\n")]
 
+    def probe_upcoming(self, url, force_generic_extractor=False, error_output=None):
+        """Release timestamp and title of an upcoming live event, or None.
+
+        --ignore-no-formats-error turns the "This live event will begin in ..."
+        extraction error into a warning, so the metadata is still returned.
+        """
+        if not self.app_config["ydl_server"].get("schedule_upcoming", True):
+            return None
+        ydl_opts = self.app_config.get("ydl_options", {})
+        extra_opts = ["-J", "--flat-playlist", "--ignore-no-formats-error"]
+        if force_generic_extractor:
+            extra_opts.append("--force-generic-extractor")
+        cmd = self.get_ydl_full_cmd(ydl_opts, url, extra_opts)
+
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        stdout, _ = proc.communicate()
+        if proc.wait() != 0:
+            return None
+
+        for line in stdout.decode().strip().split("\n"):
+            try:
+                metadata = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if metadata.get("live_status") != "is_upcoming":
+                continue
+            release = metadata.get("release_timestamp")
+            if release is None:
+                release = parse_upcoming_delay(error_output)
+            if release is None:
+                continue
+            return int(release), metadata.get("title")
+        return None
+
+    def schedule_job(self, job, release_ts, title=None):
+        """Park an upcoming live event until its release time instead of failing it."""
+        attempts = job.extra_params.get("schedule_attempts", 0) + 1
+        max_attempts = self.app_config["ydl_server"].get("schedule_max_attempts", 24)
+        if attempts > max_attempts:
+            job.log = Job.clean_logs(
+                "{}\n[scheduled] giving up after {} attempts".format(job.log or "", max_attempts)
+            )
+            job.status = Job.FAILED
+            return
+
+        job.extra_params = {**job.extra_params, "schedule_attempts": attempts}
+        job.scheduled_at = max(
+            release_ts + SCHEDULE_RELEASE_BUFFER, int(time.time()) + SCHEDULE_MIN_DELAY
+        )
+        job.status = Job.SCHEDULED
+        job.log = Job.clean_logs(
+            "{}\n[scheduled] this event has not started yet, retrying at {} (attempt {}/{})".format(
+                job.log or "",
+                datetime.fromtimestamp(job.scheduled_at).strftime("%Y-%m-%d %H:%M:%S"),
+                attempts,
+                max_attempts,
+            )
+        )
+        if title:
+            self.jobshandler.put((Actions.SET_NAME, (job.id, title)))
+        # A pid left over from a previous attempt must not be signaled on abort
+        self.jobshandler.put((Actions.SET_PID, (job.id, 0)))
+
     def get_ydl_full_cmd(self, opt_dict, url, extra_opts=None):
         cmd = [self.ydl_module_name]
         if opt_dict is not None:
@@ -277,6 +361,12 @@ class YdlHandler:
         rc, metadata = self.fetch_metadata(job.url, force_generic_extractor=force_generic)
         if rc != 0:
             job.log = Job.clean_logs("[cmd] {}\n{}".format(format_cmd(cmd), metadata))
+            upcoming = self.probe_upcoming(
+                job.url, force_generic_extractor=force_generic, error_output=metadata
+            )
+            if upcoming:
+                self.schedule_job(job, *upcoming)
+                return
             job.status = Job.FAILED
             print("Error in metadata fetching process:\n" + job.log)
             raise Exception(job.log)
@@ -285,6 +375,16 @@ class YdlHandler:
             [md.get("title", job.url[i]) for i, md in enumerate(metadata)]
         )
         self.jobshandler.put((Actions.SET_NAME, (job.id, title)))
+
+        upcoming = next(
+            (md for md in metadata if md.get("live_status") == "is_upcoming"), None
+        )
+        if upcoming and self.app_config["ydl_server"].get("schedule_upcoming", True):
+            release = upcoming.get("release_timestamp")
+            if release is not None:
+                job.log = Job.clean_logs("[cmd] {}".format(format_cmd(cmd)))
+                self.schedule_job(job, int(release))
+                return
 
         if metadata[0].get("_type") == "playlist" or len(metadata) > 1:
             ydl_opts.update(

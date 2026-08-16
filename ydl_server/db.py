@@ -6,9 +6,17 @@ from functools import wraps
 
 from ydl_server.config import app_config
 
-STATUS_NAME = ["Running", "Completed", "Failed", "Pending", "Aborted"]
+STATUS_NAME = ["Running", "Completed", "Failed", "Pending", "Aborted", "Scheduled"]
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
+
+# Columns added after schema version 0, applied to older databases on migration
+ADDED_COLUMNS = {
+    "force_generic_extractor": "INTEGER DEFAULT 0",
+    "extra_params": "TEXT DEFAULT '{}'",
+    "scheduled_at": "INTEGER",
+}
+
 
 class Actions:
     DOWNLOAD = 1
@@ -37,8 +45,9 @@ class Job:
     FAILED = 2
     PENDING = 3
     ABORTED = 4
+    SCHEDULED = 5
 
-    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1, pid=0, force_generic_extractor=False, extra_params={}):
+    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1, pid=0, force_generic_extractor=False, extra_params={}, scheduled_at=None):
         self.id = id
         self.name = name
         self.status = status
@@ -50,6 +59,7 @@ class Job:
         self.pid = pid
         self.force_generic_extractor = force_generic_extractor
         self.extra_params = extra_params
+        self.scheduled_at = scheduled_at
 
     @staticmethod
     def clean_logs(logs):
@@ -102,6 +112,20 @@ class JobsDB:
         return version
 
     @staticmethod
+    def add_missing_columns(conn):
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info('jobs')")
+        columns = [row[1] for row in cursor.fetchall()]
+        for name, definition in ADDED_COLUMNS.items():
+            if name not in columns:
+                print(f"Adding {name} column to jobs table")
+                cursor.execute(f"ALTER TABLE jobs ADD COLUMN {name} {definition};")
+        cursor.execute(
+            f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
+        )
+        conn.commit()
+
+    @staticmethod
     def migrate(conn, version):
         print(f"Migrating database from version {version}")
         match version:
@@ -129,40 +153,10 @@ class JobsDB:
                     conn.commit()
                     JobsDB.create(conn)
                     return
-                if "force_generic_extractor" not in columns:
-                    print("Adding force_generic_extractor column to jobs table")
-                    cursor.execute("ALTER TABLE jobs ADD COLUMN force_generic_extractor INTEGER DEFAULT 0;")
-                    conn.commit()
-                cursor.execute(
-                    f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
-                )
-                conn.commit()
+                JobsDB.add_missing_columns(conn)
                 return
-            case 1:
-                cursor = conn.cursor()
-                cursor.execute("PRAGMA table_info('jobs')")
-                columns = [row[1] for row in cursor.fetchall()]
-                if "force_generic_extractor" not in columns:
-                    print("Adding force_generic_extractor column to jobs table")
-                    cursor.execute("ALTER TABLE jobs ADD COLUMN force_generic_extractor INTEGER DEFAULT 0;")
-                    conn.commit()
-                cursor.execute(
-                    f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
-                )
-                conn.commit()
-                return
-            case 2:
-                cursor = conn.cursor()
-                cursor.execute("PRAGMA table_info('jobs')")
-                columns = [row[1] for row in cursor.fetchall()]
-                if "extra_params" not in columns:
-                    print("Adding extra_params column to jobs table")
-                    cursor.execute("ALTER TABLE jobs ADD COLUMN extra_params TEXT DEFAULT '{}';") 
-                    conn.commit()
-                cursor.execute(
-                    f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
-                )
-                conn.commit()
+            case 1 | 2 | 3:
+                JobsDB.add_missing_columns(conn)
                 return
             case JobsDB.SCHEMA_VERSION:
                 cursor = conn.cursor()
@@ -186,8 +180,6 @@ class JobsDB:
                     "type",
                     "url",
                     "pid",
-                    "force_generic_extractor",
-                    "extra_params",
                 }
                 if not required.issubset(columns):
                     print("Incompatible jobs table, cleaning up and recreating")
@@ -195,10 +187,7 @@ class JobsDB:
                     conn.commit()
                     JobsDB.create(conn)
                     return
-                cursor.execute(
-                    f"PRAGMA user_version = {JobsDB.SCHEMA_VERSION};"
-                )
-                conn.commit()
+                JobsDB.add_missing_columns(conn)
                 return
 
     @staticmethod
@@ -219,7 +208,8 @@ class JobsDB:
                         url TEXT,
                         pid INTEGER,
                         force_generic_extractor INTEGER DEFAULT 0,
-                        extra_params TEXT DEFAULT '{}'
+                        extra_params TEXT DEFAULT '{}',
+                        scheduled_at INTEGER
                     );
                 """
             )
@@ -253,9 +243,9 @@ class JobsDB:
         cursor.execute(
             """
             INSERT INTO jobs
-                (name, status, log, format, type, url, pid, force_generic_extractor, extra_params)
+                (name, status, log, format, type, url, pid, force_generic_extractor, extra_params, scheduled_at)
             VALUES
-                (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """,
             (
                 job.name,
@@ -267,6 +257,7 @@ class JobsDB:
                 job.pid,
                 int(getattr(job, "force_generic_extractor", False)),
                 json.dumps(getattr(job, "extra_params", {})),
+                getattr(job, "scheduled_at", None),
             ),
         )
         job.id = cursor.lastrowid
@@ -276,10 +267,17 @@ class JobsDB:
         cursor.execute(
             """
             UPDATE jobs
-            SET status = ?, log = ?, last_update = datetime(), force_generic_extractor = ?, extra_params = ? \
+            SET status = ?, log = ?, last_update = datetime(), force_generic_extractor = ?, extra_params = ?, scheduled_at = ? \
             WHERE id = ?;
             """,
-            (job.status, job.log, int(getattr(job, "force_generic_extractor", False)), json.dumps(getattr(job, "extra_params", {})), job.id),
+            (
+                job.status,
+                job.log,
+                int(getattr(job, "force_generic_extractor", False)),
+                json.dumps(getattr(job, "extra_params", {})),
+                getattr(job, "scheduled_at", None),
+                job.id,
+            ),
         )
 
     @with_cursor
@@ -338,8 +336,8 @@ class JobsDB:
     @with_cursor
     def delete_job_safe(self, cursor, job_id):
         cursor.execute(
-            "DELETE FROM jobs WHERE id = ? AND ( status = ? OR status = ? );",
-            (job_id, Job.ABORTED, Job.FAILED),
+            "DELETE FROM jobs WHERE id = ? AND status IN (?, ?, ?);",
+            (job_id, Job.ABORTED, Job.FAILED, Job.SCHEDULED),
         )
         return cursor.rowcount
 
@@ -358,9 +356,9 @@ class JobsDB:
             DELETE FROM jobs
             WHERE id NOT IN (
                 SELECT id FROM jobs ORDER BY last_update DESC LIMIT ?
-            ) AND status != ? AND status != ?;
+            ) AND status NOT IN (?, ?, ?);
             """,
-            (limit, Job.PENDING, Job.RUNNING),
+            (limit, Job.PENDING, Job.RUNNING, Job.SCHEDULED),
         )
         return cursor.rowcount
 
@@ -369,7 +367,7 @@ class JobsDB:
         cursor.execute(
             """
             SELECT
-                id, name, status, log, last_update, format, type, url, pid, force_generic_extractor, extra_params
+                id, name, status, log, last_update, format, type, url, pid, force_generic_extractor, extra_params, scheduled_at
             FROM
                 jobs
             WHERE id = ?;
@@ -391,6 +389,7 @@ class JobsDB:
             pid,
             force_generic_extractor,
             extra_params,
+            scheduled_at,
         ) = row
         return {
             "id": job_id,
@@ -404,6 +403,7 @@ class JobsDB:
             "pid": pid,
             "force_generic_extractor": bool(force_generic_extractor),
             "extra_params": json.loads(extra_params or '{}'),
+            "scheduled_at": scheduled_at,
         }
 
     @with_cursor
@@ -413,7 +413,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor, extra_params
+                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor, extra_params, scheduled_at
                 FROM
                     jobs
                 WHERE
@@ -426,7 +426,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor, extra_params
+                    id, name, status, log, last_update, format, type, url, pid, force_generic_extractor, extra_params, scheduled_at
                 FROM
                     jobs
                 ORDER BY last_update DESC LIMIT ?;
@@ -446,6 +446,7 @@ class JobsDB:
             pid,
             force_generic_extractor,
             extra_params,
+            scheduled_at,
         ) in cursor.fetchall():
             rows.append(
                 {
@@ -460,6 +461,7 @@ class JobsDB:
                     "pid": pid,
                     "force_generic_extractor": bool(force_generic_extractor),
                     "extra_params": json.loads(extra_params or '{}'),
+                    "scheduled_at": scheduled_at,
                 }
             )
         return rows
@@ -471,7 +473,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, last_update, format, type, url, pid, force_generic_extractor, extra_params
+                    id, name, status, last_update, format, type, url, pid, force_generic_extractor, extra_params, scheduled_at
                 FROM
                     jobs
                 WHERE
@@ -484,7 +486,7 @@ class JobsDB:
             cursor.execute(
                 """
                 SELECT
-                    id, name, status, last_update, format, type, url, pid, force_generic_extractor, extra_params
+                    id, name, status, last_update, format, type, url, pid, force_generic_extractor, extra_params, scheduled_at
                 FROM
                     jobs
                 ORDER BY last_update DESC LIMIT ?;
@@ -503,6 +505,7 @@ class JobsDB:
             pid,
             force_generic_extractor,
             extra_params,
+            scheduled_at,
         ) in cursor.fetchall():
             rows.append(
                 {
@@ -516,9 +519,44 @@ class JobsDB:
                     "pid": pid,
                     "force_generic_extractor": bool(force_generic_extractor),
                     "extra_params": json.loads(extra_params or '{}'),
+                    "scheduled_at": scheduled_at,
                 }
             )
         return rows
+
+    @with_cursor
+    def get_due_scheduled_jobs(self, cursor, now):
+        cursor.execute(
+            """
+            SELECT
+                id, name, format, type, url, force_generic_extractor, extra_params
+            FROM
+                jobs
+            WHERE
+                status = ? AND scheduled_at <= ?;
+            """,
+            (Job.SCHEDULED, now),
+        )
+        return [
+            {
+                "id": job_id,
+                "name": name,
+                "format": format,
+                "type": jobtype,
+                "urls": url.split("\n"),
+                "force_generic_extractor": bool(force_generic_extractor),
+                "extra_params": json.loads(extra_params or '{}'),
+            }
+            for (
+                job_id,
+                name,
+                format,
+                jobtype,
+                url,
+                force_generic_extractor,
+                extra_params,
+            ) in cursor.fetchall()
+        ]
 
     @with_cursor
     def get_job_counts(self, cursor):

@@ -1,18 +1,22 @@
+import time
 from queue import Queue, Empty
 from threading import Thread, Event
-from ydl_server.db import JobsDB, Actions
+from ydl_server.db import JobsDB, Job, Actions
 
 
 class JobsHandler:
     def __init__(self, app_config):
         self.queue = Queue()
         self.thread = None
+        self.scheduler_thread = None
         self.done = False
         self.app_config = app_config
 
     def start(self, dl_queue):
         self.thread = Thread(target=self.worker, args=(dl_queue,))
         self.thread.start()
+        self.scheduler_thread = Thread(target=self.scheduler_worker)
+        self.scheduler_thread.start()
 
     def stop(self):
         self.done = True
@@ -77,6 +81,35 @@ class JobsHandler:
                     db.vacuum()
             self.queue.task_done()
 
+    def scheduler_worker(self):
+        """Re-queue scheduled jobs (upcoming live events) once their release time is reached."""
+        db = JobsDB(readonly=True)
+        interval = self.app_config["ydl_server"].get("schedule_check_interval", 60)
+        elapsed = interval
+        while not self.done:
+            if elapsed < interval:
+                time.sleep(1)
+                elapsed += 1
+                continue
+            elapsed = 0
+            for due in db.get_due_scheduled_jobs(int(time.time())):
+                print("Scheduled time reached for job %s" % due["id"])
+                job = Job(
+                    due["name"],
+                    Job.PENDING,
+                    "Scheduled time reached",
+                    int(due["type"]),
+                    due["format"],
+                    due["urls"],
+                    id=due["id"],
+                    force_generic_extractor=due["force_generic_extractor"],
+                    extra_params=due["extra_params"],
+                )
+                self.put((Actions.RESUME, job))
+        db.close()
+
     def join(self):
+        if self.scheduler_thread is not None:
+            self.scheduler_thread.join()
         if self.thread is not None:
             return self.thread.join()

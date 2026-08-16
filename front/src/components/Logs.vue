@@ -1,7 +1,7 @@
 <script setup>
 import { orderBy, capitalize } from 'lodash'
 import { Modal } from 'bootstrap'
-import { getAPIUrl, saveConfig, getConfig } from '../utils';
+import { getAPIUrl, formatCountdown, saveConfig, getConfig } from '../utils';
 </script>
 <script>
 export default {
@@ -14,7 +14,8 @@ export default {
       Failed: 'badge bg-danger',
       Aborted: 'badge bg-warning',
       Running: 'badge bg-info',
-      Completed: 'badge bg-success'
+      Completed: 'badge bg-success',
+      Scheduled: 'badge bg-primary'
     },
     sortBy: 'last_update',
     sortOrder: 'desc',
@@ -153,7 +154,7 @@ export default {
           </div>
           <div class="dropdown">
             <a class="btn btn-outline-secondary dropdown-toggle" href="#" role="button" id="statusFilterDropDown" data-bs-toggle="dropdown" aria-expanded="false">
-              Status {{ ['COMPLETED', 'FAILED', 'PENDING', 'RUNNING', 'ABORTED'].includes(status) ? `(${capitalize(status)})` : '(All)' }}
+              Status {{ ['COMPLETED', 'FAILED', 'PENDING', 'RUNNING', 'ABORTED', 'SCHEDULED'].includes(status) ? `(${capitalize(status)})` : '(All)' }}
             </a>
             <ul class="dropdown-menu" aria-labelledby="statusFilterDropDown">
               <li><router-link class="dropdown-item" to="/logs">All</router-link></li>
@@ -162,6 +163,7 @@ export default {
               <li><router-link class="dropdown-item" to="/logs?status=PENDING">Pending</router-link></li>
               <li><router-link class="dropdown-item" to="/logs?status=RUNNING">Running</router-link></li>
               <li><router-link class="dropdown-item" to="/logs?status=ABORTED">Aborted</router-link></li>
+              <li><router-link class="dropdown-item" to="/logs?status=SCHEDULED">Scheduled</router-link></li>
             </ul>
           </div>
         </div>
@@ -214,6 +216,11 @@ export default {
                     {{ log.status }} &times;
                   </span>
                 </td>
+                <td v-else-if="log.status == 'Scheduled'">
+                  <span :class=statusToTrClass[log.status] class="status-action" @click.stop="abortDownload(log.id)">
+                    {{ log.status }} {{ formatCountdown(log.scheduled_at) }} &times;
+                  </span>
+                </td>
                 <td v-else>
                   <span :class=statusToTrClass[log.status]>
                     {{ log.status }}
@@ -255,6 +262,12 @@ export default {
                 </div>
                 <div v-else-if="getLogById?.status == 'Running' || getLogById?.status == 'Pending'">
                   <button class="btn btn-primary" role="button" aria-label="Abort" data-bs-dismiss="modal"
+                    @click="abortDownload(getLogById?.id)">Abort</button>
+                </div>
+                <div v-else-if="getLogById?.status == 'Scheduled'" class="d-flex gap-2">
+                  <button class="btn btn-primary" role="button" aria-label="Download now" data-bs-dismiss="modal"
+                    @click="retryDownload(getLogById?.id)">Download now</button>
+                  <button class="btn btn-outline-primary" role="button" aria-label="Abort" data-bs-dismiss="modal"
                     @click="abortDownload(getLogById?.id)">Abort</button>
                 </div>
                 <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="deleteLog(getLogById?.id)">Delete log</button>

@@ -9,6 +9,9 @@ ydl_server:   # youtube-dl-server specific settings
   proxy_headers: True # uvicorn flag Enable/Disable X-Forwarded-Proto, X-Forwarded-For, X-Forwarded-Port to populate remote address info.
   default_format: video/best # Default format selection
   download_workers_count: 2 # Number of download worker threads
+  schedule_upcoming: True # Park upcoming live events / premieres until their start time instead of failing them
+  schedule_check_interval: 60 # Seconds between checks for scheduled jobs that are due
+  schedule_max_attempts: 24 # Maximum number of times a job may be rescheduled before failing
 
 ydl_options:  # youtube-dl options
   output: '/youtube-dl/%(title)s [%(id)s].%(ext)s' # output directory template

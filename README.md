@@ -84,6 +84,9 @@ In the above case, if `/var/local/youtube-dl-server/config.yml` does not exist, 
 | `max_log_entries` | `100` | Maximum number of job history entries to keep |
 | `default_format` | `video/best` | Default format pre-selected in the UI |
 | `download_workers_count` | `2` | Number of parallel download worker threads |
+| `schedule_upcoming` | `True` | Park upcoming live events and premieres in the `Scheduled` status until their start time instead of failing them |
+| `schedule_check_interval` | `60` | Seconds between checks for scheduled jobs that have become due |
+| `schedule_max_attempts` | `24` | Maximum number of times a job may be rescheduled before it is failed |
 | `forwarded_allow_ips` | `None` | Comma-separated list of IPs to trust proxy headers from (passed to uvicorn) |
 | `proxy_headers` | `True` | Trust `X-Forwarded-Proto`, `X-Forwarded-For`, `X-Forwarded-Port` headers (passed to uvicorn) |
 | `debug` | `False` | Enable debug mode |

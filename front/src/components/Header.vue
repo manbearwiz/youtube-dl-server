@@ -69,6 +69,10 @@ export default {
               <span title="Running / Total Workers" id='running_size'
                 class="badge bg-info">{{ stats.running }}/{{ server_info.download_workers_count }}</span>
             </router-link>
+            <router-link to="/logs?status=SCHEDULED" v-if="stats.scheduled">
+              <span title="Scheduled" id='scheduled_size'
+                class="badge bg-primary">{{ stats.scheduled }}</span>
+            </router-link>
             <router-link to="/logs?status=COMPLETED">
               <span title="Completed" id='completed_size'
                 class="badge bg-success">{{ stats.completed }}</span>

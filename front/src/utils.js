@@ -11,6 +11,23 @@ function getAPIUrl(path, env) {
 	return path;
 }
 
+function formatCountdown(timestamp) {
+	if (!timestamp) {
+		return '';
+	}
+	const seconds = timestamp - Date.now() / 1000;
+	if (seconds <= 0) {
+		return 'now';
+	}
+	if (seconds < 3600) {
+		return `in ${Math.ceil(seconds / 60)}m`;
+	}
+	if (seconds < 86400) {
+		return `in ${Math.round(seconds / 3600)}h`;
+	}
+	return `in ${Math.round(seconds / 86400)}d`;
+}
+
 function saveConfig(key, value) {
 	localStorage.setItem(key, value);
 }
@@ -20,4 +37,4 @@ function getConfig(key, defaultValue) {
 }
 
 
-export { getAPIUrl, saveConfig, getConfig };
+export { getAPIUrl, formatCountdown, saveConfig, getConfig };
