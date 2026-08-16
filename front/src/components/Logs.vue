@@ -21,6 +21,7 @@ export default {
     currentLogDetailsModal: null,
     currentLogDetailId: null,
     status: null,
+    commandCopied: false,
   }),
   watch: {
     '$route'() {
@@ -45,6 +46,10 @@ export default {
     getLogById: function () {
       return this.logs.find(log => log.id === this.currentLogDetailId);
     },
+    currentCommand: function () {
+      const line = this.getLogById?.log?.split('\n').find(l => l.startsWith('[cmd] '));
+      return line?.slice(6);
+    },
     orderedLogs: function () {
       if (this.sortBy === 'last_update') {
         return orderBy(this.logs, e => {
@@ -68,7 +73,24 @@ export default {
     },
     showCurrentLogDetails(logId) {
       this.currentLogDetailId = logId
+      this.commandCopied = false;
       this.currentLogDetailsModal.show();
+    },
+    copyCommand() {
+      const text = this.currentCommand;
+      if (!text) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      this.commandCopied = true;
+      setTimeout(() => { this.commandCopied = false }, 1500);
     },
     abortDownload(job_id) {
       const url = getAPIUrl(`api/jobs/${job_id}/stop`, import.meta.env);
@@ -212,6 +234,15 @@ export default {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body" id="currentLogDetailContent">
+                <div v-if="currentCommand" class="mb-3">
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="text-secondary small">Command</span>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" @click="copyCommand">
+                      {{ commandCopied ? 'Copied' : 'Copy' }}
+                    </button>
+                  </div>
+                  <code class="command-output">{{ currentCommand }}</code>
+                </div>
                 <pre v-if="currentLogDetailId" class="log-output">{{ getLogById?.log }}</pre>
                 <div v-else class="spinner-border" role="status">
                   <span class="visually-hidden">Loading...</span>

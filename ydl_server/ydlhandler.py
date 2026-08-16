@@ -4,6 +4,7 @@ from threading import Thread
 import io
 import importlib
 import json
+import shlex
 from time import sleep
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT
@@ -13,6 +14,16 @@ from ydl_server.db import JobsDB, Job, Actions, JobType
 
 
 YDL_MODULES = ["youtube_dl", "youtube_dlc", "yt_dlp"]
+
+SENSITIVE_OPTS = {
+    "--username",
+    "--password",
+    "--video-password",
+    "--ap-username",
+    "--ap-password",
+    "--client-secret",
+    "--add-header",
+}
 
 
 def get_ydl_website(ydl_module_name):
@@ -37,6 +48,15 @@ def get_ydl_website(ydl_module_name):
 
 def read_proc_stdout(proc, strio):
     strio.write(proc.stdout.read1().decode())
+
+
+def format_cmd(cmd):
+    """Shell-quoted command line with credential values masked."""
+    args, redact = [], False
+    for arg in cmd:
+        args.append("***" if redact else arg)
+        redact = arg in SENSITIVE_OPTS
+    return shlex.join(args)
 
 
 class YdlHandler:
@@ -257,7 +277,7 @@ class YdlHandler:
 
         rc, metadata = self.fetch_metadata(job.url, force_generic_extractor=force_generic)
         if rc != 0:
-            job.log = Job.clean_logs(metadata)
+            job.log = Job.clean_logs("[cmd] {}\n{}".format(format_cmd(cmd), metadata))
             job.status = Job.FAILED
             print("Error in metadata fetching process:\n" + job.log)
             raise Exception(job.log)
@@ -285,6 +305,7 @@ class YdlHandler:
             )
 
         cmd = self.get_ydl_full_cmd(ydl_opts, job.url, extra_opts)
+        output.write("[cmd] {}\n".format(format_cmd(cmd)))
 
         try:
             fmt_proc = Popen(
@@ -335,7 +356,7 @@ class YdlHandler:
             cmd.extend(["-c", "copy", "-avoid_negative_ts", "make_zero"])
         cmd.append(dst)
 
-        output.write("[cut] {}\n".format(" ".join(cmd)))
+        output.write("[cmd] {}\n".format(format_cmd(cmd)))
         proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
         self.jobshandler.put((Actions.SET_PID, (job.id, proc.pid)))
         stdout_thread = Thread(
