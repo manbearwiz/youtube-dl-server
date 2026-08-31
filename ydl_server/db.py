@@ -69,7 +69,7 @@ class Job:
         for line in logs.split("\n"):
             line = re.sub(".*\r", "", line)
             if len(line) > 0:
-                clean = "%s%s\n" % (clean, line)
+                clean = f"{clean}{line}\n"
         return clean
 
 
@@ -90,9 +90,8 @@ class JobsDB:
 
     @staticmethod
     def init():
-        conn = sqlite3.connect(
-            "file://%s" % app_config["ydl_server"].get("metadata_db_path"), uri=True
-        )
+        metadata_db_path = app_config["ydl_server"].get("metadata_db_path")
+        conn = sqlite3.connect(f"file://{metadata_db_path}", uri=True)
         try:
             version = JobsDB.db_version(conn)
             JobsDB.migrate(conn, version)
@@ -226,14 +225,9 @@ class JobsDB:
         return dt.astimezone().strftime("%Y-%m-%d %H:%M:%S")
 
     def __init__(self, readonly=True):
-        self.conn = sqlite3.connect(
-            "file://%s%s"
-            % (
-                app_config["ydl_server"].get("metadata_db_path"),
-                "?mode=ro" if readonly else "",
-            ),
-            uri=True,
-        )
+        metadata_db_path = app_config["ydl_server"].get("metadata_db_path")
+        mode = "?mode=ro" if readonly else ""
+        self.conn = sqlite3.connect(f"file://{metadata_db_path}{mode}", uri=True)
 
     def close(self):
         self.conn.close()

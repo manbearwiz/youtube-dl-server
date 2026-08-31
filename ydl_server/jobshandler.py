@@ -94,7 +94,7 @@ class JobsHandler:
                 continue
             elapsed = 0
             for due in db.get_due_scheduled_jobs(int(time.time())):
-                print("Scheduled time reached for job %s" % due["id"])
+                print(f"Scheduled time reached for job {due['id']}")
                 job = Job(
                     due["name"],
                     Job.PENDING,

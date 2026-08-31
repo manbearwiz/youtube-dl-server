@@ -137,7 +137,7 @@ class YdlHandler:
             thread = Thread(target=self.worker, args=(i,))
             self.threads.append(thread)
             thread.start()
-            print("Started dl worker %i" % i)
+            print(f"Started dl worker {i}")
 
     def put(self, obj):
         self.queue.put(obj)
@@ -439,7 +439,7 @@ class YdlHandler:
         if src is None:
             raise Exception("Invalid source file path")
         if not os.path.isfile(src):
-            raise Exception("Source file not found: %s" % job.url[0])
+            raise Exception(f"Source file not found: {job.url[0]}")
         dst = os.path.join(os.path.dirname(src), params["output"])
 
         cmd = ["ffmpeg", "-nostdin", "-hide_banner", "-y", "-ss", str(params.get("start") or "0")]
