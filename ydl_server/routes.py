@@ -1,10 +1,10 @@
 from pathlib import Path
 
+from starlette.routing import Mount, Route
+from starlette.staticfiles import StaticFiles
+
 from ydl_server import views
 from ydl_server.config import get_finished_path
-
-from starlette.routing import Route, Mount
-from starlette.staticfiles import StaticFiles
 
 static = StaticFiles(directory=str(Path(__file__).parent / "static"), html=True)
 

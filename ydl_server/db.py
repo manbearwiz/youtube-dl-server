@@ -1,7 +1,7 @@
-import sqlite3
-import re
 import datetime
 import json
+import re
+import sqlite3
 from functools import wraps
 
 from ydl_server.config import app_config
@@ -222,7 +222,7 @@ class JobsDB:
 
     @staticmethod
     def convert_datetime_to_tz(dt):
-        dt = datetime.datetime.strptime("{} +0000".format(dt), "%Y-%m-%d %H:%M:%S %z")
+        dt = datetime.datetime.strptime(f"{dt} +0000", "%Y-%m-%d %H:%M:%S %z")
         return dt.astimezone().strftime("%Y-%m-%d %H:%M:%S")
 
     def __init__(self, readonly=True):

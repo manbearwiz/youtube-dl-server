@@ -1,7 +1,8 @@
 import os
-import yaml
 import shutil
 from functools import cache
+
+import yaml
 
 YDL_PATH_TYPES = (
     "home",
@@ -72,7 +73,7 @@ def expand_alias(name, aliases, stack):
             "Recursive alias definition: {}".format(" -> ".join(stack + [name]))
         )
     if name not in aliases:
-        raise Exception("Unknown alias '{}'".format(name))
+        raise Exception(f"Unknown alias '{name}'")
     alias = aliases[name]
     options = expand_uses(alias.get("use"), aliases, stack + [name])
     options.update(alias.get("ydl_options", {}))
@@ -103,9 +104,7 @@ def copy_default_config(config_file_path):
         shutil.copy("./default_config.yml", config_file_path)
     except Exception as e:
         raise Exception(
-            "Error copying default config file to {}:\n{}".format(
-                config_file_path, str(e)
-            )
+            f"Error copying default config file to {config_file_path}:\n{e!s}"
         )
 
 
@@ -119,13 +118,11 @@ def get_config_file_path():
 def load_config():
     config = None
     config_file_path = get_config_file_path()
-    print("Using configuration file {}".format(config_file_path))
+    print(f"Using configuration file {config_file_path}")
 
     if not os.path.isfile(config_file_path):
         print(
-            "{} does not exist, creating it from default values".format(
-                config_file_path
-            )
+            f"{config_file_path} does not exist, creating it from default values"
         )
         try:
             copy_default_config(config_file_path)

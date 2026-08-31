@@ -1,19 +1,19 @@
+import os
+import re
+import shutil
+import signal
+from pathlib import Path
+
 from starlette.responses import JSONResponse
 
-from pathlib import Path
 from ydl_server.config import (
     app_config,
     get_finished_path,
-    get_ydl_formats,
     get_ui_aliases,
+    get_ydl_formats,
     resolve_finished_file,
 )
-from ydl_server.db import JobsDB, Job, Actions, JobType
-import os
-import re
-import signal
-import shutil
-
+from ydl_server.db import Actions, Job, JobsDB, JobType
 
 TIMESTAMP_RE = re.compile(r"^(\d+(\.\d+)?|(\d+:)?[0-5]?\d:[0-5]?\d(\.\d+)?)$")
 
@@ -27,7 +27,7 @@ def parse_timestamp(ts):
 
 def prefix_format(prefix, value):
     """Namespace a format segment, tolerating callers that already prefixed it."""
-    return value if value.startswith(prefix + "/") else "{}/{}".format(prefix, value)
+    return value if value.startswith(prefix + "/") else f"{prefix}/{value}"
 
 
 MAX_TREE_DEPTH = 32

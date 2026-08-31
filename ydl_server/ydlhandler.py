@@ -1,20 +1,19 @@
-import os
-from queue import Queue, Empty
-from threading import Thread
-import io
 import importlib
-from importlib import metadata
+import io
 import json
+import os
 import re
 import shlex
 import time
-from time import sleep
 from datetime import datetime
-from subprocess import Popen, PIPE, STDOUT
+from importlib import metadata
+from queue import Empty, Queue
+from subprocess import PIPE, STDOUT, Popen
+from threading import Thread
+from time import sleep
 
 from ydl_server.config import resolve_finished_file
-from ydl_server.db import JobsDB, Job, Actions, JobType
-
+from ydl_server.db import Actions, Job, JobsDB, JobType
 
 YDL_MODULES = ["youtube_dl", "youtube_dlc", "yt_dlp"]
 
@@ -44,7 +43,7 @@ def get_ydl_website(ydl_module_name):
     try:
         meta = metadata.metadata(ydl_module_name)
     except metadata.PackageNotFoundError:
-        print("Package {} not found, skipping get_ydl_website".format(ydl_module_name))
+        print(f"Package {ydl_module_name} not found, skipping get_ydl_website")
         return ""
 
     url = meta.get("Home-page")
@@ -128,7 +127,7 @@ class YdlHandler:
 
         self.import_ydl_module()
 
-        print("Using {} module".format(self.ydl_module_name))
+        print(f"Using {self.ydl_module_name} module")
 
     def start(self):
         self.download_workers_count = self.app_config["ydl_server"].get(
@@ -168,13 +167,9 @@ class YdlHandler:
                     self.cut(job, output)
             except Exception as e:
                 job.status = Job.FAILED
-                job.log = "Error during download task:\n{}:\n\t{}".format(
-                    type(e).__name__, str(e)
-                )
+                job.log = f"Error during download task:\n{type(e).__name__}:\n\t{e!s}"
                 print(
-                    "Error during download task:\n{}:\n\t{}".format(
-                        type(e).__name__, str(e)
-                    )
+                    f"Error during download task:\n{type(e).__name__}:\n\t{e!s}"
                 )
             self.jobshandler.put((Actions.UPDATE, job))
 
@@ -339,7 +334,7 @@ class YdlHandler:
             for key, val in opt_dict.items():
                 if isinstance(val, bool) and not val:
                     continue
-                cmd.append("--{}".format(key))
+                cmd.append(f"--{key}")
                 if val is not None and not isinstance(val, bool):
                     cmd.append(str(val))
         if extra_opts is not None and isinstance(extra_opts, list):
@@ -360,7 +355,7 @@ class YdlHandler:
 
         rc, metadata = self.fetch_metadata(job.url, force_generic_extractor=force_generic)
         if rc != 0:
-            job.log = Job.clean_logs("[cmd] {}\n{}".format(format_cmd(cmd), metadata))
+            job.log = Job.clean_logs(f"[cmd] {format_cmd(cmd)}\n{metadata}")
             upcoming = self.probe_upcoming(
                 job.url, force_generic_extractor=force_generic, error_output=metadata
             )
@@ -382,7 +377,7 @@ class YdlHandler:
         if upcoming and self.app_config["ydl_server"].get("schedule_upcoming", True):
             release = upcoming.get("release_timestamp")
             if release is not None:
-                job.log = Job.clean_logs("[cmd] {}".format(format_cmd(cmd)))
+                job.log = Job.clean_logs(f"[cmd] {format_cmd(cmd)}")
                 self.schedule_job(job, int(release))
                 return
 
@@ -404,7 +399,7 @@ class YdlHandler:
             )
 
         cmd = self.get_ydl_full_cmd(ydl_opts, job.url, extra_opts)
-        output.write("[cmd] {}\n".format(format_cmd(cmd)))
+        output.write(f"[cmd] {format_cmd(cmd)}\n")
 
         try:
             fmt_proc = Popen(
@@ -413,7 +408,7 @@ class YdlHandler:
             )
             fmt_stdout, _ = fmt_proc.communicate()
             if fmt_proc.returncode == 0 and fmt_stdout.strip():
-                output.write("[format] {}\n".format(fmt_stdout.decode().strip()))
+                output.write(f"[format] {fmt_stdout.decode().strip()}\n")
         except Exception as e:
             print("Error looking up format", e)
 
@@ -455,7 +450,7 @@ class YdlHandler:
             cmd.extend(["-c", "copy", "-avoid_negative_ts", "make_zero"])
         cmd.append(dst)
 
-        output.write("[cmd] {}\n".format(format_cmd(cmd)))
+        output.write(f"[cmd] {format_cmd(cmd)}\n")
         proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
         self.jobshandler.put((Actions.SET_PID, (job.id, proc.pid)))
         stdout_thread = Thread(

@@ -1,17 +1,15 @@
-from __future__ import unicode_literals
+import signal
+
+import uvicorn
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
-import uvicorn
-import signal
 
-from ydl_server.db import JobsDB
-
-from ydl_server.ydlhandler import YdlHandler
-from ydl_server.jobshandler import JobsHandler
 from ydl_server.config import app_config
-
+from ydl_server.db import JobsDB
+from ydl_server.jobshandler import JobsHandler
 from ydl_server.routes import routes
+from ydl_server.ydlhandler import YdlHandler
 
 if __name__ == "__main__":
     JobsDB.init()

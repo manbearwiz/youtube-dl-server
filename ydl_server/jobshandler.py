@@ -1,7 +1,8 @@
 import time
-from queue import Queue, Empty
-from threading import Thread, Event
-from ydl_server.db import JobsDB, Job, Actions
+from queue import Empty, Queue
+from threading import Event, Thread
+
+from ydl_server.db import Actions, Job, JobsDB
 
 
 class JobsHandler:
