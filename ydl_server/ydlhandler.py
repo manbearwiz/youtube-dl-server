@@ -5,7 +5,7 @@ import os
 import re
 import shlex
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from importlib import metadata
 from queue import Empty, Queue
 from subprocess import PIPE, STDOUT, Popen
@@ -16,6 +16,18 @@ from ydl_server.config import resolve_finished_file
 from ydl_server.db import Actions, Job, JobsDB, JobType
 
 YDL_MODULES = ["youtube_dl", "youtube_dlc", "yt_dlp"]
+
+
+class OptionsError(Exception):
+    pass
+
+
+class DownloadError(Exception):
+    pass
+
+
+class CutError(Exception):
+    pass
 
 # Fallback when an extractor announces an upcoming event without a release timestamp
 UPCOMING_DELAY_RE = re.compile(
@@ -123,7 +135,7 @@ class YdlHandler:
         self.app_config = app_config
         self.jobshandler = jobshandler
 
-        self.app_config["ydl_last_update"] = datetime.now()
+        self.app_config["ydl_last_update"] = datetime.now(timezone.utc)
 
         self.import_ydl_module()
 
@@ -165,7 +177,7 @@ class YdlHandler:
                     self.download(job, {"format": job.format}, output)
                 elif job.type == JobType.FFMPEG_CUT:
                     self.cut(job, output)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - worker thread must survive any download failure
                 job.status = Job.FAILED
                 job.log = f"Error during download task:\n{type(e).__name__}:\n\t{e!s}"
                 print(
@@ -180,7 +192,7 @@ class YdlHandler:
                 profile = s
             elif s.startswith("alias/"):
                 aliases.append(s)
-            elif s.startswith("audio/") or s.startswith("bestaudio/"):
+            elif s.startswith(("audio/", "bestaudio/")):
                 audio = s
             else:
                 fmt = s
@@ -192,7 +204,7 @@ class YdlHandler:
         profile_name = "/".join(profile_str.split("/")[1:])
         profile = self.app_config.get("profiles", {}).get(profile_name, {}).get('ydl_options')
         if not profile:
-            raise Exception("Unknown profile ", profile_str)
+            raise OptionsError(f"Unknown profile '{profile_str}'")
         return profile
 
     def get_aliases(self, alias_strs):
@@ -201,7 +213,7 @@ class YdlHandler:
             alias_name = "/".join(alias_str.split("/")[1:])
             alias = self.app_config.get("aliases", {}).get(alias_name, {}).get("ydl_options")
             if not alias:
-                raise Exception("Unknown alias ", alias_str)
+                raise OptionsError(f"Unknown alias '{alias_str}'")
             options.update(alias)
         return options
 
@@ -223,10 +235,9 @@ class YdlHandler:
         if req_format is not None:
             if req_format == "video/best":
                 req_format = "video/bestvideo"
-            if req_format.startswith("video/"):
-                # youtube-dl downloads BEST video and audio by default
-                if req_format != "video/best":
-                    req_format = req_format.split("/")[-1]
+            # youtube-dl downloads BEST video and audio by default
+            if req_format.startswith("video/") and req_format != "video/best":
+                req_format = req_format.split("/")[-1]
             if req_audio is not None:
                 req_format = req_format + "+" + req_audio.split("/")[-1]
             else:
@@ -318,7 +329,9 @@ class YdlHandler:
         job.log = Job.clean_logs(
             "{}\n[scheduled] this event has not started yet, retrying at {} (attempt {}/{})".format(
                 job.log or "",
-                datetime.fromtimestamp(job.scheduled_at).strftime("%Y-%m-%d %H:%M:%S"),
+                datetime.fromtimestamp(job.scheduled_at, tz=timezone.utc)
+                .astimezone()
+                .strftime("%Y-%m-%d %H:%M:%S"),
                 attempts,
                 max_attempts,
             )
@@ -364,7 +377,7 @@ class YdlHandler:
                 return
             job.status = Job.FAILED
             print("Error in metadata fetching process:\n" + job.log)
-            raise Exception(job.log)
+            raise DownloadError(job.log)
 
         title = ", ".join(
             [md.get("title", job.url[i]) for i, md in enumerate(metadata)]
@@ -409,7 +422,7 @@ class YdlHandler:
             fmt_stdout, _ = fmt_proc.communicate()
             if fmt_proc.returncode == 0 and fmt_stdout.strip():
                 output.write(f"[format] {fmt_stdout.decode().strip()}\n")
-        except Exception as e:
+        except (OSError, UnicodeDecodeError) as e:
             print("Error looking up format", e)
 
         proc = Popen(cmd, stdout=PIPE, stderr=STDOUT)
@@ -437,9 +450,9 @@ class YdlHandler:
         params = job.extra_params
         src = resolve_finished_file(job.url[0])
         if src is None:
-            raise Exception("Invalid source file path")
+            raise CutError("Invalid source file path")
         if not os.path.isfile(src):
-            raise Exception(f"Source file not found: {job.url[0]}")
+            raise CutError(f"Source file not found: {job.url[0]}")
         dst = os.path.join(os.path.dirname(src), params["output"])
 
         cmd = ["ffmpeg", "-nostdin", "-hide_banner", "-y", "-ss", str(params.get("start") or "0")]

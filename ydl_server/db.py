@@ -47,7 +47,7 @@ class Job:
     ABORTED = 4
     SCHEDULED = 5
 
-    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1, pid=0, force_generic_extractor=False, extra_params={}, scheduled_at=None):
+    def __init__(self, name, status, log, jobtype, format=None, url=None, id=-1, pid=0, force_generic_extractor=False, extra_params=None, scheduled_at=None):
         self.id = id
         self.name = name
         self.status = status
@@ -58,7 +58,7 @@ class Job:
         self.url = url
         self.pid = pid
         self.force_generic_extractor = force_generic_extractor
-        self.extra_params = extra_params
+        self.extra_params = extra_params if extra_params is not None else {}
         self.scheduled_at = scheduled_at
 
     @staticmethod
@@ -136,7 +136,7 @@ class JobsDB:
                 cursor = conn.cursor()
                 cursor.execute("PRAGMA table_info('jobs')")
                 columns = [row[1] for row in cursor.fetchall()]
-                if set(columns) != set([
+                if set(columns) != {
                         "id",
                         "name",
                         "status",
@@ -146,7 +146,7 @@ class JobsDB:
                         "type",
                         "url",
                         "pid",
-                    ]):
+                    }:
                     print("Outdated jobs table, cleaning up and recreating")
                     cursor.execute("DROP TABLE if exists jobs;")
                     conn.commit()

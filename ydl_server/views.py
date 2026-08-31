@@ -49,7 +49,7 @@ def build_finished_tree(root_dir, seen=None, depth=0):
         try:
             stat = entry.stat()
             is_dir = entry.is_dir()
-        except Exception as e:
+        except OSError as e:
             print(f"Error accessing {entry.path} - {e}")
         children = None
         if is_dir:

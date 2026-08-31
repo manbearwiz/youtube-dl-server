@@ -75,10 +75,12 @@ class JobsHandler:
                 if db.clean_old_jobs():
                     db.vacuum()
             elif action == Actions.DELETE_LOG_SAFE:
-                if db.delete_job_safe(job["id"]):
+                deleted = db.delete_job_safe(job["id"])
+                if deleted:
                     db.vacuum()
             elif action == Actions.DELETE_LOG:
-                if db.delete_job(job["id"]):
+                deleted = db.delete_job(job["id"])
+                if deleted:
                     db.vacuum()
             self.queue.task_done()
 
