@@ -4,7 +4,7 @@
         <a type="button">
           <SvgIcon :name="isOpen ? 'folder-open' : 'folder'" color="var(--bs-teal)" size="14" />
         </a>
-        <a href="#" @click.stop.prevent="$emit('delete', item.name)">
+        <a href="#" @click.stop.prevent="$emit('delete', fullPath)">
           <SvgIcon name="trash" color="var(--bs-red)" size="14" />
         </a>
       </td>
@@ -20,8 +20,8 @@
         :item="child"
         :depth="depth + 1"
         :parent-path="parentPath ? `${parentPath}/${item.name}` : item.name"
-        @delete="$emit('delete', parentPath ? `${parentPath}/${item.name}/${$event}` : `${item.name}/${$event}`)"
-        @cut="$emit('cut', parentPath ? `${parentPath}/${item.name}/${$event}` : `${item.name}/${$event}`)"
+        @delete="$emit('delete', $event)"
+        @cut="$emit('cut', $event)"
       />
     </template>
     <tr v-else-if="!item.directory">
@@ -29,10 +29,10 @@
         <a :href="`api/finished/${encodeURIComponent(fullPath)}`" download>
           <SvgIcon name="download" color="var(--bs-teal)" size="14" />
         </a>
-        <a v-if="isMedia" href="#" @click.prevent="$emit('cut', item.name)" style="cursor: pointer;" title="Cut">
+        <a v-if="isMedia" href="#" @click.prevent="$emit('cut', fullPath)" style="cursor: pointer;" title="Cut">
           <SvgIcon name="scissors" color="var(--bs-orange)" size="14" />
         </a>
-        <a href="#" @click.prevent="$emit('delete', item.name)" style="cursor: pointer;">
+        <a href="#" @click.prevent="$emit('delete', fullPath)" style="cursor: pointer;">
           <SvgIcon name="trash" color="var(--bs-red)" size="14" />
         </a>
       </td>
