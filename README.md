@@ -44,6 +44,55 @@ This is an example service definition that could be put in `docker-compose.yml`.
     restart: always
 ```
 
+### Using an existing HTTP proxy (Docker / Unraid)
+
+Set the optional `YDL_PROXY` environment variable to the URL of an existing
+HTTP proxy, for example `http://192.168.1.10:8118`. It is passed directly to
+yt-dlp's `proxy` option for outbound requests and downloads. Leaving it unset
+or blank preserves existing behavior, including yt-dlp's normal proxy discovery.
+This setting does not create or manage a VPN.
+
+For example, a Binhex VPN container with Privoxy enabled can provide the proxy
+on port `8118`. Publish that port, allow access from youtube-dl-server in the
+proxy's configuration, and replace the example IP with your Unraid server's IP:
+
+```shell
+docker run -d --name youtube-dl-server -p 8080:8080 \
+  -v /home/core/youtube-dl:/youtube-dl \
+  -e YDL_PROXY=http://192.168.1.10:8118 \
+  kmb32123/youtube-dl-server
+```
+
+On Unraid, keep the normal bridge network and WebUI port mapping, and add a
+Variable named `YDL_PROXY` with value `http://UNRAID-IP:8118` (replace
+`UNRAID-IP` with the actual IP). Traffic flows from yt-dlp through Privoxy and
+the proxy container's VPN. This avoids sharing the VPN container's network
+namespace, so the YTDL WebUI remains reachable normally at
+`http://UNRAID-IP:8080/youtube-dl`. Only traffic using the configured proxy
+follows that route; VPN availability and traffic blocking depend on the proxy
+container's configuration.
+
+To verify the public IP seen by yt-dlp, run this on the Docker / Unraid host:
+
+```shell
+docker exec -i youtube-dl-server python3 - <<'PY'
+import os
+from yt_dlp import YoutubeDL
+
+with YoutubeDL({
+    "proxy": os.environ.get("YDL_PROXY") or None,
+    "quiet": True,
+    "no_warnings": True,
+}) as ydl:
+    response = ydl.urlopen('https://api.ipify.org')
+    print("Public IP seen by yt-dlp:", response.read().decode())
+PY
+```
+
+With `YDL_PROXY` configured, compare the result with the VPN container's public
+IP; they should match. This checks the yt-dlp request path rather than a
+separate tool's proxy settings.
+
 ### Python
 
 If you have python ^3.6.0 installed in your PATH you can simply run like this, providing optional environment variable overrides inline.
