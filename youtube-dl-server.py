@@ -1,11 +1,14 @@
+import asyncio
 import logging
 import os
-import sys
 import subprocess
+import sys
+from contextlib import asynccontextmanager
 from urllib.parse import quote
 
 from starlette.applications import Starlette
 from starlette.config import Config
+from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Route
 from starlette.templating import Jinja2Templates
@@ -50,6 +53,11 @@ OPTIONS = {
     "YDL_SUBTITLES_LANGS": (split_langs, None),
     "YDL_WRITE_THUMBNAIL": (bool, False),
     "YDL_EMBED_METADATA": (bool, False),
+    # Four. Previously a burst of requests ran up to anyio's 40-token thread pool,
+    # because each request spawned its own task. A single download is unaffected;
+    # concurrent bursts serialize. 40 restores the previous ceiling.
+    "YDL_MAX_CONCURRENT_DOWNLOADS": (int, 4),
+    "YDL_JOB_HISTORY": (int, 200),
 }
 
 
@@ -117,20 +125,21 @@ async def q_put(request):
             {"success": False, "error": "/q called without a 'url' in form data"}
         )
 
-    task = BackgroundTask(download, url, options)
+    job = store.add(url, options)
+    queue.put_nowait(job)
 
     logger.info("Added url %s to the download queue", url)
 
     if not ui:
+        # job_id is additive: success/url/options are what consumers already read.
         return JSONResponse(
-            {"success": True, "url": url, "options": options}, background=task
+            {"success": True, "url": url, "options": options, "job_id": job["id"]}
         )
     # quote() percent-encodes the url so the added= query param parses correctly
     # on the UI page (previously raw concatenation).
     return RedirectResponse(
         url="/youtube-dl?added=" + quote(url),
         status_code=HTTP_303_SEE_OTHER,
-        background=task,
     )
 
 
@@ -231,6 +240,71 @@ def download(url, request_options):
         ydl.download([url])
 
 
+class JobStore:
+    """Live job record. The durable record is the yt-dlp archive file
+    (YDL_ARCHIVE_FILE); this is a bounded in-memory view that a restart clears."""
+
+    def __init__(self, history_limit):
+        self.history_limit = history_limit
+        self.order = []
+        self.counter = 0
+
+    def add(self, url, request_options):
+        self.counter += 1
+        job = {
+            "id": str(self.counter),
+            "url": url,
+            "options": dict(request_options),
+            "status": "queued",
+            "error": None,
+        }
+        self.order.append(job)
+        while self.history_limit and len(self.order) > self.history_limit:
+            self.order.pop(0)
+        return job
+
+    def snapshot(self):
+        return [dict(job) for job in self.order]
+
+
+store = JobStore(app_defaults["YDL_JOB_HISTORY"])
+queue = asyncio.Queue()
+
+
+async def process(job):
+    # A failure used to be invisible to the caller: the response had already been sent
+    # as success, so a raising download produced a traceback at best and nothing was
+    # recorded.
+    job["status"] = "running"
+    try:
+        await run_in_threadpool(download, job["url"], job["options"])
+        job["status"] = "done"
+    except Exception as exc:
+        logger.exception("Download failed for %s", job["url"])
+        job["status"] = "failed"
+        job["error"] = str(exc)
+
+
+async def worker():
+    while True:
+        job = await queue.get()
+        await process(job)
+        queue.task_done()
+
+
+@asynccontextmanager
+async def lifespan(app):
+    # The worker count is the limit. 0 creates no workers, which the test harness uses
+    # so queue state is observable without a running loop.
+    workers = [
+        asyncio.create_task(worker())
+        for _ in range(app_defaults["YDL_MAX_CONCURRENT_DOWNLOADS"])
+    ]
+    yield
+    for task in workers:
+        task.cancel()
+
+
 routes = [
     Route("/", endpoint=redirect),
     Route("/healthz", endpoint=healthz),
@@ -239,4 +313,4 @@ routes = [
     Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
 ]
 
-app = Starlette(debug=False, routes=routes)
+app = Starlette(debug=False, routes=routes, lifespan=lifespan)
