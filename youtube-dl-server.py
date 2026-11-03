@@ -37,6 +37,7 @@ OPTIONS = {
     "YDL_OUTPUT_TEMPLATE": (str, "/youtube-dl/%(title).200s [%(id)s].%(ext)s"),
     "YDL_ARCHIVE_FILE": (str, None),
     "YDL_UPDATE_TIME": (bool, True),
+    "YDL_PROXY": (str, None),
 }
 
 
@@ -174,6 +175,7 @@ def get_ydl_options(request_options):
         "postprocessors": postprocessors,
         "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
         "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
+        "proxy": ydl_vars["YDL_PROXY"],
         "updatetime": ydl_vars["YDL_UPDATE_TIME"],
     }
 

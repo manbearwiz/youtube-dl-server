@@ -178,6 +178,28 @@ def test_env_var_wins_over_dotenv_file(monkeypatch, tmp_path):
     assert config("YDL_FORMAT") == "from_env"
 
 
+def test_proxy_option_is_none_when_unset(monkeypatch):
+    # Pins the no-change guarantee for existing installs: an unset YDL_PROXY
+    # passes None, which is what yt-dlp treats as "use the environment's proxy
+    # discovery".
+    monkeypatch.delenv("YDL_PROXY", raising=False)
+    assert app.get_ydl_options({})["proxy"] is None
+
+
+def test_proxy_value_passed_through(monkeypatch):
+    monkeypatch.setitem(app.app_defaults, "YDL_PROXY", "http://127.0.0.1:8118")
+    assert app.get_ydl_options({})["proxy"] == "http://127.0.0.1:8118"
+
+
+def test_empty_proxy_env_value_means_unset(monkeypatch):
+    # An empty YDL_PROXY= (common in compose files and .env files) must not
+    # disable yt-dlp's own proxy discovery. Worth knowing: yt-dlp's CLI treats an
+    # explicit --proxy '' as "no proxy", so this is our documented rule -- an
+    # env file cannot distinguish absent from empty, so empty means not set.
+    monkeypatch.setenv("YDL_PROXY", "")
+    assert app.resolve("YDL_PROXY", str, None) is None
+
+
 def test_get_ydl_options_audio_postprocessor():
     opts = app.get_ydl_options({"format": "mp3"})
     assert opts["postprocessors"][0]["key"] == "FFmpegExtractAudio"
@@ -212,5 +234,6 @@ def test_get_ydl_options_base_keys(client):
         "format",
         "outtmpl",
         "postprocessors",
+        "proxy",
         "updatetime",
     ]
