@@ -5,7 +5,9 @@
 #
 
 # Pinned for reproducible builds; kept current by Dependabot (.github/dependabot.yml).
-FROM python:3.14.10-alpine3.24
+# 3.15.2 rather than 3.15.0: 3.15.0-alpine3.24 has no arm/v6 or arm/v7 builds, which
+# this image publishes (see .github/workflows/docker-image.yml).
+FROM python:3.15.2-alpine3.24
 
 # Install JS runtime for yt-dlp based on architecture
 # deno is available on: x86_64 (amd64), aarch64 (arm64)

@@ -100,6 +100,6 @@ javascript:!function(){fetch("http://${host}:8080/youtube-dl/q",{body:new URLSea
 
 The server uses [`starlette`](https://github.com/encode/starlette) for the web framework and [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) to handle the downloading. The integration with yt-dlp makes use of their [python api](https://github.com/yt-dlp/yt-dlp#embedding-yt-dlp).
 
-This docker image is based on [`python:3.14.10-alpine3.24`](https://hub.docker.com/_/python/), pinned for reproducible builds and kept current by Dependabot.
+This docker image is based on the official [`python`](https://hub.docker.com/_/python/) alpine image, pinned in the `Dockerfile` and kept current by Dependabot.
 
 [1]:youtube-dl-server.png
