@@ -173,4 +173,4 @@ routes = [
     Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
 ]
 
-app = Starlette(debug=True, routes=routes)
+app = Starlette(debug=False, routes=routes)
