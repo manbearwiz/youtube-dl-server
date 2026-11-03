@@ -94,10 +94,8 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: [changed, test]
-    # changed runs on every event, so this condition is evaluated. It used to be
-    # gated by `if: github.event_name == 'pull_request'`, and a job whose
-    # dependency is skipped is skipped regardless of its own condition, so on push
-    # and tag events this job never ran and nothing was published.
+    # changed runs on every event, so this condition is evaluated: a skipped
+    # dependency skips this job regardless of its own condition.
     if: github.event_name != 'pull_request' || needs.changed.outputs.build == 'true'
     steps:
       - name: Checkout

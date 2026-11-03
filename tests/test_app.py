@@ -1,8 +1,6 @@
 """Behavior tests.
 
-Tests marked with a bug-pin comment asserted broken behavior in the baseline
-suite (PR #378). This PR flips each pin; the flipped assertion is the
-reviewable signal that the behavior change is intentional.
+Each test pins one observable behavior.
 """
 
 import importlib
@@ -15,7 +13,7 @@ app = importlib.import_module("youtube-dl-server")
 
 
 def test_root_redirects(client):
-    # Pins current behavior: Starlette 1.0 RedirectResponse defaults to 307.
+    # Starlette 1.0 RedirectResponse defaults to 307.
     r = client.get("/", follow_redirects=False)
     assert r.status_code == 307
     assert r.headers["location"] == "/youtube-dl"
@@ -25,8 +23,7 @@ def test_queue_list_renders(client):
     r = client.get("/youtube-dl")
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
-    # Bug pin flipped (was EMPTY in the baseline): TemplateResponse now uses
-    # Starlette's (request, name, context) signature.
+    # TemplateResponse uses Starlette's (request, name, context) signature.
     assert version.__version__ in r.text
 
 
@@ -43,9 +40,8 @@ def test_q_json_success_pins_current_shape(client, calls):
 
 
 def test_q_accepts_multipart_form_data(client, calls):
-    # python-multipart is a declared dependency, but the suite only exercised the
-    # urlencoded path. This pins the multipart branch of request.form() so a
-    # python-multipart or starlette regression is visible in CI.
+    # The multipart branch of request.form(), so a python-multipart or starlette
+    # regression is visible in CI.
     r = client.post(
         "/youtube-dl/q",
         files={"url": ("", "https://example.com/watch?v=x", "text/plain")},
@@ -60,8 +56,7 @@ def test_q_accepts_multipart_form_data(client, calls):
 
 
 def test_q_logs_queue_add(client, caplog):
-    # print() replaced by logging; caplog confirms the message is logged via
-    # the named logger at INFO.
+    # Queue adds are logged through the named logger at INFO.
     caplog.set_level(logging.INFO, logger="youtube-dl-server")
     client.post("/youtube-dl/q", data={"url": "https://example.com/watch?v=x"})
     assert (
@@ -70,17 +65,14 @@ def test_q_logs_queue_add(client, caplog):
 
 
 def test_q_ui_redirect(client, calls):
-    # Already fixed on main (812bed5: missing HTTP_303_SEE_OTHER import). Pins
-    # the now-correct behavior so it cannot regress.
     r = client.post(
         "/youtube-dl/q",
         data={"url": "https://example.com/watch?v=x", "ui": "true"},
         follow_redirects=False,
     )
     assert r.status_code == 303
-    # Behavior change in this commit: the added= value is percent-encoded
-    # instead of raw string concatenation, so the UI page's query param parses
-    # correctly for urls containing ? or &.
+    # percent-encoding makes the added= query param parse for urls containing
+    # ? or &.
     assert r.headers["location"] == "/youtube-dl?added=" + quote(
         "https://example.com/watch?v=x"
     )
@@ -88,8 +80,7 @@ def test_q_ui_redirect(client, calls):
 
 
 def test_q_missing_url_returns_json_error(client):
-    # Bug pin flipped (was AttributeError -> 500 in the baseline): now the JSON
-    # error branch is reachable, with status intentionally unchanged (200).
+    # Status stays 200: the API contract for a missing url is a JSON error body.
     r = client.post("/youtube-dl/q", data={})
     assert r.status_code == 200
     assert r.json() == {
@@ -99,15 +90,11 @@ def test_q_missing_url_returns_json_error(client):
 
 
 def test_no_startup_self_update(client, calls):
-    # PR #380 removed the lifespan pip self-update. The client fixture enters
-    # the app lifespan; nothing must run at startup. The runtime pip upgrade
-    # remains available only via the explicit PUT /update endpoint.
+    # Nothing runs at startup; the pip upgrade happens only through PUT /update.
     assert calls["update"] == []
 
 
 def test_update_route(client, calls):
-    # Bug pin flipped (was TypeError -> 500 in the baseline): update_route now
-    # uses the request-style endpoint signature.
     r = client.put("/youtube-dl/update")
     assert r.status_code == 200
     assert r.json() == {"output": "Initiated package update"}
@@ -138,8 +125,8 @@ def test_healthz_reports_unwritable_output_dir(client, monkeypatch):
 
 
 def test_resolve_uses_config_bool_mapping(monkeypatch):
-    # Documents what starlette's cast=bool actually accepts: true/1/false/0,
-    # case-insensitive. Deferring to Config means no bespoke vocabulary.
+    # What starlette's cast=bool accepts: true/1/false/0, case-insensitive.
+    # Deferring to Config means no bespoke vocabulary.
     for value, expected in (
         ("true", True),
         ("False", False),
@@ -151,9 +138,8 @@ def test_resolve_uses_config_bool_mapping(monkeypatch):
 
 
 def test_resolve_warns_and_uses_default_for_unparseable_value(monkeypatch, caplog):
-    # Bug pin flipped: an unparseable value (including an empty one) raised
-    # ValueError at import time and took the whole app down -- a container restart
-    # loop with no clear message. It now warns and keeps the documented default.
+    # An unparseable value warns and keeps the documented default instead of
+    # raising at import time, which would take the whole app down.
     caplog.set_level(logging.WARNING, logger="youtube-dl-server")
     monkeypatch.setenv("YDL_TEST_BOOL", "yes")
     assert app.resolve("YDL_TEST_BOOL", bool, True) is True
@@ -168,7 +154,7 @@ def test_empty_value_means_not_set(monkeypatch):
 
 
 def test_setting_reaches_ydl_options(monkeypatch):
-    # Pins the wiring: a boolean setting must reach the yt-dlp options as a bool.
+    # A boolean setting reaches the yt-dlp options as a bool.
     monkeypatch.setenv("YDL_UPDATE_TIME", "false")
     monkeypatch.setitem(
         app.app_defaults, "YDL_UPDATE_TIME", app.resolve("YDL_UPDATE_TIME", bool, True)
@@ -177,8 +163,7 @@ def test_setting_reaches_ydl_options(monkeypatch):
 
 
 def test_env_var_wins_over_dotenv_file(monkeypatch, tmp_path):
-    # Both sources are supported. Documented precedence: process environment >
-    # .env file > default. Pinned so the two sources cannot drift in behavior.
+    # Precedence: process environment > .env file > default.
     (tmp_path / ".env").write_text("YDL_FORMAT=from_file\n")
     config = app.config.__class__(tmp_path / ".env")
     monkeypatch.setenv("YDL_FORMAT", "from_env")
@@ -186,9 +171,8 @@ def test_env_var_wins_over_dotenv_file(monkeypatch, tmp_path):
 
 
 def test_proxy_option_is_none_when_unset(monkeypatch):
-    # Pins the no-change guarantee for existing installs: an unset YDL_PROXY
-    # passes None, which is what yt-dlp treats as "use the environment's proxy
-    # discovery".
+    # An unset YDL_PROXY passes None, which yt-dlp treats as "use the
+    # environment's proxy discovery".
     monkeypatch.delenv("YDL_PROXY", raising=False)
     assert app.get_ydl_options({})["proxy"] is None
 
@@ -199,25 +183,21 @@ def test_proxy_value_passed_through(monkeypatch):
 
 
 def test_empty_proxy_env_value_means_unset(monkeypatch):
-    # An empty YDL_PROXY= (common in compose files and .env files) must not
-    # disable yt-dlp's own proxy discovery. Worth knowing: yt-dlp's CLI treats an
-    # explicit --proxy '' as "no proxy", so this is our documented rule -- an
-    # env file cannot distinguish absent from empty, so empty means not set.
+    # An empty YDL_PROXY (common in compose and .env files) means not set, so
+    # yt-dlp's own proxy discovery still applies.
     monkeypatch.setenv("YDL_PROXY", "")
     assert app.resolve("YDL_PROXY", str, None) is None
 
 
 def test_cookie_file_option_is_none_when_unset(monkeypatch):
-    # Pins the no-change guarantee: cookies are only read when configured, so
-    # existing installs behave exactly as before.
+    # Cookies are only read when configured.
     monkeypatch.delenv("YDL_COOKIE_FILE", raising=False)
     assert app.get_ydl_options({})["cookiefile"] is None
 
 
 def test_cookie_file_path_passed_as_given(monkeypatch):
-    # Bug pin flipped against #96: that PR hard-prefixed "/youtube-dl/", which
-    # assumed the cookie file lives in the output volume. The value is a path as
-    # the operator wrote it, so a separate mount works.
+    # The cookie file is the path as the operator wrote it, so it can live
+    # outside the output volume.
     monkeypatch.setitem(app.app_defaults, "YDL_COOKIE_FILE", "cookies.txt")
     assert app.get_ydl_options({})["cookiefile"] == "cookies.txt"
     monkeypatch.setitem(app.app_defaults, "YDL_COOKIE_FILE", "/config/cookies.txt")
@@ -239,18 +219,15 @@ def test_get_ydl_options_video_postprocessor():
 
 
 def test_get_ydl_options_no_postprocessor_for_non_codec_formats():
-    # Pins that "bestvideo", None and unknown formats produce no postprocessors.
+    # "bestvideo", None and unknown formats produce no postprocessors.
     assert app.get_ydl_options({"format": "bestvideo"})["postprocessors"] == []
     assert app.get_ydl_options({"format": None})["postprocessors"] == []
     assert app.get_ydl_options({"format": ""})["postprocessors"] == []
 
 
 def test_env_audio_format_applies_when_request_names_no_format(monkeypatch):
-    # Bug reproduction. request_vars always contained both keys, one of them None,
-    # so `app_defaults | request_vars` cleared the env value on every request:
-    # YDL_EXTRACT_AUDIO_FORMAT -- documented in .env.example as forcing audio
-    # extraction -- had no effect for a request without a format, which is what the
-    # REST API sends. The env value is a default, so it must survive.
+    # The env value is a default, so it must survive a request that names no
+    # format, which is what the REST API sends.
     monkeypatch.setitem(app.app_defaults, "YDL_EXTRACT_AUDIO_FORMAT", "mp3")
     assert app.get_ydl_options({})["postprocessors"] == [
         {
@@ -267,8 +244,7 @@ def test_env_audio_format_applies_when_request_names_no_format(monkeypatch):
 
 
 def test_request_format_choice_still_wins_over_env_default(monkeypatch):
-    # Pins the precedence that must not change: an explicit request format overrides
-    # the env default for the same choice.
+    # An explicit request format overrides the env default for the same choice.
     monkeypatch.setitem(app.app_defaults, "YDL_EXTRACT_AUDIO_FORMAT", "mp3")
     opts = app.get_ydl_options({"format": "flac"})
     assert opts["postprocessors"] == [
@@ -287,9 +263,9 @@ def test_request_format_choice_still_wins_over_env_default(monkeypatch):
 
 
 def test_request_choice_excludes_the_env_choice_of_the_other_kind(monkeypatch):
-    # A request naming a codec or a container selects one pipeline, so the env value
-    # of the other kind must not add a second postprocessor (ffmpeg would recode an
-    # extracted audio file into a video container). Pinned both directions.
+    # A request naming a codec or a container selects one pipeline, so the env
+    # value of the other kind must not add a second postprocessor: ffmpeg would
+    # recode an extracted audio file into a video container.
     monkeypatch.setitem(app.app_defaults, "YDL_EXTRACT_AUDIO_FORMAT", "mp3")
     assert [
         p["key"] for p in app.get_ydl_options({"format": "mp4"})["postprocessors"]
@@ -301,15 +277,14 @@ def test_request_choice_excludes_the_env_choice_of_the_other_kind(monkeypatch):
 
 
 def test_debug_mode_off(client):
-    # Release-note candidate: error responses no longer include tracebacks;
-    # API consumers scraping error pages will see plain 500s.
+    # Error responses do not include tracebacks.
     assert app.app.debug is False
 
 
 def test_media_options_are_off_by_default(monkeypatch):
-    # Pins the no-change guarantee: every option here is opt-in, and the values
-    # match yt-dlp's own defaults when unset (subtitleslangs is deliberately
-    # absent so yt-dlp keeps its default language selection).
+    # Every option here is opt-in, and the values match yt-dlp's own defaults
+    # when unset. subtitleslangs is absent so yt-dlp keeps its default language
+    # selection.
     for key in (
         "YDL_WRITE_SUBTITLES",
         "YDL_SUBTITLES_LANGS",
@@ -328,8 +303,8 @@ def test_write_subtitles_when_enabled(monkeypatch):
     monkeypatch.setitem(app.app_defaults, "YDL_WRITE_SUBTITLES", True)
     opts = app.get_ydl_options({})
     assert opts["writesubtitles"] is True
-    # Postprocessors are unchanged here: this option is the faithful mapping of
-    # --write-sub (sidecar files), not --embed-sub. Embedding stays out of scope.
+    # This is the mapping of --write-sub (sidecar files), not --embed-sub, so
+    # postprocessors are unchanged.
     assert opts["postprocessors"] == []
 
 
@@ -356,8 +331,8 @@ def test_metadata_postprocessor_when_enabled(monkeypatch):
     assert [p["key"] for p in app.get_ydl_options({})["postprocessors"]] == [
         "FFmpegMetadata"
     ]
-    # Order pins the yt-dlp convention: the metadata postprocessor runs after the
-    # converters, since containers before conversion may not carry metadata.
+    # The metadata postprocessor runs after the converters: containers before
+    # conversion may not carry metadata.
     monkeypatch.setitem(app.app_defaults, "YDL_WRITE_SUBTITLES", True)
     opts = app.get_ydl_options({"format": "mp3"})
     assert [p["key"] for p in opts["postprocessors"]] == [
@@ -368,10 +343,9 @@ def test_metadata_postprocessor_when_enabled(monkeypatch):
 
 def test_get_ydl_options_base_keys(client):
     opts = app.get_ydl_options({})
-    # Behavior change in this commit: the two media params appear with their
-    # defaults (False, which is what yt-dlp already does), so the base shape
-    # gains them. subtitleslangs stays conditional -- it must not be passed as
-    # None, which yt-dlp would choke on.
+    # The media params appear with their defaults (False, which is yt-dlp's
+    # default too). subtitleslangs is conditional: passing None would break
+    # yt-dlp.
     assert sorted(opts) == [
         "cookiefile",
         "download_archive",
