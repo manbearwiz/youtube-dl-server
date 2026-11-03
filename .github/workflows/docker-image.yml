@@ -7,12 +7,56 @@ on:
     tags:
       - 'v*'
   pull_request:
+    # Runs for PRs against any base branch so stacked PRs get checks too.
     branches:
-      - 'main'
+      - '**'
 
 jobs:
+  changed:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.filter.outputs.build }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Filter build-relevant changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            build:
+              - 'Dockerfile'
+              - 'requirements*.txt'
+              - '.github/workflows/**'
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Test
+        run: pytest -q
+
   docker:
     runs-on: ubuntu-latest
+    needs: [changed, test]
+    # PRs only rebuild the image when build inputs change; test-only PRs skip it.
+    if: github.event_name != 'pull_request' || needs.changed.outputs.build == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,7 +91,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6
+          # PRs build amd64 only for fast feedback; full multi-arch on push/tags.
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6' }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
