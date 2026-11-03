@@ -42,14 +42,19 @@ jobs:
             exit 0
           fi
 
-          # Fail open. If the base commit is not in the clone, build anyway: a
-          # skipped publish is worse than a slow pull request.
-          if ! git cat-file -e "$BASE_SHA" 2>/dev/null; then
+          # Merge base to head, the definition GitHub uses for a pull request's files.
+          # A base..head comparison compares trees, so a branch behind main reports
+          # main's commits as changed and gets a build for a non-build change.
+          base=$(git merge-base "$BASE_SHA" "$HEAD_SHA" 2>/dev/null || true)
+
+          # Fail open. If either commit is not in the clone, build anyway: a skipped
+          # publish is worse than a slow pull request.
+          if [ -z "$base" ]; then
             echo 'build=true' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          changed=$(git diff --name-only "$base" "$HEAD_SHA")
           printf 'Changed files:\n%s\n' "$changed"
           if printf '%s\n' "$changed" \
             | grep -q -e '^Dockerfile$' -e '^requirements.*\.txt$' -e '^\.github/workflows/'
