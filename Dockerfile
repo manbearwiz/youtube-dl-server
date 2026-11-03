@@ -4,7 +4,8 @@
 # https://github.com/manbearwiz/youtube-dl-server-dockerfile
 #
 
-FROM python:alpine
+# Pinned for reproducible builds; kept current by Dependabot (.github/dependabot.yml).
+FROM python:3.14.10-alpine3.24
 
 # Install JS runtime for yt-dlp based on architecture
 # deno is available on: x86_64 (amd64), aarch64 (arm64)
@@ -35,5 +36,8 @@ COPY . /usr/src/app
 EXPOSE 8080
 
 VOLUME ["/youtube-dl", "/root/.config/yt-dlp"]
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -q --spider http://127.0.0.1:8080/youtube-dl || exit 1
 
 CMD ["uvicorn", "youtube-dl-server:app", "--host", "0.0.0.0", "--port", "8080"]
