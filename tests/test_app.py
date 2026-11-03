@@ -64,7 +64,9 @@ def test_q_logs_queue_add(client, caplog):
     # the named logger at INFO.
     caplog.set_level(logging.INFO, logger="youtube-dl-server")
     client.post("/youtube-dl/q", data={"url": "https://example.com/watch?v=x"})
-    assert "Added url https://example.com/watch?v=x to the download queue" in caplog.text
+    assert (
+        "Added url https://example.com/watch?v=x to the download queue" in caplog.text
+    )
 
 
 def test_q_ui_redirect(client, calls):
@@ -138,7 +140,12 @@ def test_healthz_reports_unwritable_output_dir(client, monkeypatch):
 def test_resolve_uses_config_bool_mapping(monkeypatch):
     # Documents what starlette's cast=bool actually accepts: true/1/false/0,
     # case-insensitive. Deferring to Config means no bespoke vocabulary.
-    for value, expected in (("true", True), ("False", False), ("1", True), ("0", False)):
+    for value, expected in (
+        ("true", True),
+        ("False", False),
+        ("1", True),
+        ("0", False),
+    ):
         monkeypatch.setenv("YDL_TEST_BOOL", value)
         assert app.resolve("YDL_TEST_BOOL", bool, True) is expected
 
@@ -303,7 +310,12 @@ def test_media_options_are_off_by_default(monkeypatch):
     # Pins the no-change guarantee: every option here is opt-in, and the values
     # match yt-dlp's own defaults when unset (subtitleslangs is deliberately
     # absent so yt-dlp keeps its default language selection).
-    for key in ("YDL_WRITE_SUBTITLES", "YDL_SUBTITLES_LANGS", "YDL_WRITE_THUMBNAIL", "YDL_EMBED_METADATA"):
+    for key in (
+        "YDL_WRITE_SUBTITLES",
+        "YDL_SUBTITLES_LANGS",
+        "YDL_WRITE_THUMBNAIL",
+        "YDL_EMBED_METADATA",
+    ):
         monkeypatch.delenv(key, raising=False)
     opts = app.get_ydl_options({})
     assert opts["writesubtitles"] is False
@@ -341,12 +353,17 @@ def test_write_thumbnail_when_enabled(monkeypatch):
 
 def test_metadata_postprocessor_when_enabled(monkeypatch):
     monkeypatch.setitem(app.app_defaults, "YDL_EMBED_METADATA", True)
-    assert [p["key"] for p in app.get_ydl_options({})["postprocessors"]] == ["FFmpegMetadata"]
+    assert [p["key"] for p in app.get_ydl_options({})["postprocessors"]] == [
+        "FFmpegMetadata"
+    ]
     # Order pins the yt-dlp convention: the metadata postprocessor runs after the
     # converters, since containers before conversion may not carry metadata.
     monkeypatch.setitem(app.app_defaults, "YDL_WRITE_SUBTITLES", True)
     opts = app.get_ydl_options({"format": "mp3"})
-    assert [p["key"] for p in opts["postprocessors"]] == ["FFmpegExtractAudio", "FFmpegMetadata"]
+    assert [p["key"] for p in opts["postprocessors"]] == [
+        "FFmpegExtractAudio",
+        "FFmpegMetadata",
+    ]
 
 
 def test_get_ydl_options_base_keys(client):
