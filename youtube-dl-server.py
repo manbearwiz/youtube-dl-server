@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import subprocess
+from urllib.parse import quote
 
 from starlette.applications import Starlette
 from starlette.config import Config
@@ -88,8 +89,12 @@ async def q_put(request):
         return JSONResponse(
             {"success": True, "url": url, "options": options}, background=task
         )
+    # quote() percent-encodes the url so the added= query param parses correctly
+    # on the UI page (previously raw concatenation).
     return RedirectResponse(
-        url="/youtube-dl?added=" + url, status_code=HTTP_303_SEE_OTHER, background=task
+        url="/youtube-dl?added=" + quote(url),
+        status_code=HTTP_303_SEE_OTHER,
+        background=task,
     )
 
 
