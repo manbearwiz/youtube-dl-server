@@ -244,8 +244,62 @@ def test_debug_mode_off(client):
     assert app.app.debug is False
 
 
+def test_media_options_are_off_by_default(monkeypatch):
+    # Pins the no-change guarantee: every option here is opt-in, and the values
+    # match yt-dlp's own defaults when unset (subtitleslangs is deliberately
+    # absent so yt-dlp keeps its default language selection).
+    for key in ("YDL_WRITE_SUBTITLES", "YDL_SUBTITLES_LANGS", "YDL_WRITE_THUMBNAIL", "YDL_EMBED_METADATA"):
+        monkeypatch.delenv(key, raising=False)
+    opts = app.get_ydl_options({})
+    assert opts["writesubtitles"] is False
+    assert opts["writethumbnail"] is False
+    assert "subtitleslangs" not in opts
+    assert opts["postprocessors"] == []
+
+
+def test_write_subtitles_when_enabled(monkeypatch):
+    monkeypatch.setitem(app.app_defaults, "YDL_WRITE_SUBTITLES", True)
+    opts = app.get_ydl_options({})
+    assert opts["writesubtitles"] is True
+    # Postprocessors are unchanged here: this option is the faithful mapping of
+    # --write-sub (sidecar files), not --embed-sub. Embedding stays out of scope.
+    assert opts["postprocessors"] == []
+
+
+def test_subtitles_langs_only_when_set(monkeypatch):
+    # yt-dlp's default language selection must survive when the option is unset,
+    # so the key is only added when the operator set it.
+    monkeypatch.setenv("YDL_SUBTITLES_LANGS", "en, es")
+    assert app.resolve("YDL_SUBTITLES_LANGS", app.split_langs, None) == ["en", "es"]
+    monkeypatch.setitem(app.app_defaults, "YDL_SUBTITLES_LANGS", ["en", "es"])
+    assert app.get_ydl_options({})["subtitleslangs"] == ["en", "es"]
+    monkeypatch.setitem(app.app_defaults, "YDL_SUBTITLES_LANGS", None)
+    assert "subtitleslangs" not in app.get_ydl_options({})
+
+
+def test_write_thumbnail_when_enabled(monkeypatch):
+    monkeypatch.setitem(app.app_defaults, "YDL_WRITE_THUMBNAIL", True)
+    opts = app.get_ydl_options({})
+    assert opts["writethumbnail"] is True
+    assert opts["postprocessors"] == []
+
+
+def test_metadata_postprocessor_when_enabled(monkeypatch):
+    monkeypatch.setitem(app.app_defaults, "YDL_EMBED_METADATA", True)
+    assert [p["key"] for p in app.get_ydl_options({})["postprocessors"]] == ["FFmpegMetadata"]
+    # Order pins the yt-dlp convention: the metadata postprocessor runs after the
+    # converters, since containers before conversion may not carry metadata.
+    monkeypatch.setitem(app.app_defaults, "YDL_WRITE_SUBTITLES", True)
+    opts = app.get_ydl_options({"format": "mp3"})
+    assert [p["key"] for p in opts["postprocessors"]] == ["FFmpegExtractAudio", "FFmpegMetadata"]
+
+
 def test_get_ydl_options_base_keys(client):
     opts = app.get_ydl_options({})
+    # Behavior change in this commit: the two media params appear with their
+    # defaults (False, which is what yt-dlp already does), so the base shape
+    # gains them. subtitleslangs stays conditional -- it must not be passed as
+    # None, which yt-dlp would choke on.
     assert sorted(opts) == [
         "cookiefile",
         "download_archive",
@@ -254,4 +308,6 @@ def test_get_ydl_options_base_keys(client):
         "postprocessors",
         "proxy",
         "updatetime",
+        "writesubtitles",
+        "writethumbnail",
     ]

@@ -27,6 +27,12 @@ logging.basicConfig(
 )
 logger = logging.getLogger("youtube-dl-server")
 
+def split_langs(value):
+    # yt-dlp expects subtitleslangs as a list; a comma-separated env value is the
+    # natural spelling here (and "all" is yt-dlp's own special value).
+    return [lang.strip() for lang in value.split(",") if lang.strip()]
+
+
 # Options are data, not per-option code: name -> (cast, default). Resolution
 # order is the process environment, then the .env file, then the default.
 OPTIONS = {
@@ -39,6 +45,10 @@ OPTIONS = {
     "YDL_UPDATE_TIME": (bool, True),
     "YDL_PROXY": (str, None),
     "YDL_COOKIE_FILE": (str, None),
+    "YDL_WRITE_SUBTITLES": (bool, False),
+    "YDL_SUBTITLES_LANGS": (split_langs, None),
+    "YDL_WRITE_THUMBNAIL": (bool, False),
+    "YDL_EMBED_METADATA": (bool, False),
 }
 
 
@@ -169,7 +179,12 @@ def get_ydl_options(request_options):
             }
         )
 
-    return {
+    if ydl_vars["YDL_EMBED_METADATA"]:
+        # After the converters, the same order yt-dlp uses: containers before
+        # conversion may not carry metadata (3gp, webm).
+        postprocessors.append({"key": "FFmpegMetadata", "add_metadata": True})
+
+    options = {
         "format": ydl_vars["YDL_FORMAT"],
         "postprocessors": postprocessors,
         "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
@@ -177,7 +192,16 @@ def get_ydl_options(request_options):
         "cookiefile": ydl_vars["YDL_COOKIE_FILE"],
         "proxy": ydl_vars["YDL_PROXY"],
         "updatetime": ydl_vars["YDL_UPDATE_TIME"],
+        "writesubtitles": ydl_vars["YDL_WRITE_SUBTITLES"],
+        "writethumbnail": ydl_vars["YDL_WRITE_THUMBNAIL"],
     }
+
+    # Only pass languages the operator asked for. Passing None would override
+    # yt-dlp's own default language selection, and the value must be a list.
+    if ydl_vars["YDL_SUBTITLES_LANGS"]:
+        options["subtitleslangs"] = ydl_vars["YDL_SUBTITLES_LANGS"]
+
+    return options
 
 
 def download(url, request_options):
