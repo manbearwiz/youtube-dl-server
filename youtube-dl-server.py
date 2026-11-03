@@ -33,7 +33,7 @@ app_defaults = {
 
 async def dl_queue_list(request):
     return templates.TemplateResponse(
-        {"ytdlp_version": version.__version__}, "index.html"
+        request, "index.html", {"ytdlp_version": version.__version__}
     )
 
 
@@ -43,11 +43,14 @@ async def redirect(request):
 
 async def q_put(request):
     form = await request.form()
-    url = form.get("url").strip()
+    url = (form.get("url") or "").strip()
     ui = form.get("ui")
     options = {"format": form.get("format")}
 
     if not url:
+        # Status intentionally stays 200 to preserve the existing API contract;
+        # this branch previously crashed with AttributeError instead (pinned by
+        # the baseline tests).
         return JSONResponse(
             {"success": False, "error": "/q called without a 'url' in form data"}
         )
@@ -65,7 +68,7 @@ async def q_put(request):
     )
 
 
-async def update_route(scope, receive, send):
+async def update_route(request):
     task = BackgroundTask(update)
 
     return JSONResponse({"output": "Initiated package update"}, background=task)
