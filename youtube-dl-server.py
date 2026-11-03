@@ -27,6 +27,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("youtube-dl-server")
 
+
 def split_langs(value):
     # yt-dlp expects subtitleslangs as a list; a comma-separated env value is the
     # natural spelling here (and "all" is yt-dlp's own special value).
@@ -69,9 +70,13 @@ def resolve(key, cast, default):
     return default if value == "" else value
 
 
-app_defaults = {key: resolve(key, cast, default) for key, (cast, default) in OPTIONS.items()}
+app_defaults = {
+    key: resolve(key, cast, default) for key, (cast, default) in OPTIONS.items()
+}
 
 templates = Jinja2Templates(directory="templates")
+
+
 async def dl_queue_list(request):
     return templates.TemplateResponse(
         request, "index.html", {"ytdlp_version": version.__version__}
@@ -89,7 +94,10 @@ async def healthz(request):
     output_dir = os.path.dirname(app_defaults["YDL_OUTPUT_TEMPLATE"]) or "."
     if not os.path.isdir(output_dir) or not os.access(output_dir, os.W_OK):
         return JSONResponse(
-            {"status": "unhealthy", "error": f"output directory not writable: {output_dir}"},
+            {
+                "status": "unhealthy",
+                "error": f"output directory not writable: {output_dir}",
+            },
             status_code=503,
         )
     return JSONResponse({"status": "ok"})

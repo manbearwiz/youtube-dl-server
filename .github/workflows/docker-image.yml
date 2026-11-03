@@ -49,6 +49,12 @@ jobs:
       - name: Lint
         run: ruff check .
 
+      # The same style pre-commit applies (.pre-commit-config.yaml runs
+      # ruff-format), enforced here so a commit that skipped pre-commit cannot
+      # leave the tree formatted differently than the next run would.
+      - name: Format check
+        run: ruff format --check .
+
       - name: Test
         run: pytest -q
 

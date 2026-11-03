@@ -26,7 +26,9 @@ def calls():
 @pytest.fixture
 def client(monkeypatch, calls):
     monkeypatch.setattr(
-        app_module, "download", lambda url, options: calls["download"].append((url, options))
+        app_module,
+        "download",
+        lambda url, options: calls["download"].append((url, options)),
     )
     monkeypatch.setattr(app_module, "update", lambda: calls["update"].append(True))
     # Safe as a context manager now that the lifespan pip self-update is gone
