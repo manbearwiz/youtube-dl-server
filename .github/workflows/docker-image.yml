@@ -11,25 +11,53 @@ on:
     branches:
       - '**'
 
+# Nothing here writes to the repository: the build only reads the checkout.
+# Declaring the scope means a step cannot inherit a broader token.
+permissions:
+  contents: read
+
 jobs:
   changed:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     outputs:
       build: ${{ steps.filter.outputs.build }}
     steps:
       - name: Checkout
+        if: github.event_name == 'pull_request'
+        # Full history so the pull request's base commit exists for git diff.
         uses: actions/checkout@v7
-
-      - name: Filter build-relevant changes
-        uses: dorny/paths-filter@v4
-        id: filter
         with:
-          filters: |
-            build:
-              - 'Dockerfile'
-              - 'requirements*.txt'
-              - '.github/workflows/**'
+          fetch-depth: 0
+
+      - name: Decide whether to build
+        id: filter
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != 'pull_request' ]; then
+            # Merges to main and tags publish an image, so there is nothing to
+            # filter: the published image must match the tree it was built from.
+            echo 'build=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Fail open. If the base commit is not in the clone, build anyway: a
+          # skipped publish is worse than a slow pull request.
+          if ! git cat-file -e "$BASE_SHA" 2>/dev/null; then
+            echo 'build=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          printf 'Changed files:\n%s\n' "$changed"
+          if printf '%s\n' "$changed" \
+            | grep -q -e '^Dockerfile$' -e '^requirements.*\.txt$' -e '^\.github/workflows/'
+          then
+            echo 'build=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'build=false' >> "$GITHUB_OUTPUT"
+          fi
 
   test:
     runs-on: ubuntu-latest
@@ -61,7 +89,10 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: [changed, test]
-    # PRs only rebuild the image when build inputs change; test-only PRs skip it.
+    # changed runs on every event, so this condition is evaluated. It used to be
+    # gated by `if: github.event_name == 'pull_request'`, and a job whose
+    # dependency is skipped is skipped regardless of its own condition, so on push
+    # and tag events this job never ran and nothing was published.
     if: github.event_name != 'pull_request' || needs.changed.outputs.build == 'true'
     steps:
       - name: Checkout
@@ -81,6 +112,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Set up QEMU
+        if: github.event_name != 'pull_request'
         uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
@@ -97,7 +129,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          # PRs build amd64 only for fast feedback; full multi-arch on push/tags.
+          # Pull requests build amd64 only for fast feedback (no QEMU emulation);
+          # merges to main and tags build the full matrix that is published.
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6' }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
