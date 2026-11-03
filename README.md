@@ -58,7 +58,7 @@ In this example, `YDL_UPDATE_TIME=False` is the same as the command line option 
 
 All behavior is controlled by environment variables (or a `.env` file read from the working directory). See [`.env.example`](.env.example) for the full list with defaults: `YDL_FORMAT`, `YDL_EXTRACT_AUDIO_FORMAT`, `YDL_EXTRACT_AUDIO_QUALITY`, `YDL_RECODE_VIDEO_FORMAT`, `YDL_OUTPUT_TEMPLATE`, `YDL_ARCHIVE_FILE`, `YDL_UPDATE_TIME`.
 
-The container includes a health check that probes `http://127.0.0.1:8080/youtube-dl`.
+The container includes a health check that probes `http://127.0.0.1:8080/healthz` — it verifies the app responds and that the output volume is writable (the most common operational failure). It makes no external network calls.
 
 ## Usage
 

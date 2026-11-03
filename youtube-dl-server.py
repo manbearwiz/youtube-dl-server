@@ -1,3 +1,4 @@
+import os
 import sys
 import subprocess
 
@@ -39,6 +40,19 @@ async def dl_queue_list(request):
 
 async def redirect(request):
     return RedirectResponse(url="/youtube-dl")
+
+
+async def healthz(request):
+    # Readiness probe: the app responds and the output volume is writable,
+    # which is the most common operational failure for this service. No
+    # external network calls -- health checks should stay local and cheap.
+    output_dir = os.path.dirname(app_defaults["YDL_OUTPUT_TEMPLATE"]) or "."
+    if not os.path.isdir(output_dir) or not os.access(output_dir, os.W_OK):
+        return JSONResponse(
+            {"status": "unhealthy", "error": f"output directory not writable: {output_dir}"},
+            status_code=503,
+        )
+    return JSONResponse({"status": "ok"})
 
 
 async def q_put(request):
@@ -137,6 +151,7 @@ def download(url, request_options):
 
 routes = [
     Route("/", endpoint=redirect),
+    Route("/healthz", endpoint=healthz),
     Route("/youtube-dl", endpoint=dl_queue_list),
     Route("/youtube-dl/q", endpoint=q_put, methods=["POST"]),
     Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),

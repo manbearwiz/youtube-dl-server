@@ -38,6 +38,6 @@ EXPOSE 8080
 VOLUME ["/youtube-dl", "/root/.config/yt-dlp"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget -q --spider http://127.0.0.1:8080/youtube-dl || exit 1
+  CMD wget -q --spider http://127.0.0.1:8080/healthz || exit 1
 
 CMD ["uvicorn", "youtube-dl-server:app", "--host", "0.0.0.0", "--port", "8080"]
