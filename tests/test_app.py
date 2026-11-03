@@ -3,10 +3,12 @@
 Each test pins one observable behavior.
 """
 
+import asyncio
 import importlib
 import logging
 from urllib.parse import quote
 
+from starlette.testclient import TestClient
 from yt_dlp import version
 
 app = importlib.import_module("youtube-dl-server")
@@ -99,6 +101,98 @@ def test_update_route(client, calls):
     assert r.status_code == 200
     assert r.json() == {"output": "Initiated package update"}
     assert calls["update"] == [True]
+
+
+def test_version_tuple_compare():
+    # Dotted numeric segments, so int tuples order correctly, including the
+    # occasional fourth segment. A non-numeric segment is not comparable.
+    assert app.version_tuple("2026.10.26") == (2026, 10, 26)
+    assert app.version_tuple("2026.10.26.1") > app.version_tuple("2026.10.26")
+    assert app.version_tuple("2026.10.26rc1") is None
+
+
+def test_update_check_is_off_by_default(client, calls, status):
+    assert app.app_defaults["YDL_UPDATE_CHECK"] is False
+    assert calls["check"] == []
+    assert client.get("/youtube-dl/update").json() == {
+        "current": status["current"],
+        "latest": None,
+        "checked_at": None,
+        "update_available": False,
+    }
+    assert "available)" not in client.get("/youtube-dl").text
+
+
+def test_healthz_makes_no_network_call(status, fetch, calls, monkeypatch):
+    # The readiness probe stays local and cheap: it reads the record, it does not
+    # fetch.
+    monkeypatch.setitem(app.app_defaults, "YDL_UPDATE_CHECK", True)
+    calls["latest"] = "2099.1.1"
+
+    with TestClient(app.app) as client:
+        calls["check"].clear()
+        client.get("/healthz")
+        assert calls["check"] == []
+
+
+def test_update_check_runs_at_startup_when_enabled(status, fetch, calls, monkeypatch):
+    monkeypatch.setitem(app.app_defaults, "YDL_UPDATE_CHECK", True)
+    calls["latest"] = "2099.1.1"
+
+    with TestClient(app.app):
+        # The first check is awaited during startup, so the record is populated
+        # before the first request.
+        assert calls["check"] == [True]
+        assert status["update_available"] is True
+
+
+def test_update_check_reports_an_available_upgrade(client, fetch, calls, status):
+    calls["latest"] = "2099.1.1"
+    asyncio.run(app.check_update())
+
+    assert status["update_available"] is True
+    assert client.get("/youtube-dl/update").json() == {
+        "current": status["current"],
+        "latest": "2099.1.1",
+        "checked_at": status["checked_at"],
+        "update_available": True,
+    }
+    assert "(2099.1.1 available)" in client.get("/youtube-dl").text
+
+
+def test_ui_shows_nothing_when_up_to_date(client, fetch, calls, status):
+    calls["latest"] = status["current"]
+    asyncio.run(app.check_update())
+
+    assert status["update_available"] is False
+    assert "available)" not in client.get("/youtube-dl").text
+
+
+def test_update_check_failure_is_logged_and_not_reported(
+    client, status, monkeypatch, caplog
+):
+    caplog.set_level(logging.WARNING, logger="youtube-dl-server")
+
+    def boom():
+        raise RuntimeError("no network")
+
+    monkeypatch.setattr(app, "fetch_latest", boom)
+    asyncio.run(app.check_update())
+
+    assert "update check failed" in caplog.text
+    assert status["latest"] is None
+    assert status["update_available"] is False
+    assert client.get("/youtube-dl/update").json()["update_available"] is False
+    assert "available)" not in client.get("/youtube-dl").text
+
+
+def test_update_check_interval_is_clamped(monkeypatch):
+    # The floor keeps a mis-set interval from turning the check into a loop against
+    # the index.
+    monkeypatch.setitem(app.app_defaults, "YDL_UPDATE_CHECK_INTERVAL", 0)
+    assert app.check_interval() == app.MIN_CHECK_INTERVAL
+    monkeypatch.setitem(app.app_defaults, "YDL_UPDATE_CHECK_INTERVAL", 7200)
+    assert app.check_interval() == 7200
 
 
 def test_healthz_ok(client, monkeypatch, tmp_path):

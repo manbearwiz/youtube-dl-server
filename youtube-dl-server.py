@@ -1,7 +1,12 @@
+import asyncio
+import json
 import logging
 import os
 import sys
 import subprocess
+import urllib.request
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from urllib.parse import quote
 
 from starlette.applications import Starlette
@@ -50,6 +55,8 @@ OPTIONS = {
     "YDL_SUBTITLES_LANGS": (split_langs, None),
     "YDL_WRITE_THUMBNAIL": (bool, False),
     "YDL_EMBED_METADATA": (bool, False),
+    "YDL_UPDATE_CHECK": (bool, False),
+    "YDL_UPDATE_CHECK_INTERVAL": (int, 86400),
 }
 
 
@@ -79,7 +86,9 @@ templates = Jinja2Templates(directory="templates")
 
 async def dl_queue_list(request):
     return templates.TemplateResponse(
-        request, "index.html", {"ytdlp_version": version.__version__}
+        request,
+        "index.html",
+        {"ytdlp_version": version.__version__, "update": update_status},
     )
 
 
@@ -134,6 +143,9 @@ async def q_put(request):
 
 
 async def update_route(request):
+    if request.method == "GET":
+        return JSONResponse(dict(update_status))
+
     task = BackgroundTask(update)
 
     return JSONResponse({"output": "Initiated package update"}, background=task)
@@ -148,6 +160,72 @@ def update():
         logger.info("yt-dlp update: %s", output.decode("utf-8"))
     except subprocess.CalledProcessError as e:
         logger.error("yt-dlp update failed: %s", e.output)
+
+
+PYPI_JSON_URL = "https://pypi.org/pypi/yt-dlp/json"
+MIN_CHECK_INTERVAL = 60
+
+# What the last check found. This never installs anything: the record is read by
+# GET /youtube-dl/update and by the queue page, and an upgrade happens only through
+# the explicit PUT /youtube-dl/update.
+update_status = {
+    "current": version.__version__,
+    "latest": None,
+    "checked_at": None,
+    "update_available": False,
+}
+
+
+def version_tuple(value):
+    # Dotted numeric segments as an int tuple, so 2026.10.26.1 orders after
+    # 2026.10.26. A segment that is not numeric is not comparable.
+    parts = value.split(".")
+    if not parts or not all(part.isdigit() for part in parts):
+        return None
+    return tuple(int(part) for part in parts)
+
+
+def check_interval():
+    # The floor keeps a mis-set interval from turning the check into a loop against
+    # the index.
+    return max(app_defaults["YDL_UPDATE_CHECK_INTERVAL"], MIN_CHECK_INTERVAL)
+
+
+def fetch_latest():
+    with urllib.request.urlopen(PYPI_JSON_URL, timeout=10) as response:
+        return json.load(response)["info"]["version"]
+
+
+async def check_update():
+    try:
+        latest = await asyncio.to_thread(fetch_latest)
+    except Exception as exc:
+        # Logged, not reported: a deployment without outbound access, or a failed
+        # request, looks to a client exactly like an up-to-date one.
+        logger.warning("yt-dlp update check failed: %s", exc)
+        return
+
+    current = version.__version__
+    current_tuple, latest_tuple = version_tuple(current), version_tuple(latest)
+    if current_tuple is None or latest_tuple is None:
+        logger.warning("Cannot compare yt-dlp versions %s and %s", current, latest)
+        return
+
+    update_status["current"] = current
+    update_status["latest"] = latest
+    update_status["checked_at"] = datetime.now(timezone.utc).isoformat(
+        timespec="seconds"
+    )
+    update_status["update_available"] = latest_tuple > current_tuple
+    if update_status["update_available"]:
+        logger.info("yt-dlp update available: %s (running %s)", latest, current)
+
+
+async def update_check_loop():
+    interval = check_interval()
+    while True:
+        await asyncio.sleep(interval)
+        await check_update()
 
 
 # A request's `format` field names a postprocessor, not yt-dlp's format selector
@@ -235,7 +313,22 @@ routes = [
     Route("/healthz", endpoint=healthz),
     Route("/youtube-dl", endpoint=dl_queue_list),
     Route("/youtube-dl/q", endpoint=q_put, methods=["POST"]),
-    Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
+    Route("/youtube-dl/update", endpoint=update_route, methods=["GET", "PUT"]),
 ]
 
-app = Starlette(debug=False, routes=routes)
+
+@asynccontextmanager
+async def lifespan(app):
+    task = None
+    if app_defaults["YDL_UPDATE_CHECK"]:
+        # The first check is awaited, so the record is populated before the first
+        # request. Startup makes no network call while the check is off, which is the
+        # default.
+        await check_update()
+        task = asyncio.create_task(update_check_loop())
+    yield
+    if task is not None:
+        task.cancel()
+
+
+app = Starlette(debug=False, routes=routes, lifespan=lifespan)
