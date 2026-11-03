@@ -42,6 +42,23 @@ def test_q_json_success_pins_current_shape(client, calls):
     assert calls["download"] == [("https://example.com/watch?v=x", {"format": None})]
 
 
+def test_q_accepts_multipart_form_data(client, calls):
+    # python-multipart is a declared dependency, but the suite only exercised the
+    # urlencoded path. This pins the multipart branch of request.form() so a
+    # python-multipart or starlette regression is visible in CI.
+    r = client.post(
+        "/youtube-dl/q",
+        files={"url": ("", "https://example.com/watch?v=x", "text/plain")},
+    )
+    assert r.status_code == 200
+    assert r.json() == {
+        "success": True,
+        "url": "https://example.com/watch?v=x",
+        "options": {"format": None},
+    }
+    assert calls["download"] == [("https://example.com/watch?v=x", {"format": None})]
+
+
 def test_q_logs_queue_add(client, caplog):
     # print() replaced by logging; caplog confirms the message is logged via
     # the named logger at INFO.
