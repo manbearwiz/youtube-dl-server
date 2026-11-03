@@ -87,7 +87,8 @@
           <a class="text-light" href="https://github.com/yt-dlp/yt-dlp"
             >yt-dlp</a
           >
-          v{{ ytdlp_version }}, by
+          v{{ ytdlp_version }}{% if update.update_available %}
+          ({{ update.latest }} available){% endif %}, by
           <a class="text-light" href="https://twitter.com/manbearwiz"
             >@manbearwiz</a
           >.

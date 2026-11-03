@@ -56,11 +56,13 @@ In this example, `YDL_UPDATE_TIME=False` is the same as the command line option 
 
 ## Configuration
 
-All behavior is controlled by environment variables (or a `.env` file read from the working directory). The process environment wins over the `.env` file, and an empty value means "not set". Booleans accept `true/1/false/0` (case-insensitive); an unparseable value is logged as a warning and the documented default is used, so a typo cannot stop the app from starting. See [`.env.example`](.env.example) for the full list with defaults: `YDL_FORMAT`, `YDL_EXTRACT_AUDIO_FORMAT`, `YDL_EXTRACT_AUDIO_QUALITY`, `YDL_RECODE_VIDEO_FORMAT`, `YDL_OUTPUT_TEMPLATE`, `YDL_ARCHIVE_FILE`, `YDL_PROXY`, `YDL_COOKIE_FILE`, `YDL_UPDATE_TIME`, `YDL_LOG_LEVEL`, and the opt-in media options `YDL_WRITE_SUBTITLES`, `YDL_SUBTITLES_LANGS`, `YDL_WRITE_THUMBNAIL`, `YDL_EMBED_METADATA`.
+All behavior is controlled by environment variables (or a `.env` file read from the working directory). The process environment wins over the `.env` file, and an empty value means "not set". Booleans accept `true/1/false/0` (case-insensitive); an unparseable value is logged as a warning and the documented default is used, so a typo cannot stop the app from starting. See [`.env.example`](.env.example) for the full list with defaults: `YDL_FORMAT`, `YDL_EXTRACT_AUDIO_FORMAT`, `YDL_EXTRACT_AUDIO_QUALITY`, `YDL_RECODE_VIDEO_FORMAT`, `YDL_OUTPUT_TEMPLATE`, `YDL_ARCHIVE_FILE`, `YDL_PROXY`, `YDL_COOKIE_FILE`, `YDL_UPDATE_TIME`, `YDL_LOG_LEVEL`, `YDL_UPDATE_CHECK`, `YDL_UPDATE_CHECK_INTERVAL`, and the opt-in media options `YDL_WRITE_SUBTITLES`, `YDL_SUBTITLES_LANGS`, `YDL_WRITE_THUMBNAIL`, `YDL_EMBED_METADATA`.
 
 `YDL_FORMAT` is yt-dlp's format selector. The `format` field of a download request is a separate thing: it names a postprocessor (`mp3` extracts audio, `mp4` recodes), and an explicit request format wins for that download. `YDL_EXTRACT_AUDIO_FORMAT` and `YDL_RECODE_VIDEO_FORMAT` apply when the request names no codec or container.
 
 The container includes a health check that probes `http://127.0.0.1:8080/healthz` — it verifies the app responds and that the output volume is writable (the most common operational failure). It makes no external network calls.
+
+`YDL_UPDATE_CHECK` reports a newer yt-dlp version without installing anything. It is off by default, so startup makes no network request; when enabled, the first check runs at startup and then every `YDL_UPDATE_CHECK_INTERVAL` seconds (floor 60). `GET /youtube-dl/update` returns `{current, latest, checked_at, update_available}` and the queue page shows the available version. A failed check is logged and not reported, so a deployment without outbound access looks like an up-to-date one. Installing an upgrade is still an explicit `PUT /youtube-dl/update`.
 
 ## Usage
 

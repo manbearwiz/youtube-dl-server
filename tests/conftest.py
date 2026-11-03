@@ -20,11 +20,35 @@ app_module = importlib.import_module("youtube-dl-server")
 @pytest.fixture
 def calls():
     """Records side effects that would otherwise hit the network or pip."""
-    return {"download": [], "update": []}
+    return {"download": [], "update": [], "check": [], "latest": None}
 
 
 @pytest.fixture
-def client(monkeypatch, calls):
+def status():
+    """The update-check record, reset so tests cannot see each other's state."""
+    record = app_module.update_status
+    record["current"] = app_module.version.__version__
+    record["latest"] = None
+    record["checked_at"] = None
+    record["update_available"] = False
+    return record
+
+
+@pytest.fixture
+def fetch(monkeypatch, calls):
+    """Stub for the PyPI request, so no test reaches the network."""
+
+    def fake_latest():
+        calls["check"].append(True)
+        return calls["latest"]
+
+    monkeypatch.setattr(app_module, "fetch_latest", fake_latest)
+    return calls
+
+
+@pytest.fixture
+def client(monkeypatch, fetch):
+    calls = fetch
     monkeypatch.setattr(
         app_module,
         "download",
