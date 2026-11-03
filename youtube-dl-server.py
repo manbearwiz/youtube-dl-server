@@ -110,9 +110,8 @@ async def q_put(request):
     options = {"format": form.get("format")}
 
     if not url:
-        # Status intentionally stays 200 to preserve the existing API contract;
-        # this branch previously crashed with AttributeError instead (pinned by
-        # the baseline tests).
+        # Status stays 200: the API contract for a missing url is a JSON error
+        # body.
         return JSONResponse(
             {"success": False, "error": "/q called without a 'url' in form data"}
         )
@@ -125,8 +124,8 @@ async def q_put(request):
         return JSONResponse(
             {"success": True, "url": url, "options": options}, background=task
         )
-    # quote() percent-encodes the url so the added= query param parses correctly
-    # on the UI page (previously raw concatenation).
+    # percent-encoding makes the added= query param parse correctly on the UI
+    # page.
     return RedirectResponse(
         url="/youtube-dl?added=" + quote(url),
         status_code=HTTP_303_SEE_OTHER,
