@@ -561,7 +561,8 @@ class YdlHandler:
                 self.schedule_job(job, int(release))
                 return
 
-        if metadata[0].get("_type") == "playlist" or len(metadata) > 1:
+        is_playlist = metadata[0].get("_type") == "playlist" or len(metadata) > 1
+        if is_playlist:
             ydl_opts.update(
                 {
                     "output": self.app_config["ydl_server"].get(
@@ -581,14 +582,17 @@ class YdlHandler:
         cmd = self.get_ydl_full_cmd(ydl_opts, job.url, extra_opts)
         output.write(f"[cmd] {format_cmd(cmd)}\n")
 
+        fmt_opts = ["--simulate", "--print", "%(format)s"]
+        if is_playlist:
+            fmt_opts += ["--playlist-items", "1"]
         try:
             fmt_rc, fmt_stdout, _ = self.run_metadata_command(
-                self.get_ydl_full_cmd(ydl_opts, job.url, extra_opts + ["--simulate", "--print", "%(format)s"]),
+                self.get_ydl_full_cmd(ydl_opts, job.url, extra_opts + fmt_opts),
                 job=job,
             )
             if fmt_rc == 0 and fmt_stdout.strip():
                 output.write(f"[format] {fmt_stdout.decode().strip()}\n")
-        except (OSError, UnicodeDecodeError) as e:
+        except (OSError, UnicodeDecodeError, MetadataTimeout) as e:
             print("Error looking up format", e)
 
         rc = self.run_logged_command(cmd, job, output)

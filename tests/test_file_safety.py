@@ -462,6 +462,64 @@ class FileSafetyTests(unittest.TestCase):
         stop.assert_called_once_with(proc, signal.SIGKILL)
         self.assertEqual(proc.communicate.call_args_list[0].kwargs, {"timeout": 3})
 
+    def make_download_handler(self, metadata):
+        handler = self.make_metadata_handler(timeout=3)
+        handler.app_config = {"ydl_server": {}, "ydl_options": {}}
+        handler.fetch_metadata = Mock(return_value=(0, metadata))
+        return handler
+
+    def make_download_job(self):
+        return SimpleNamespace(extra_params={}, url=["https://example.com/playlist"], id=1, log="")
+
+    def test_format_lookup_timeout_does_not_fail_the_download(self):
+        handler = self.make_download_handler([{"_type": "playlist", "title": "album"}])
+        stalled = Mock(pid=12345)
+        stalled.communicate.side_effect = [subprocess.TimeoutExpired("yt-dlp", 3), (b'', b'')]
+
+        def spawn(cmd, **kwargs):
+            if "--simulate" in cmd:
+                return stalled
+            return subprocess.Popen([sys.executable, "-c", "print('downloaded')"], **kwargs)
+
+        job = self.make_download_job()
+        output = io.StringIO()
+        with (
+            patch.object(self.ydlhandler, "Popen", side_effect=spawn),
+            patch.object(handler, "signal_process") as stop,
+        ):
+            handler.download(job, {"format": "video/best"}, output)
+        stop.assert_called_once_with(stalled, signal.SIGKILL)
+        self.assertEqual(job.status, self.db.Job.COMPLETED)
+        self.assertIn("downloaded", output.getvalue())
+        self.assertFalse(handler.processes)
+
+    def test_format_lookup_only_resolves_the_first_playlist_entry(self):
+        for metadata, expected in (
+            ([{"_type": "playlist", "title": "album"}], ["--playlist-items", "1"]),
+            ([{"title": "video"}], []),
+        ):
+            with self.subTest(metadata=metadata):
+                handler = self.make_download_handler(metadata)
+                lookup = Mock(returncode=0, pid=12345)
+                lookup.communicate.return_value = (b"251 - audio only\n", b'')
+                commands = []
+
+                def spawn(cmd, lookup=lookup, commands=commands, **kwargs):
+                    commands.append(cmd)
+                    if "--simulate" in cmd:
+                        return lookup
+                    raise RuntimeError("captured")
+
+                with (
+                    patch.object(self.ydlhandler, "Popen", side_effect=spawn),
+                    self.assertRaisesRegex(RuntimeError, "captured"),
+                ):
+                    handler.download(self.make_download_job(), {"format": "video/best"}, io.StringIO())
+                lookup_cmd, download_cmd = commands
+                lookup_opts = lookup_cmd[lookup_cmd.index("%(format)s") + 1:lookup_cmd.index("--")]
+                self.assertEqual(lookup_opts, expected)
+                self.assertNotIn("--playlist-items", download_cmd)
+
     def test_invalid_metadata_limits_are_rejected(self):
         for workers, timeout in ((0, 1), (-1, 1), (True, 1), (1.5, 1), (1, 0), (1, -1), (1, True), (1, float("inf"))):
             with self.subTest(workers=workers, timeout=timeout), self.assertRaises(self.ydlhandler.OptionsError):
