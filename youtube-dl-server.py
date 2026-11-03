@@ -28,6 +28,7 @@ logger = logging.getLogger("youtube-dl-server")
 templates = Jinja2Templates(directory="templates")
 
 app_defaults = {
+    "YDL_PROXY": config("YDL_PROXY", default=None) or None,
     "YDL_FORMAT": config("YDL_FORMAT", cast=str, default="bestvideo+bestaudio/best"),
     "YDL_EXTRACT_AUDIO_FORMAT": config("YDL_EXTRACT_AUDIO_FORMAT", default=None),
     "YDL_EXTRACT_AUDIO_QUALITY": config(
@@ -152,6 +153,7 @@ def get_ydl_options(request_options):
         )
 
     return {
+        "proxy": ydl_vars["YDL_PROXY"],
         "format": ydl_vars["YDL_FORMAT"],
         "postprocessors": postprocessors,
         "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
