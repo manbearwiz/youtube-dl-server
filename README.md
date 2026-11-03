@@ -60,6 +60,10 @@ All behavior is controlled by environment variables (or a `.env` file read from 
 
 `YDL_FORMAT` is yt-dlp's format selector. The `format` field of a download request is a separate thing: it names a postprocessor (`mp3` extracts audio, `mp4` recodes), and an explicit request format wins for that download. `YDL_EXTRACT_AUDIO_FORMAT` and `YDL_RECODE_VIDEO_FORMAT` apply when the request names no codec or container.
 
+Downloads run through a bounded worker pool instead of a task per request. `POST /youtube-dl/q` records a job and its response gains a `job_id` field; `success`, `url` and `options` are unchanged. A failed download is logged and recorded on the job instead of vanishing after the response was already sent as success. The job record is in-memory and bounded by `YDL_JOB_HISTORY`, so it is cleared by a restart — `YDL_ARCHIVE_FILE` remains the durable record.
+
+The default is four concurrent downloads. Release note: before the queue, a burst of requests ran up to anyio's 40-token thread pool, so `YDL_MAX_CONCURRENT_DOWNLOADS=40` restores the previous behavior for installs that relied on parallel downloads. A single download at a time is unaffected.
+
 The container includes a health check that probes `http://127.0.0.1:8080/healthz` — it verifies the app responds and that the output volume is writable (the most common operational failure). It makes no external network calls.
 
 ## Usage

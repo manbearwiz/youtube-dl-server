@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import os
 import sys
@@ -24,13 +25,32 @@ def calls():
 
 
 @pytest.fixture
-def client(monkeypatch, calls):
+def store(monkeypatch):
+    """A fresh job store per test: the module-level store is shared state."""
+    fresh = app_module.JobStore(5)
+    monkeypatch.setattr(app_module, "store", fresh)
+    return fresh
+
+
+@pytest.fixture
+def queue(monkeypatch):
+    """A fresh queue per test, so jobs from one test cannot be drained by another."""
+    fresh = asyncio.Queue()
+    monkeypatch.setattr(app_module, "queue", fresh)
+    return fresh
+
+
+@pytest.fixture
+def client(monkeypatch, calls, store, queue):
     monkeypatch.setattr(
         app_module,
         "download",
         lambda url, options: calls["download"].append((url, options)),
     )
     monkeypatch.setattr(app_module, "update", lambda: calls["update"].append(True))
+    # Workers are disabled so the request path is observable: the handler enqueues
+    # and tests process explicitly, instead of racing a running worker loop.
+    monkeypatch.setitem(app_module.app_defaults, "YDL_MAX_CONCURRENT_DOWNLOADS", 0)
     # Safe as a context manager now that the lifespan pip self-update is gone
     # (PR #380); test_no_startup_self_update protects that property.
     with TestClient(app_module.app) as client:
