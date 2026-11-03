@@ -64,6 +64,13 @@ def test_q_missing_url_returns_json_error(client):
     }
 
 
+def test_no_startup_self_update(client, calls):
+    # PR #380 removed the lifespan pip self-update. The client fixture enters
+    # the app lifespan; nothing must run at startup. The runtime pip upgrade
+    # remains available only via the explicit PUT /update endpoint.
+    assert calls["update"] == []
+
+
 def test_update_route(client, calls):
     # Bug pin flipped (was TypeError -> 500 in the baseline): update_route now
     # uses the request-style endpoint signature.
