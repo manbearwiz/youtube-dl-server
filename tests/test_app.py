@@ -139,6 +139,12 @@ def test_get_ydl_options_no_postprocessor_for_non_codec_formats():
     assert app.get_ydl_options({"format": ""})["postprocessors"] == []
 
 
+def test_debug_mode_off(client):
+    # Release-note candidate: error responses no longer include tracebacks;
+    # API consumers scraping error pages will see plain 500s.
+    assert app.app.debug is False
+
+
 def test_get_ydl_options_base_keys(client):
     opts = app.get_ydl_options({})
     assert sorted(opts) == [
