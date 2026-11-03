@@ -133,7 +133,45 @@ jobs:
           # merges to main and tags build the full matrix that is published.
           platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6' }}
           push: ${{ github.event_name != 'pull_request' }}
+          # Load the pull request image into the runner's docker daemon for the smoke
+          # test. Multi-platform builds cannot be loaded.
+          load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Smoke test the image
+        env:
+          IMAGE: ${{ steps.meta.outputs.tags }}
+        run: |
+          image=$(printf '%s\n' "$IMAGE" | head -n 1)
+
+          # Pull request images are loaded locally; merge builds test the pushed image.
+          if [ "$GITHUB_EVENT_NAME" != 'pull_request' ]; then
+            docker pull "$image"
+          fi
+
+          # Uses the image's own HEALTHCHECK, with a shorter interval so CI does not
+          # wait for the scheduled 30s probe. Proves uvicorn starts, the app imports,
+          # and the output directory is writable.
+          docker run -d --name smoke \
+            --health-start-period=2s --health-interval=1s --health-retries=5 \
+            "$image"
+
+          ok=0
+          for _ in $(seq 1 15); do
+            if [ "$(docker inspect -f '{{.State.Health.Status}}' smoke)" = 'healthy' ]; then
+              ok=1
+              break
+            fi
+            sleep 2
+          done
+
+          docker logs smoke
+          docker stop -t 5 smoke > /dev/null
+          if [ "$ok" != '1' ]; then
+            echo 'container never became healthy'
+            exit 1
+          fi
+        shell: bash
