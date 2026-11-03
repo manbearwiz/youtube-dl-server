@@ -1,16 +1,12 @@
-"""Baseline tests pinning CURRENT behavior, including known bugs.
+"""Behavior tests.
 
-Bug pins are intentionally asserting today's broken behavior. When a fix PR
-changes the behavior, the corresponding test must be updated in that same PR —
-that diff is the reviewable signal that a behavior change is intentional.
-
-Note: the missing `HTTP_303_SEE_OTHER` import was already fixed on main
-(812bed5), so the UI redirect path is asserted as fixed behavior, not pinned.
+Tests marked with a bug-pin comment asserted broken behavior in the baseline
+suite (PR #378). This PR flips each pin; the flipped assertion is the
+reviewable signal that the behavior change is intentional.
 """
 
 import importlib
 
-import pytest
 from yt_dlp import version
 
 app = importlib.import_module("youtube-dl-server")
@@ -27,10 +23,9 @@ def test_queue_list_renders(client):
     r = client.get("/youtube-dl")
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
-    # BUG PIN: TemplateResponse is called as (context, name), but Starlette 1.0's
-    # signature is (request, name, context), so the footer version renders EMPTY
-    # today. Flip to `version.__version__ in r.text` in the fix PR.
-    assert version.__version__ not in r.text
+    # Bug pin flipped (was EMPTY in the baseline): TemplateResponse now uses
+    # Starlette's (request, name, context) signature.
+    assert version.__version__ in r.text
 
 
 def test_q_json_success_pins_current_shape(client, calls):
@@ -58,20 +53,24 @@ def test_q_ui_redirect(client, calls):
     assert calls["download"] == [("https://example.com/watch?v=x", {"format": None})]
 
 
-def test_q_missing_url_documents_current_bug(client):
-    # BUG PIN: `form.get("url").strip()` raises AttributeError when url is
-    # missing, so the JSON error branch below it is unreachable today.
-    with pytest.raises(AttributeError):
-        client.post("/youtube-dl/q", data={})
+def test_q_missing_url_returns_json_error(client):
+    # Bug pin flipped (was AttributeError -> 500 in the baseline): now the JSON
+    # error branch is reachable, with status intentionally unchanged (200).
+    r = client.post("/youtube-dl/q", data={})
+    assert r.status_code == 200
+    assert r.json() == {
+        "success": False,
+        "error": "/q called without a 'url' in form data",
+    }
 
 
-def test_update_route_documents_current_bug(client):
-    # BUG PIN: update_route is defined with a raw-ASGI signature (scope, receive,
-    # send) but registered as a Route endpoint, which Starlette 1.0 calls with a
-    # single `request` argument, so PUT /update raises TypeError (500) today.
-    # Update in the fix PR to assert the JSON response and that update() ran.
-    with pytest.raises(TypeError):
-        client.put("/youtube-dl/update")
+def test_update_route(client, calls):
+    # Bug pin flipped (was TypeError -> 500 in the baseline): update_route now
+    # uses the request-style endpoint signature.
+    r = client.put("/youtube-dl/update")
+    assert r.status_code == 200
+    assert r.json() == {"output": "Initiated package update"}
+    assert calls["update"] == [True]
 
 
 def test_get_ydl_options_audio_postprocessor():
