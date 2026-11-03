@@ -135,6 +135,49 @@ def test_healthz_reports_unwritable_output_dir(client, monkeypatch):
     assert "not writable" in body["error"]
 
 
+def test_resolve_uses_config_bool_mapping(monkeypatch):
+    # Documents what starlette's cast=bool actually accepts: true/1/false/0,
+    # case-insensitive. Deferring to Config means no bespoke vocabulary.
+    for value, expected in (("true", True), ("False", False), ("1", True), ("0", False)):
+        monkeypatch.setenv("YDL_TEST_BOOL", value)
+        assert app.resolve("YDL_TEST_BOOL", bool, True) is expected
+
+
+def test_resolve_warns_and_uses_default_for_unparseable_value(monkeypatch, caplog):
+    # Bug pin flipped: an unparseable value (including an empty one) raised
+    # ValueError at import time and took the whole app down -- a container restart
+    # loop with no clear message. It now warns and keeps the documented default.
+    caplog.set_level(logging.WARNING, logger="youtube-dl-server")
+    monkeypatch.setenv("YDL_TEST_BOOL", "yes")
+    assert app.resolve("YDL_TEST_BOOL", bool, True) is True
+    assert "Ignoring YDL_TEST_BOOL" in caplog.text
+
+
+def test_empty_value_means_not_set(monkeypatch):
+    # An env file cannot distinguish absent from empty, and yt-dlp checks these
+    # options with `is not None`, so an empty value must resolve to the default.
+    monkeypatch.setenv("YDL_ARCHIVE_FILE", "")
+    assert app.resolve("YDL_ARCHIVE_FILE", str, None) is None
+
+
+def test_setting_reaches_ydl_options(monkeypatch):
+    # Pins the wiring: a boolean setting must reach the yt-dlp options as a bool.
+    monkeypatch.setenv("YDL_UPDATE_TIME", "false")
+    monkeypatch.setitem(
+        app.app_defaults, "YDL_UPDATE_TIME", app.resolve("YDL_UPDATE_TIME", bool, True)
+    )
+    assert app.get_ydl_options({})["updatetime"] is False
+
+
+def test_env_var_wins_over_dotenv_file(monkeypatch, tmp_path):
+    # Both sources are supported. Documented precedence: process environment >
+    # .env file > default. Pinned so the two sources cannot drift in behavior.
+    (tmp_path / ".env").write_text("YDL_FORMAT=from_file\n")
+    config = app.config.__class__(tmp_path / ".env")
+    monkeypatch.setenv("YDL_FORMAT", "from_env")
+    assert config("YDL_FORMAT") == "from_env"
+
+
 def test_get_ydl_options_audio_postprocessor():
     opts = app.get_ydl_options({"format": "mp3"})
     assert opts["postprocessors"][0]["key"] == "FFmpegExtractAudio"

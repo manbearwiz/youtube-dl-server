@@ -17,7 +17,9 @@ from yt_dlp import YoutubeDL, version
 config = Config(".env")
 
 # Logging stays on stdout so existing log scrapers keep working; the format
-# gains timestamps/levels. Configure via YDL_LOG_LEVEL (see .env.example).
+# gains timestamps/levels. Configure via YDL_LOG_LEVEL (see .env.example). The
+# logger's own level is the one option resolved before the table below, because
+# handlers must be configured before resolving can log a warning.
 logging.basicConfig(
     level=config("YDL_LOG_LEVEL", default="INFO"),
     stream=sys.stdout,
@@ -25,23 +27,39 @@ logging.basicConfig(
 )
 logger = logging.getLogger("youtube-dl-server")
 
-templates = Jinja2Templates(directory="templates")
-
-app_defaults = {
-    "YDL_FORMAT": config("YDL_FORMAT", cast=str, default="bestvideo+bestaudio/best"),
-    "YDL_EXTRACT_AUDIO_FORMAT": config("YDL_EXTRACT_AUDIO_FORMAT", default=None),
-    "YDL_EXTRACT_AUDIO_QUALITY": config(
-        "YDL_EXTRACT_AUDIO_QUALITY", cast=str, default="192"
-    ),
-    "YDL_RECODE_VIDEO_FORMAT": config("YDL_RECODE_VIDEO_FORMAT", default=None),
-    "YDL_OUTPUT_TEMPLATE": config(
-        "YDL_OUTPUT_TEMPLATE",
-        cast=str,
-        default="/youtube-dl/%(title).200s [%(id)s].%(ext)s",
-    ),
-    "YDL_ARCHIVE_FILE": config("YDL_ARCHIVE_FILE", default=None),
-    "YDL_UPDATE_TIME": config("YDL_UPDATE_TIME", cast=bool, default=True),
+# Options are data, not per-option code: name -> (cast, default). Resolution
+# order is the process environment, then the .env file, then the default.
+OPTIONS = {
+    "YDL_FORMAT": (str, "bestvideo+bestaudio/best"),
+    "YDL_EXTRACT_AUDIO_FORMAT": (str, None),
+    "YDL_EXTRACT_AUDIO_QUALITY": (str, "192"),
+    "YDL_RECODE_VIDEO_FORMAT": (str, None),
+    "YDL_OUTPUT_TEMPLATE": (str, "/youtube-dl/%(title).200s [%(id)s].%(ext)s"),
+    "YDL_ARCHIVE_FILE": (str, None),
+    "YDL_UPDATE_TIME": (bool, True),
 }
+
+
+def resolve(key, cast, default):
+    # An empty value means "not set": an env file cannot distinguish absent from
+    # empty, and yt-dlp checks these options with `is not None` (an empty
+    # cookiefile would be a file literally named "").
+    #
+    # An unparseable value warns and falls back to the documented default instead
+    # of raising -- starlette's cast=bool accepts only true/1/false/0 and raises
+    # ValueError for anything else, including an empty value, which crashed the
+    # app at import time (a container restart loop with no clear message).
+    try:
+        value = config(key, cast=cast, default=default)
+    except ValueError as exc:
+        logger.warning("Ignoring %s: %s (using default %r)", key, exc, default)
+        return default
+    return default if value == "" else value
+
+
+app_defaults = {key: resolve(key, cast, default) for key, (cast, default) in OPTIONS.items()}
+
+templates = Jinja2Templates(directory="templates")
 
 
 async def dl_queue_list(request):
