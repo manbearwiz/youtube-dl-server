@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import subprocess
@@ -12,8 +13,18 @@ from starlette.status import HTTP_303_SEE_OTHER
 
 from yt_dlp import YoutubeDL, version
 
-templates = Jinja2Templates(directory="templates")
 config = Config(".env")
+
+# Logging stays on stdout so existing log scrapers keep working; the format
+# gains timestamps/levels. Configure via YDL_LOG_LEVEL (see .env.example).
+logging.basicConfig(
+    level=config("YDL_LOG_LEVEL", default="INFO"),
+    stream=sys.stdout,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger("youtube-dl-server")
+
+templates = Jinja2Templates(directory="templates")
 
 app_defaults = {
     "YDL_FORMAT": config("YDL_FORMAT", cast=str, default="bestvideo+bestaudio/best"),
@@ -71,7 +82,7 @@ async def q_put(request):
 
     task = BackgroundTask(download, url, options)
 
-    print("Added url " + url + " to the download queue")
+    logger.info("Added url %s to the download queue", url)
 
     if not ui:
         return JSONResponse(
@@ -94,9 +105,9 @@ def update():
             [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"]
         )
 
-        print(output.decode("utf-8"))
+        logger.info("yt-dlp update: %s", output.decode("utf-8"))
     except subprocess.CalledProcessError as e:
-        print(e.output)
+        logger.error("yt-dlp update failed: %s", e.output)
 
 
 def get_ydl_options(request_options):
