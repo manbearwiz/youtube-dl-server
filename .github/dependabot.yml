@@ -4,11 +4,24 @@ updates:
     directory: '/'
     schedule:
       interval: 'daily'
+    # Minimum package age before a version-update pull request is opened. GitHub's
+    # default is 3 days; 5 is between that and the 7 that security-minded
+    # configurations use. Version updates only: security updates are never delayed.
+    cooldown:
+      default-days: 5
+
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: 'weekly'
+    # SemVer-bump cooldowns are not supported for this ecosystem.
+    cooldown:
+      default-days: 5
+
   - package-ecosystem: 'docker'
     directory: '/'
     schedule:
       interval: 'weekly'
+    # Image tags are not SemVer, so default-days is the only form that applies.
+    cooldown:
+      default-days: 5
