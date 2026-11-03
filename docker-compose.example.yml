@@ -1,0 +1,13 @@
+# Example service definition. Copy into your own compose file or use directly.
+services:
+  youtube-dl:
+    image: "kmb32123/youtube-dl-server"
+    volumes:
+      - ./youtube-dl:/youtube-dl
+      # optional: custom yt-dlp config (see README)
+      # - ./yt-dlp-config:/root/.config/yt-dlp
+    ports:
+      - "8080:8080"
+    # example: use the env file (optional)
+    # env_file: .env
+    restart: always

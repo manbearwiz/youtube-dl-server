@@ -80,6 +80,29 @@ def test_update_route(client, calls):
     assert calls["update"] == [True]
 
 
+def test_healthz_ok(client, monkeypatch, tmp_path):
+    # Point the output template at a writable directory for the probe.
+    monkeypatch.setitem(
+        app.app_defaults, "YDL_OUTPUT_TEMPLATE", str(tmp_path / "%(title)s.%(ext)s")
+    )
+    r = client.get("/healthz")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}
+
+
+def test_healthz_reports_unwritable_output_dir(client, monkeypatch):
+    monkeypatch.setitem(
+        app.app_defaults,
+        "YDL_OUTPUT_TEMPLATE",
+        "/definitely-not-writable-for-tests/%(title)s.%(ext)s",
+    )
+    r = client.get("/healthz")
+    assert r.status_code == 503
+    body = r.json()
+    assert body["status"] == "unhealthy"
+    assert "not writable" in body["error"]
+
+
 def test_get_ydl_options_audio_postprocessor():
     opts = app.get_ydl_options({"format": "mp3"})
     assert opts["postprocessors"][0]["key"] == "FFmpegExtractAudio"

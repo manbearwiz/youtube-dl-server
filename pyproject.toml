@@ -1,9 +1,10 @@
 [project]
 name = "youtube-dl-server"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py39"
+# target-version is inferred from [project] requires-python; do not set it here
+# (single source for the supported floor is requires-python).

@@ -1,0 +1,21 @@
+# Build context hygiene: the image only needs the app, templates, and requirements.
+.git
+.github
+.vscode
+tests/
+*.png
+.venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+requirements-dev.txt
+pyproject.toml
+.pre-commit-config.yaml
+.env
+.env.example
+.python-version
+docker-compose.example.yml
+README.md
+LICENSE
+SECURITY.md
+.gitignore
