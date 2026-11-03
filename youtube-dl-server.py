@@ -38,6 +38,7 @@ OPTIONS = {
     "YDL_ARCHIVE_FILE": (str, None),
     "YDL_UPDATE_TIME": (bool, True),
     "YDL_PROXY": (str, None),
+    "YDL_COOKIE_FILE": (str, None),
 }
 
 
@@ -61,8 +62,6 @@ def resolve(key, cast, default):
 app_defaults = {key: resolve(key, cast, default) for key, (cast, default) in OPTIONS.items()}
 
 templates = Jinja2Templates(directory="templates")
-
-
 async def dl_queue_list(request):
     return templates.TemplateResponse(
         request, "index.html", {"ytdlp_version": version.__version__}
@@ -175,6 +174,7 @@ def get_ydl_options(request_options):
         "postprocessors": postprocessors,
         "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
         "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
+        "cookiefile": ydl_vars["YDL_COOKIE_FILE"],
         "proxy": ydl_vars["YDL_PROXY"],
         "updatetime": ydl_vars["YDL_UPDATE_TIME"],
     }

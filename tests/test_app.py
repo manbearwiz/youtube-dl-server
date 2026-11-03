@@ -200,6 +200,23 @@ def test_empty_proxy_env_value_means_unset(monkeypatch):
     assert app.resolve("YDL_PROXY", str, None) is None
 
 
+def test_cookie_file_option_is_none_when_unset(monkeypatch):
+    # Pins the no-change guarantee: cookies are only read when configured, so
+    # existing installs behave exactly as before.
+    monkeypatch.delenv("YDL_COOKIE_FILE", raising=False)
+    assert app.get_ydl_options({})["cookiefile"] is None
+
+
+def test_cookie_file_path_passed_as_given(monkeypatch):
+    # Bug pin flipped against #96: that PR hard-prefixed "/youtube-dl/", which
+    # assumed the cookie file lives in the output volume. The value is a path as
+    # the operator wrote it, so a separate mount works.
+    monkeypatch.setitem(app.app_defaults, "YDL_COOKIE_FILE", "cookies.txt")
+    assert app.get_ydl_options({})["cookiefile"] == "cookies.txt"
+    monkeypatch.setitem(app.app_defaults, "YDL_COOKIE_FILE", "/config/cookies.txt")
+    assert app.get_ydl_options({})["cookiefile"] == "/config/cookies.txt"
+
+
 def test_get_ydl_options_audio_postprocessor():
     opts = app.get_ydl_options({"format": "mp3"})
     assert opts["postprocessors"][0]["key"] == "FFmpegExtractAudio"
@@ -230,6 +247,7 @@ def test_debug_mode_off(client):
 def test_get_ydl_options_base_keys(client):
     opts = app.get_ydl_options({})
     assert sorted(opts) == [
+        "cookiefile",
         "download_archive",
         "format",
         "outtmpl",
