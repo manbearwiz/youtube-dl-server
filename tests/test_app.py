@@ -7,6 +7,7 @@ reviewable signal that the behavior change is intentional.
 
 import importlib
 import logging
+from urllib.parse import quote
 
 from yt_dlp import version
 
@@ -58,7 +59,12 @@ def test_q_ui_redirect(client, calls):
         follow_redirects=False,
     )
     assert r.status_code == 303
-    assert r.headers["location"] == "/youtube-dl?added=https://example.com/watch?v=x"
+    # Behavior change in this commit: the added= value is percent-encoded
+    # instead of raw string concatenation, so the UI page's query param parses
+    # correctly for urls containing ? or &.
+    assert r.headers["location"] == "/youtube-dl?added=" + quote(
+        "https://example.com/watch?v=x"
+    )
     assert calls["download"] == [("https://example.com/watch?v=x", {"format": None})]
 
 
