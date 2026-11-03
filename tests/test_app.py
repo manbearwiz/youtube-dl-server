@@ -6,6 +6,7 @@ reviewable signal that the behavior change is intentional.
 """
 
 import importlib
+import logging
 
 from yt_dlp import version
 
@@ -38,6 +39,14 @@ def test_q_json_success_pins_current_shape(client, calls):
         "options": {"format": None},
     }
     assert calls["download"] == [("https://example.com/watch?v=x", {"format": None})]
+
+
+def test_q_logs_queue_add(client, caplog):
+    # print() replaced by logging; caplog confirms the message is logged via
+    # the named logger at INFO.
+    caplog.set_level(logging.INFO, logger="youtube-dl-server")
+    client.post("/youtube-dl/q", data={"url": "https://example.com/watch?v=x"})
+    assert "Added url https://example.com/watch?v=x to the download queue" in caplog.text
 
 
 def test_q_ui_redirect(client, calls):
