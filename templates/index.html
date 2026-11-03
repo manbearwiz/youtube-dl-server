@@ -107,22 +107,49 @@
 
       function alert(message, type) {
         var wrapper = document.createElement('div');
-        wrapper.innerHTML =
-          '<div class="alert alert-' +
-          type +
-          ' alert-dismissible" role="alert">' +
-          message +
-          '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+        wrapper.className = 'alert alert-' + type + ' alert-dismissible';
+        wrapper.setAttribute('role', 'alert');
+
+        if (typeof message === 'string') {
+          var span = document.createElement('span');
+          span.textContent = message;
+          wrapper.append(span);
+        } else {
+          wrapper.append(message);
+        }
+
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn-close';
+        button.setAttribute('data-bs-dismiss', 'alert');
+        button.setAttribute('aria-label', 'Close');
+        wrapper.append(button);
+
         alertPlaceholder.append(wrapper);
       }
 
       if (added) {
-        alert(
-          'Successfully added <a href=' +
-            added +
-            '>one item</a> to the download queue',
-          'success',
-        );
+        var message = document.createDocumentFragment();
+        var prefix = document.createElement('span');
+        prefix.textContent = 'Successfully added ';
+
+        var link = document.createElement('a');
+        link.textContent = 'one item';
+        try {
+          const parsed = new URL(added);
+          // Scheme guard: only http(s) becomes an href; anything else is text.
+          if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+            link.href = added;
+          }
+        } catch (error) {
+          /* untrusted input: text only, no href */
+        }
+
+        var suffix = document.createElement('span');
+        suffix.textContent = ' to the download queue';
+
+        message.append(prefix, link, suffix);
+        alert(message, 'success');
       }
     </script>
   </body>
