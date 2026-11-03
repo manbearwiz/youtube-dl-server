@@ -143,22 +143,36 @@ def update():
         logger.error("yt-dlp update failed: %s", e.output)
 
 
+# A request's `format` field names a postprocessor, not yt-dlp's format selector
+# (that is the YDL_FORMAT option). Values outside these lists select nothing.
+REQUEST_AUDIO_FORMATS = {
+    "aac": "aac",
+    "flac": "flac",
+    "mp3": "mp3",
+    "m4a": "m4a",
+    "opus": "opus",
+    "vorbis": "vorbis",
+    "wav": "wav",
+    # yt-dlp's own "keep the best audio codec, do not convert" spelling
+    "bestaudio": "best",
+}
+REQUEST_RECODE_FORMATS = {"mp4", "flv", "webm", "ogg", "mkv", "avi"}
+
+
 def get_ydl_options(request_options):
-    request_vars = {
-        "YDL_EXTRACT_AUDIO_FORMAT": None,
-        "YDL_RECODE_VIDEO_FORMAT": None,
-    }
+    # The env values are defaults: they apply when the request names no codec or
+    # container. A request that names one selects a single pipeline, so it wins over
+    # the env default for both kinds (ffmpeg would otherwise recode an extracted
+    # audio file into a video container).
+    ydl_vars = dict(app_defaults)
+    requested_format = request_options.get("format")
 
-    requested_format = request_options.get("format", "bestvideo")
-
-    if requested_format in ["aac", "flac", "mp3", "m4a", "opus", "vorbis", "wav"]:
-        request_vars["YDL_EXTRACT_AUDIO_FORMAT"] = requested_format
-    elif requested_format == "bestaudio":
-        request_vars["YDL_EXTRACT_AUDIO_FORMAT"] = "best"
-    elif requested_format in ["mp4", "flv", "webm", "ogg", "mkv", "avi"]:
-        request_vars["YDL_RECODE_VIDEO_FORMAT"] = requested_format
-
-    ydl_vars = app_defaults | request_vars
+    if requested_format in REQUEST_AUDIO_FORMATS:
+        ydl_vars["YDL_EXTRACT_AUDIO_FORMAT"] = REQUEST_AUDIO_FORMATS[requested_format]
+        ydl_vars["YDL_RECODE_VIDEO_FORMAT"] = None
+    elif requested_format in REQUEST_RECODE_FORMATS:
+        ydl_vars["YDL_RECODE_VIDEO_FORMAT"] = requested_format
+        ydl_vars["YDL_EXTRACT_AUDIO_FORMAT"] = None
 
     postprocessors = []
 

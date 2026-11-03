@@ -238,6 +238,61 @@ def test_get_ydl_options_no_postprocessor_for_non_codec_formats():
     assert app.get_ydl_options({"format": ""})["postprocessors"] == []
 
 
+def test_env_audio_format_applies_when_request_names_no_format(monkeypatch):
+    # Bug reproduction. request_vars always contained both keys, one of them None,
+    # so `app_defaults | request_vars` cleared the env value on every request:
+    # YDL_EXTRACT_AUDIO_FORMAT -- documented in .env.example as forcing audio
+    # extraction -- had no effect for a request without a format, which is what the
+    # REST API sends. The env value is a default, so it must survive.
+    monkeypatch.setitem(app.app_defaults, "YDL_EXTRACT_AUDIO_FORMAT", "mp3")
+    assert app.get_ydl_options({})["postprocessors"] == [
+        {
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        }
+    ]
+    monkeypatch.setitem(app.app_defaults, "YDL_RECODE_VIDEO_FORMAT", "mkv")
+    monkeypatch.setitem(app.app_defaults, "YDL_EXTRACT_AUDIO_FORMAT", None)
+    assert app.get_ydl_options({})["postprocessors"] == [
+        {"key": "FFmpegVideoConvertor", "preferedformat": "mkv"}
+    ]
+
+
+def test_request_format_choice_still_wins_over_env_default(monkeypatch):
+    # Pins the precedence that must not change: an explicit request format overrides
+    # the env default for the same choice.
+    monkeypatch.setitem(app.app_defaults, "YDL_EXTRACT_AUDIO_FORMAT", "mp3")
+    opts = app.get_ydl_options({"format": "flac"})
+    assert opts["postprocessors"] == [
+        {
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "flac",
+            "preferredquality": "192",
+        }
+    ]
+    assert (
+        app.get_ydl_options({"format": "bestaudio"})["postprocessors"][0][
+            "preferredcodec"
+        ]
+        == "best"
+    )
+
+
+def test_request_choice_excludes_the_env_choice_of_the_other_kind(monkeypatch):
+    # A request naming a codec or a container selects one pipeline, so the env value
+    # of the other kind must not add a second postprocessor (ffmpeg would recode an
+    # extracted audio file into a video container). Pinned both directions.
+    monkeypatch.setitem(app.app_defaults, "YDL_EXTRACT_AUDIO_FORMAT", "mp3")
+    assert [
+        p["key"] for p in app.get_ydl_options({"format": "mp4"})["postprocessors"]
+    ] == ["FFmpegVideoConvertor"]
+    monkeypatch.setitem(app.app_defaults, "YDL_RECODE_VIDEO_FORMAT", "mkv")
+    assert [
+        p["key"] for p in app.get_ydl_options({"format": "mp3"})["postprocessors"]
+    ] == ["FFmpegExtractAudio"]
+
+
 def test_debug_mode_off(client):
     # Release-note candidate: error responses no longer include tracebacks;
     # API consumers scraping error pages will see plain 500s.
