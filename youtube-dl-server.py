@@ -85,12 +85,6 @@ def update():
         print(e.output)
 
 
-async def lifespan(app):
-    print("Updating yt-dlp to the newest version")
-    update()
-    yield
-
-
 def get_ydl_options(request_options):
     request_vars = {
         "YDL_EXTRACT_AUDIO_FORMAT": None,
@@ -148,4 +142,4 @@ routes = [
     Route("/youtube-dl/update", endpoint=update_route, methods=["PUT"]),
 ]
 
-app = Starlette(debug=True, routes=routes, lifespan=lifespan)
+app = Starlette(debug=True, routes=routes)

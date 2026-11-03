@@ -29,7 +29,7 @@ def client(monkeypatch, calls):
         app_module, "download", lambda url, options: calls["download"].append((url, options))
     )
     monkeypatch.setattr(app_module, "update", lambda: calls["update"].append(True))
-    # Deliberately NOT using `with TestClient(...)`: entering the context runs
-    # the app's lifespan, which today executes a real `pip install --upgrade`.
-    # Fix this when the lifespan self-update is removed.
-    return TestClient(app_module.app)
+    # Safe as a context manager now that the lifespan pip self-update is gone
+    # (PR #380); test_no_startup_self_update protects that property.
+    with TestClient(app_module.app) as client:
+        yield client
