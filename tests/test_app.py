@@ -435,6 +435,22 @@ def test_metadata_postprocessor_when_enabled(monkeypatch):
     ]
 
 
+def test_ignore_errors_is_off_by_default(monkeypatch):
+    # Same as yt-dlp's own default: a failing item aborts the download.
+    monkeypatch.delenv("YDL_IGNORE_ERRORS", raising=False)
+    assert app.resolve("YDL_IGNORE_ERRORS", bool, False) is False
+    assert app.get_ydl_options({})["ignoreerrors"] is False
+
+
+def test_ignore_errors_when_enabled(monkeypatch):
+    # The equivalent of yt-dlp --ignore-errors: an unavailable video (deleted,
+    # region blocked) in a playlist is skipped instead of ending the whole job.
+    monkeypatch.setenv("YDL_IGNORE_ERRORS", "true")
+    assert app.resolve("YDL_IGNORE_ERRORS", bool, False) is True
+    monkeypatch.setitem(app.app_defaults, "YDL_IGNORE_ERRORS", True)
+    assert app.get_ydl_options({})["ignoreerrors"] is True
+
+
 def test_get_ydl_options_base_keys(client):
     opts = app.get_ydl_options({})
     # The media params appear with their defaults (False, which is yt-dlp's
@@ -444,6 +460,7 @@ def test_get_ydl_options_base_keys(client):
         "cookiefile",
         "download_archive",
         "format",
+        "ignoreerrors",
         "outtmpl",
         "postprocessors",
         "proxy",
