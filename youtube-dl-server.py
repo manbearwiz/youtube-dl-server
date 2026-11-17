@@ -49,6 +49,7 @@ OPTIONS = {
     "YDL_OUTPUT_TEMPLATE": (str, "/youtube-dl/%(title).200s [%(id)s].%(ext)s"),
     "YDL_ARCHIVE_FILE": (str, None),
     "YDL_UPDATE_TIME": (bool, True),
+    "YDL_IGNORE_ERRORS": (bool, False),
     "YDL_PROXY": (str, None),
     "YDL_COOKIE_FILE": (str, None),
     "YDL_WRITE_SUBTITLES": (bool, False),
@@ -291,6 +292,7 @@ def get_ydl_options(request_options):
         "cookiefile": ydl_vars["YDL_COOKIE_FILE"],
         "proxy": ydl_vars["YDL_PROXY"],
         "updatetime": ydl_vars["YDL_UPDATE_TIME"],
+        "ignoreerrors": ydl_vars["YDL_IGNORE_ERRORS"],
         "writesubtitles": ydl_vars["YDL_WRITE_SUBTITLES"],
         "writethumbnail": ydl_vars["YDL_WRITE_THUMBNAIL"],
     }

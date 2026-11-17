@@ -1,6 +1,6 @@
 aiofiles==25.1.0
 Jinja2==3.1.6
-python-multipart==0.0.32
+python-multipart==0.0.33
 starlette==1.10.0
 # Kept as two conditionals even though both now pin the same version: the
 # [standard] extras (uvloop, httptools) have no wheels for the non-x86_64
