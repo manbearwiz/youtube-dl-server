@@ -2,21 +2,20 @@ import asyncio
 import json
 import logging
 import os
-import sys
 import subprocess
+import sys
 import urllib.request
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.parse import quote
 
 from starlette.applications import Starlette
+from starlette.background import BackgroundTask
 from starlette.config import Config
 from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Route
-from starlette.templating import Jinja2Templates
-from starlette.background import BackgroundTask
 from starlette.status import HTTP_303_SEE_OTHER
-
+from starlette.templating import Jinja2Templates
 from yt_dlp import YoutubeDL, version
 
 config = Config(".env")
@@ -200,7 +199,7 @@ def fetch_latest():
 async def check_update():
     try:
         latest = await asyncio.to_thread(fetch_latest)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - any failure here must not break the app
         # Logged, not reported: a deployment without outbound access, or a failed
         # request, looks to a client exactly like an up-to-date one.
         logger.warning("yt-dlp update check failed: %s", exc)
@@ -214,9 +213,7 @@ async def check_update():
 
     update_status["current"] = current
     update_status["latest"] = latest
-    update_status["checked_at"] = datetime.now(timezone.utc).isoformat(
-        timespec="seconds"
-    )
+    update_status["checked_at"] = datetime.now(UTC).isoformat(timespec="seconds")
     update_status["update_available"] = latest_tuple > current_tuple
     if update_status["update_available"]:
         logger.info("yt-dlp update available: %s (running %s)", latest, current)
