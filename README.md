@@ -22,6 +22,7 @@ For easier deployment, a docker image is available on
 
 - `nbr23/youtube-dl-server:yt-dlp` or simply `nbr23/youtube-dl-server` to use `yt-dlp`
 - `nbr23/youtube-dl-server:youtube-dl` to use `youtube-dl`. Note that the latest release of `youtube-dl` is pretty [outdated](https://github.com/ytdl-org/youtube-dl/releases/tag/2021.12.17).
+- Pin a release with `nbr23/youtube-dl-server:1.2.0` or `:1.2.0-yt-dlp` for yt-dlp, or `nbr23/youtube-dl-server:1.2.0-youtube-dl` for youtube-dl.
 
 ### Docker CLI
 
@@ -234,13 +235,14 @@ To force a specific yt-dlp/youtube-dl fork, set the `YOUTUBE_DL` environment var
 YOUTUBE_DL=yt-dlp python3 -u ./youtube-dl-server.py
 ```
 
-The following environment variables are used for version display in the UI:
+The server version shown in the footer and `/api/info` comes from `ydl_server/VERSION`.
+Set `YDLS_RELEASE_DATE` to supply a release date string to `/api/info`.
 
-| Variable | Description |
-|----------|-------------|
-| `YOUTUBE_DL` | The yt-dlp/youtube-dl module to use (`yt-dlp`, `youtube-dl`) |
-| `YDLS_VERSION` | Version string shown in the server info endpoint |
-| `YDLS_RELEASE_DATE` | Release date string shown in the server info endpoint |
+## Releasing
+
+Bump `ydl_server/VERSION` to a higher `MAJOR.MINOR.PATCH` version and merge it into `master`.
+Jenkins publishes both Docker images under the new version and updates the floating tags after both images are available.
+If publishing fails, rerun the full Jenkins build before merging another version bump.
 
 ## Usage
 

@@ -10,6 +10,7 @@ import signal
 import time
 from datetime import datetime, timezone
 from importlib import metadata
+from pathlib import Path
 from queue import Empty, Queue
 from subprocess import PIPE, STDOUT, Popen, TimeoutExpired
 from threading import BoundedSemaphore, Condition, Event, RLock, Thread, Timer
@@ -107,10 +108,9 @@ def format_cmd(cmd):
 class YdlHandler:
     def import_ydl_module(self):
         ydl_module = None
-        if os.environ.get("YOUTUBE_DL").replace("-", "_") in YDL_MODULES:
-            ydl_module = importlib.import_module(
-                os.environ.get("YOUTUBE_DL").replace("-", "_")
-            )
+        module_name = os.environ.get("YOUTUBE_DL", "").replace("-", "_")
+        if module_name in YDL_MODULES:
+            ydl_module = importlib.import_module(module_name)
         else:
             for module in YDL_MODULES:
                 try:
@@ -123,9 +123,6 @@ class YdlHandler:
 
         self.ydl_module_name = ydl_module.__name__.replace("_", "-")
         self.ydl_website = get_ydl_website(self.ydl_module_name)
-
-        self.ydls_version = os.environ.get("YDLS_VERSION", "")
-        self.ydls_release_date = os.environ.get("YDLS_RELEASE_DATE", "")
 
         importlib.reload(ydl_module.version)
         importlib.reload(ydl_module.extractor)
@@ -145,6 +142,8 @@ class YdlHandler:
         self.done = False
         self.ydl_module_name = None
         self.ydl_version = None
+        self.ydls_version = Path(__file__).with_name("VERSION").read_text(encoding="ascii").strip()
+        self.ydls_release_date = os.environ.get("YDLS_RELEASE_DATE", "")
         self.ydl_extractors = []
         self.app_config = app_config
         self.jobshandler = jobshandler

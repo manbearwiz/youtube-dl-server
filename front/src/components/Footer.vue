@@ -1,52 +1,29 @@
 <script setup>
 import { inject } from 'vue'
+
+const serverInfo = inject('serverInfo')
+const endpoint = `${window.location.origin}/api/downloads`
+const bookmarklet = window.location.protocol === 'https:'
+  ? `javascript:fetch(${JSON.stringify(endpoint)},{body:JSON.stringify({url:window.location.href}),method:"POST",headers:{"Content-Type":"application/json"}});`
+  : `javascript:(function(){document.body.innerHTML += '<form name="ydl_form" method="POST" action="${endpoint}"><input name="url" type="url" value="'+window.location.href+'"/></form>';document.ydl_form.submit()})();`
 </script>
-<script>
-export default {
-  data: () => ({
-    server_info: {},
-  }),
-  mounted() {
-    this.setBookmarklet();
-    this.server_info = inject('serverInfo');
-  },
-  methods: {
-    setBookmarklet() {
-      let url = window.location.protocol + '//' + window.location.hostname
-      if (window.location.port != '') {
-        url = url + ':' + window.location.port;
-      }
-      if (window.location.protocol == 'https:') {
-        document.getElementById('bookmarklet').href = "javascript:fetch(\"" + url
-          + "/api/downloads\",{body:JSON.stringify({'url':window.location.href}),method:\"POST\",headers:{'Content-Type':'application/json'}});";
-      }
-      else {
-        document.getElementById('bookmarklet').href = "javascript:(function(){document.body.innerHTML += '<form name=\"ydl_form\" method=\"POST\" action=\""
-          + url
-          + "/api/downloads\"><input name=\"url\" type=\"url\" value=\"'+window.location.href+'\"/></form>';document.ydl_form.submit()})();";
-      }
-    }
-  }
-}
-</script>
+
 <template>
-  <footer class="footer text-center">
-    <p class="text-muted">
-      Drag and Drop the Bookmarklet to your bookmark bar for easy access: <a id="bookmarklet" class="badge badge-subtle"
-        href="">{{ server_info.ydl_module_name }}</a>
-      <br />
-      Powered by
-      <a target="_blank" rel="noopener noreferrer" class="footer-link" :href="server_info.ydl_module_website">{{
-        server_info.ydl_module_name
-      }}</a> version {{ server_info.ydl_module_version }}.
-      Code &amp; issues on <a target="_blank" rel="noopener noreferrer" class="footer-link"
-        href="https://github.com/nbr23/youtube-dl-server">GitHub</a>.
-      <span v-if="server_info.ydls_version != ''" data-toggle="tooltip" data-placement="top"
-        :title="server_info.ydls_release_date">Rev <a target="_blank"
-          :href="'https://github.com/nbr23/youtube-dl-server/commit/' + server_info.ydls_version"
-          class="badge badge-subtle">{{
-            server_info.ydls_version }}</a>
-      </span>
-    </p>
+  <footer class="footer d-flex flex-wrap align-items-center justify-content-center column-gap-2 row-gap-1 px-2 pb-3 small text-muted">
+    <a id="bookmarklet" class="footer-link" :href="bookmarklet" title="Drag to your bookmarks bar">Bookmarklet</a>
+    <span v-if="serverInfo.ydl_module_name" class="d-inline-flex align-items-center gap-2 text-nowrap">
+      <span aria-hidden="true">·</span>
+      <a target="_blank" rel="noopener noreferrer" class="footer-link" :href="serverInfo.ydl_module_website">
+        {{ serverInfo.ydl_module_name }} {{ serverInfo.ydl_module_version }}
+      </a>
+    </span>
+    <span class="d-inline-flex align-items-center gap-2">
+      <span aria-hidden="true">·</span>
+      <a target="_blank" rel="noopener noreferrer" class="footer-link" href="https://github.com/nbr23/youtube-dl-server">GitHub</a>
+    </span>
+    <span v-if="serverInfo.ydls_version" class="d-inline-flex align-items-center gap-2">
+      <span aria-hidden="true">·</span>
+      <span>v{{ serverInfo.ydls_version }}</span>
+    </span>
   </footer>
 </template>
