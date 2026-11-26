@@ -1,8 +1,8 @@
-starlette==1.6.0
-uvicorn==0.52.4
+starlette==1.10.0
+uvicorn==0.54.0
 aiofiles==25.1.0
 Jinja2==3.1.6
-PyYAML==6.0.3
+PyYAML==6.0.4
 youtube-dl==2021.12.17
 yt-dlp[default]==2026.11.23
-python-multipart==0.0.32
+python-multipart==0.0.34
