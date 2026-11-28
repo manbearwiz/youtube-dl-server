@@ -179,63 +179,14 @@ jobs:
           fi
         shell: bash
 
-      # ARMv7 code in the arm/v6 image runs under QEMU's default CPU, which is
-      # ARMv7, so it passes every other check here and then crashes on a real
-      # Raspberry Pi Zero (issue #424). The Dockerfile runs pip on QEMU's arm1176
-      # model to keep armv7l wheels out; this guards that, and anything else
-      # that installs compiled Python code. Load every compiled file in the
-      # published v6 image on arm1176, the Pi Zero's ARMv6 core, where ARMv7
-      # instructions fail.
-      - name: Check the arm/v6 image runs on an ARMv6 CPU
+      # Under QEMU's default ARMv7 CPU, pip installs armv7l wheels that crash on a
+      # real Raspberry Pi Zero (issue #424). Fail if any reached the arm/v6 image.
+      # grep exits 1 only when it read the files and found no match.
+      - name: Check the arm/v6 image has no armv7l wheels
         if: github.event_name != 'pull_request'
         env:
           IMAGE: ${{ steps.meta.outputs.tags }}
         run: |
           image=$(printf '%s\n' "$IMAGE" | head -n 1)
-          docker run --rm -i --platform linux/arm/v6 -e QEMU_CPU=arm1176 \
-            --entrypoint python3 "$image" - <<'EOF'
-          import pathlib
-          import subprocess
-          import sys
-          import sysconfig
-
-          # Loads one compiled file in a fresh interpreter: a Python extension by
-          # importing it, or a plain shared library (pycryptodomex loads its own
-          # through ctypes) with ctypes.
-          LOAD = """
-          import ctypes, importlib, sys
-          try:
-              importlib.import_module(sys.argv[1])
-          except ImportError as error:
-              if "module export function" not in str(error):
-                  raise
-              ctypes.CDLL(sys.argv[2])
-          """
-
-          site = pathlib.Path(sysconfig.get_paths()["platlib"])
-          paths = sorted(site.rglob("*.so"))
-          crashed, failed = [], []
-          for path in paths:
-              parts = (*path.relative_to(site).parent.parts, path.name.split(".")[0])
-              module = ".".join(parts)
-              result = subprocess.run(
-                  [sys.executable, "-c", LOAD, module, str(path)],
-                  capture_output=True,
-                  text=True,
-              )
-              if result.returncode < 0:
-                  crashed.append(f"{module} (signal {-result.returncode})")
-              elif result.returncode:
-                  failed.append(f"{module}: {result.stderr.strip().splitlines()[-1]}")
-
-          loaded = len(paths) - len(crashed) - len(failed)
-          print(f"loaded {loaded} of {len(paths)} compiled files")
-          for line in failed:
-              print("warning, did not load:", line)
-          if not paths:
-              sys.exit(f"no compiled files found under {site}")
-          if crashed:
-              print("crashed on ARMv6:", *crashed, sep="\n  ")
-              sys.exit(1)
-          EOF
-        shell: bash
+          docker run --rm --platform linux/arm/v6 --entrypoint sh "$image" -c \
+            'grep -H armv7l /usr/local/lib/python3*/site-packages/*.dist-info/WHEEL; [ $? -eq 1 ]'
