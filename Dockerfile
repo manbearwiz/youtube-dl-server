@@ -29,7 +29,18 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 COPY requirements.txt /usr/src/app/
-RUN apk --update-cache add --virtual build-dependencies gcc libc-dev make \
+# The arm/v6 build runs under QEMU, whose default CPU is ARMv7 and reports
+# armv7l, so pip would install armv7l wheels whose compiled modules crash on real
+# ARMv6 hardware (Raspberry Pi Zero and Pi 1). On v6, run pip on QEMU's arm1176
+# model (the Pi Zero's ARMv6 core): the build then reports armv6l, pip rejects
+# armv7l wheels and builds those packages from source with Alpine's gcc, which
+# targets ARMv6. QEMU reads QEMU_CPU from each process's environment, so this
+# covers every child of this RUN; without QEMU (a native build) it does nothing.
+# It is exported here rather than set with ENV so the image does not carry it.
+# See issue #424.
+ARG TARGETVARIANT
+RUN if [ "$TARGETVARIANT" = "v6" ]; then export QEMU_CPU=arm1176; fi \
+  && apk --update-cache add --virtual build-dependencies gcc libc-dev make \
   && pip install --no-cache-dir -r requirements.txt \
   && apk del build-dependencies
 

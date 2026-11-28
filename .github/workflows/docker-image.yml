@@ -178,3 +178,15 @@ jobs:
             exit 1
           fi
         shell: bash
+
+      # Under QEMU's default ARMv7 CPU, pip installs armv7l wheels that crash on a
+      # real Raspberry Pi Zero (issue #424). Fail if any reached the arm/v6 image.
+      # grep exits 1 only when it read the files and found no match.
+      - name: Check the arm/v6 image has no armv7l wheels
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE: ${{ steps.meta.outputs.tags }}
+        run: |
+          image=$(printf '%s\n' "$IMAGE" | head -n 1)
+          docker run --rm --platform linux/arm/v6 --entrypoint sh "$image" -c \
+            'grep -H armv7l /usr/local/lib/python3*/site-packages/*.dist-info/WHEEL; [ $? -eq 1 ]'
