@@ -28,7 +28,13 @@ docker run -d --net="host" --name youtube-dl \
   kmb32123/youtube-dl-server
 ```
 
-Place your `config` file in `/home/core/yt-dlp-config/` with yt-dlp options (one per line). See [yt-dlp configuration documentation](https://github.com/yt-dlp/yt-dlp#configuration) for details.
+Place your `config` file in `/home/core/yt-dlp-config/` with yt-dlp options (one per line). See [yt-dlp configuration documentation](https://github.com/yt-dlp/yt-dlp#configuration) for details. It applies to every download, and [Configuration](#configuration) describes how it combines with the `YDL_*` variables. For example, to embed thumbnails and cut sponsor segments:
+
+```shell
+# /home/core/yt-dlp-config/config
+--embed-thumbnail
+--sponsorblock-remove sponsor
+```
 
 ### Docker Compose
 
@@ -57,6 +63,8 @@ In this example, `YDL_UPDATE_TIME=False` is the same as the command line option 
 ## Configuration
 
 All behavior is controlled by environment variables (or a `.env` file read from the working directory). The process environment wins over the `.env` file, and an empty value means "not set". Booleans accept `true/1/false/0` (case-insensitive); an unparseable value is logged as a warning and the documented default is used, so a typo cannot stop the app from starting. See [`.env.example`](.env.example) for the full list with defaults: `YDL_FORMAT`, `YDL_EXTRACT_AUDIO_FORMAT`, `YDL_EXTRACT_AUDIO_QUALITY`, `YDL_RECODE_VIDEO_FORMAT`, `YDL_OUTPUT_TEMPLATE`, `YDL_ARCHIVE_FILE`, `YDL_PROXY`, `YDL_COOKIE_FILE`, `YDL_UPDATE_TIME`, `YDL_IGNORE_ERRORS`, `YDL_LOG_LEVEL`, `YDL_UPDATE_CHECK`, `YDL_UPDATE_CHECK_INTERVAL`, and the opt-in media options `YDL_WRITE_SUBTITLES`, `YDL_SUBTITLES_LANGS`, `YDL_WRITE_THUMBNAIL`, `YDL_EMBED_METADATA`.
+
+A yt-dlp config file sets any yt-dlp option for every download, including the ones without a `YDL_*` variable (`--embed-thumbnail`, `--sponsorblock-remove`, `--netrc`, `--js-runtimes`). The server reads yt-dlp's system and user config files at startup, from the places the yt-dlp command line looks: in the image, `/etc/yt-dlp/config` (where the 32-bit ARM images select the node JS runtime) and a `config` file in the mounted `/root/.config/yt-dlp`. The log names the files it uses, never their contents. Downloads then run with the options the yt-dlp command line would build, with this precedence, highest first: a request's `format`, the `YDL_*` variables you set (environment, then `.env`), the config files (the user's over the system's), the defaults in `.env.example`, and yt-dlp's own command-line defaults. A request `format` that names a codec or container replaces the conversion from every other source. Every `YDL_*` value that yt-dlp takes is checked by yt-dlp at startup, as is each config file; one that fails is logged as a warning and ignored. Restart the server after editing a config file.
 
 `YDL_IGNORE_ERRORS` is yt-dlp's `--ignore-errors`. It is off by default, so a video that cannot be downloaded (deleted, private, region blocked) ends that download; set it to `true` to skip such videos and carry on with the rest of a playlist. yt-dlp still logs each failure.
 

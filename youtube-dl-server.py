@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import optparse
 import os
 import subprocess
 import sys
@@ -16,7 +17,16 @@ from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Route
 from starlette.status import HTTP_303_SEE_OTHER
 from starlette.templating import Jinja2Templates
-from yt_dlp import YoutubeDL, version
+from yt_dlp import YoutubeDL, parse_options, version
+
+try:
+    # yt-dlp's own config file reader and lookup. They are not part of its public
+    # API, which reads config files only for its own command line, so if an upgrade
+    # moves them the server runs without config files instead of failing to start.
+    from yt_dlp.utils import Config as YtdlpConfig
+    from yt_dlp.utils import get_system_config_dirs, get_user_config_dirs
+except ImportError:
+    YtdlpConfig = None
 
 config = Config(".env")
 
@@ -39,7 +49,8 @@ def split_langs(value):
 
 
 # Options are data, not per-option code: name -> (cast, default). Resolution
-# order is the process environment, then the .env file, then the default.
+# order is the process environment, then the .env file, then a yt-dlp config file
+# for the options yt-dlp has (YDL_ARGS below), then the default.
 OPTIONS = {
     "YDL_FORMAT": (str, "bestvideo+bestaudio/best"),
     "YDL_EXTRACT_AUDIO_FORMAT": (str, None),
@@ -60,26 +71,141 @@ OPTIONS = {
 }
 
 
-def resolve(key, cast, default):
-    # An empty value means "not set": an env file cannot distinguish absent from
-    # empty, and yt-dlp checks these options with `is not None` (an empty
+def flag(name):
+    # A comma-separated list is yt-dlp's own spelling for list values (--sub-langs).
+    return lambda value: [name, ",".join(value) if isinstance(value, list) else value]
+
+
+def switch(on, off):
+    return lambda value: [on if value else off]
+
+
+# The yt-dlp command-line arguments for each option yt-dlp has. yt-dlp turns them
+# into its params together with the config files, the way its own command line
+# does, so a config file and these options combine by yt-dlp's rules.
+YDL_ARGS = {
+    "YDL_FORMAT": flag("-f"),
+    "YDL_EXTRACT_AUDIO_FORMAT": lambda value: ["-x", "--audio-format", value],
+    "YDL_EXTRACT_AUDIO_QUALITY": flag("--audio-quality"),
+    "YDL_RECODE_VIDEO_FORMAT": flag("--recode-video"),
+    "YDL_OUTPUT_TEMPLATE": flag("-o"),
+    "YDL_ARCHIVE_FILE": flag("--download-archive"),
+    "YDL_UPDATE_TIME": switch("--mtime", "--no-mtime"),
+    "YDL_IGNORE_ERRORS": switch("--ignore-errors", "--abort-on-error"),
+    "YDL_PROXY": flag("--proxy"),
+    "YDL_COOKIE_FILE": flag("--cookies"),
+    "YDL_WRITE_SUBTITLES": switch("--write-subs", "--no-write-subs"),
+    "YDL_SUBTITLES_LANGS": flag("--sub-langs"),
+    "YDL_WRITE_THUMBNAIL": switch("--write-thumbnail", "--no-write-thumbnail"),
+    "YDL_EMBED_METADATA": switch("--embed-metadata", "--no-embed-metadata"),
+}
+
+
+def to_args(values):
+    # None is unset, which leaves yt-dlp's own default (e.g. its proxy discovery).
+    return [
+        arg
+        for key, value in values.items()
+        if value is not None
+        for arg in YDL_ARGS[key](value)
+    ]
+
+
+def parse_error(exc):
+    # yt-dlp's message is the last line, after its usage text and the program name
+    # ("uvicorn: error: no such option: ...").
+    message = str(exc).strip().rpartition("\n")[2]
+    return message.partition(": error: ")[2] or message
+
+
+def setting(key, cast, default):
+    # The value the environment or the .env file sets, or None when neither sets
+    # one. An empty value means "not set": an env file cannot distinguish absent
+    # from empty, and yt-dlp checks these options with `is not None` (an empty
     # cookiefile would be a file literally named "").
     #
-    # An unparseable value warns and falls back to the documented default instead
-    # of raising -- starlette's cast=bool accepts only true/1/false/0 and raises
-    # ValueError for anything else, including an empty value, which crashed the
-    # app at import time (a container restart loop with no clear message).
+    # An unparseable value warns and counts as not set instead of raising --
+    # starlette's cast=bool accepts only true/1/false/0 and raises ValueError for
+    # anything else, which crashed the app at import time (a container restart
+    # loop with no clear message). yt-dlp checks the values it takes the same way
+    # it checks its command line, so a bad one cannot fail every download.
+    if config(key, default="") == "":
+        return None
     try:
-        value = config(key, cast=cast, default=default)
-    except ValueError as exc:
-        logger.warning("Ignoring %s: %s (using default %r)", key, exc, default)
-        return default
-    return default if value == "" else value
+        value = config(key, cast=cast)
+        if value == []:  # a list of nothing, e.g. YDL_SUBTITLES_LANGS=","
+            return None
+        if key in YDL_ARGS:
+            parse_options(to_args({key: value}))
+    except (ValueError, optparse.OptParseError) as exc:
+        logger.warning(
+            "Ignoring %s: %s (using default %r)", key, parse_error(exc), default
+        )
+        return None
+    return value
 
 
-app_defaults = {
-    key: resolve(key, cast, default) for key, (cast, default) in OPTIONS.items()
+def resolve(key, cast, default):
+    value = setting(key, cast, default)
+    return default if value is None else value
+
+
+# The options the environment or the .env file sets. A yt-dlp config file cannot
+# override these, only the defaults.
+settings = {
+    key: value
+    for key, (cast, default) in OPTIONS.items()
+    if (value := setting(key, cast, default)) is not None
 }
+app_defaults = {
+    key: settings.get(key, default) for key, (_, default) in OPTIONS.items()
+}
+
+
+def read_config_files():
+    # yt-dlp's own lookup for its system and user config files: in the image,
+    # /etc/yt-dlp/config and the mounted /root/.config/yt-dlp/config. The first file
+    # found in each is read, and the user's comes later, so it wins.
+    if YtdlpConfig is None:
+        logger.warning("This yt-dlp has no config file reader; ignoring config files")
+        return []
+    args = []
+    for dirs in (get_system_config_dirs("yt-dlp"), get_user_config_dirs("yt-dlp")):
+        paths = [
+            path
+            for d in dirs
+            for path in (
+                os.path.join(os.path.dirname(d), "yt-dlp.conf"),
+                os.path.join(d, "config"),
+                os.path.join(d, "config.txt"),
+            )
+        ]
+        for path in paths:
+            try:
+                found = YtdlpConfig.read_file(path, default=None)
+            except (OSError, ValueError) as exc:
+                logger.warning("Ignoring yt-dlp config file %s: %s", path, exc)
+                continue
+            if found is not None:
+                # The path only: a config file can hold credentials.
+                logger.info("Using yt-dlp config file %s", path)
+                args += found
+                break
+
+    # Checked once here, so a file yt-dlp cannot parse warns and is skipped, as a
+    # bad option value is, instead of failing every download.
+    try:
+        parse_options(args)
+    except optparse.OptParseError as exc:
+        logger.warning("Ignoring yt-dlp config files: %s", parse_error(exc))
+        return []
+    except SystemExit:
+        logger.warning("Ignoring yt-dlp config files: they make yt-dlp exit")
+        return []
+    return args
+
+
+config_args = read_config_files()
 
 templates = Jinja2Templates(directory="templates")
 
@@ -99,8 +225,10 @@ async def redirect(request):
 async def healthz(request):
     # Readiness probe: the app responds and the output volume is writable,
     # which is the most common operational failure for this service. No
-    # external network calls -- health checks should stay local and cheap.
-    output_dir = os.path.dirname(app_defaults["YDL_OUTPUT_TEMPLATE"]) or "."
+    # external network calls -- health checks should stay local and cheap. The
+    # output template is the one downloads use, so a config file's -o counts.
+    outtmpl = get_ydl_options({})["outtmpl"]["default"]
+    output_dir = os.path.dirname(outtmpl) or "."
     if not os.path.isdir(output_dir) or not os.access(output_dir, os.W_OK):
         return JSONResponse(
             {
@@ -241,63 +369,42 @@ REQUEST_AUDIO_FORMATS = {
 }
 REQUEST_RECODE_FORMATS = {"mp4", "flv", "webm", "ogg", "mkv", "avi"}
 
+# The postprocessors that convert the downloaded file into another format.
+CONVERTERS = {"FFmpegExtractAudio", "FFmpegVideoConvertor", "FFmpegVideoRemuxer"}
+
+
+def request_args(requested_format):
+    if requested_format in REQUEST_AUDIO_FORMATS:
+        return ["-x", "--audio-format", REQUEST_AUDIO_FORMATS[requested_format]]
+    if requested_format in REQUEST_RECODE_FORMATS:
+        return ["--recode-video", requested_format]
+    return []
+
 
 def get_ydl_options(request_options):
-    # The env values are defaults: they apply when the request names no codec or
-    # container. A request that names one selects a single pipeline, so it wins over
-    # the env default for both kinds (ffmpeg would otherwise recode an extracted
-    # audio file into a video container).
-    ydl_vars = dict(app_defaults)
-    requested_format = request_options.get("format")
+    # One yt-dlp command line, lowest precedence first, as yt-dlp orders a config
+    # file before its own arguments: the defaults, the config files, the options
+    # the environment sets, then the request's format. yt-dlp builds the params
+    # from it, postprocessors in its own order included.
+    defaults = {key: app_defaults[key] for key in YDL_ARGS if key not in settings}
+    chosen = {key: settings[key] for key in YDL_ARGS if key in settings}
+    requested = request_args(request_options.get("format"))
+    options = parse_options(
+        [*to_args(defaults), *config_args, *to_args(chosen), *requested]
+    ).ydl_opts
 
-    if requested_format in REQUEST_AUDIO_FORMATS:
-        ydl_vars["YDL_EXTRACT_AUDIO_FORMAT"] = REQUEST_AUDIO_FORMATS[requested_format]
-        ydl_vars["YDL_RECODE_VIDEO_FORMAT"] = None
-    elif requested_format in REQUEST_RECODE_FORMATS:
-        ydl_vars["YDL_RECODE_VIDEO_FORMAT"] = requested_format
-        ydl_vars["YDL_EXTRACT_AUDIO_FORMAT"] = None
-
-    postprocessors = []
-
-    if ydl_vars["YDL_EXTRACT_AUDIO_FORMAT"]:
-        postprocessors.append(
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": ydl_vars["YDL_EXTRACT_AUDIO_FORMAT"],
-                "preferredquality": ydl_vars["YDL_EXTRACT_AUDIO_QUALITY"],
-            }
-        )
-
-    if ydl_vars["YDL_RECODE_VIDEO_FORMAT"]:
-        postprocessors.append(
-            {
-                "key": "FFmpegVideoConvertor",
-                "preferedformat": ydl_vars["YDL_RECODE_VIDEO_FORMAT"],
-            }
-        )
-
-    if ydl_vars["YDL_EMBED_METADATA"]:
-        # After the converters, the same order yt-dlp uses: containers before
-        # conversion may not carry metadata (3gp, webm).
-        postprocessors.append({"key": "FFmpegMetadata", "add_metadata": True})
-
-    options = {
-        "format": ydl_vars["YDL_FORMAT"],
-        "postprocessors": postprocessors,
-        "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
-        "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
-        "cookiefile": ydl_vars["YDL_COOKIE_FILE"],
-        "proxy": ydl_vars["YDL_PROXY"],
-        "updatetime": ydl_vars["YDL_UPDATE_TIME"],
-        "ignoreerrors": ydl_vars["YDL_IGNORE_ERRORS"],
-        "writesubtitles": ydl_vars["YDL_WRITE_SUBTITLES"],
-        "writethumbnail": ydl_vars["YDL_WRITE_THUMBNAIL"],
-    }
-
-    # Only pass languages the operator asked for. Passing None would override
-    # yt-dlp's own default language selection, and the value must be a list.
-    if ydl_vars["YDL_SUBTITLES_LANGS"]:
-        options["subtitleslangs"] = ydl_vars["YDL_SUBTITLES_LANGS"]
+    if requested:
+        # A request that names a codec or container selects the one pipeline, so it
+        # replaces the other conversions (ffmpeg would otherwise recode an extracted
+        # audio file into a video container). yt-dlp's -x has no negation, so they
+        # are dropped here, and the final extension is the request's.
+        own = "FFmpegExtractAudio" if requested[0] == "-x" else "FFmpegVideoConvertor"
+        options["postprocessors"] = [
+            pp
+            for pp in options["postprocessors"]
+            if pp["key"] not in CONVERTERS or pp["key"] == own
+        ]
+        options["final_ext"] = parse_options(requested).ydl_opts.get("final_ext")
 
     return options
 

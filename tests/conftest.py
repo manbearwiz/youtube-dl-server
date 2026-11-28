@@ -16,6 +16,10 @@ sys.path.insert(0, str(ROOT))
 # Module name contains a hyphen, so it cannot be a plain `import`.
 app_module = importlib.import_module("youtube-dl-server")
 
+# The app read the machine's yt-dlp config files at import; a developer's own must
+# not change what the tests see.
+app_module.config_args = []
+
 
 @pytest.fixture
 def calls():
@@ -44,6 +48,18 @@ def fetch(monkeypatch, calls):
 
     monkeypatch.setattr(app_module, "fetch_latest", fake_latest)
     return calls
+
+
+@pytest.fixture
+def config_dirs(monkeypatch, tmp_path):
+    """Empty system and user config dirs, in place of /etc/yt-dlp and ~/.config."""
+    system = tmp_path / "etc" / "yt-dlp"
+    user = tmp_path / "home" / ".config" / "yt-dlp"
+    monkeypatch.setattr(
+        app_module, "get_system_config_dirs", lambda name: [str(system)]
+    )
+    monkeypatch.setattr(app_module, "get_user_config_dirs", lambda name: [str(user)])
+    return system, user
 
 
 @pytest.fixture
