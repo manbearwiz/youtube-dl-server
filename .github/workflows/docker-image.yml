@@ -178,3 +178,63 @@ jobs:
             exit 1
           fi
         shell: bash
+
+      # The arm/v6 image is built under QEMU's default CPU, which is ARMv7, so pip
+      # can install armv7l wheels whose code passes every check here and then
+      # crashes on a real Raspberry Pi Zero (issue #424). Import every compiled
+      # module in the published v6 image on QEMU's arm1176 model, the Pi Zero's
+      # ARMv6 core, where ARMv7 instructions fail. A module that crashes needs
+      # adding to PIP_NO_BINARY in the Dockerfile.
+      - name: Check the arm/v6 image runs on an ARMv6 CPU
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE: ${{ steps.meta.outputs.tags }}
+        run: |
+          image=$(printf '%s\n' "$IMAGE" | head -n 1)
+          docker run --rm -i --platform linux/arm/v6 -e QEMU_CPU=arm1176 \
+            --entrypoint python3 "$image" - <<'EOF'
+          import pathlib
+          import subprocess
+          import sys
+          import sysconfig
+
+          # Loads one compiled file in a fresh interpreter: a Python extension by
+          # importing it, or a plain shared library (pycryptodomex loads its own
+          # through ctypes) with ctypes.
+          LOAD = """
+          import ctypes, importlib, sys
+          try:
+              importlib.import_module(sys.argv[1])
+          except ImportError as error:
+              if "module export function" not in str(error):
+                  raise
+              ctypes.CDLL(sys.argv[2])
+          """
+
+          site = pathlib.Path(sysconfig.get_paths()["platlib"])
+          paths = sorted(site.rglob("*.so"))
+          crashed, failed = [], []
+          for path in paths:
+              parts = (*path.relative_to(site).parent.parts, path.name.split(".")[0])
+              module = ".".join(parts)
+              result = subprocess.run(
+                  [sys.executable, "-c", LOAD, module, str(path)],
+                  capture_output=True,
+                  text=True,
+              )
+              if result.returncode < 0:
+                  crashed.append(f"{module} (signal {-result.returncode})")
+              elif result.returncode:
+                  failed.append(f"{module}: {result.stderr.strip().splitlines()[-1]}")
+
+          loaded = len(paths) - len(crashed) - len(failed)
+          print(f"loaded {loaded} of {len(paths)} compiled files")
+          for line in failed:
+              print("warning, did not load:", line)
+          if not paths:
+              sys.exit(f"no compiled files found under {site}")
+          if crashed:
+              print("crashed on ARMv6:", *crashed, sep="\n  ")
+              sys.exit(1)
+          EOF
+        shell: bash

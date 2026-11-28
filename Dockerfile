@@ -29,7 +29,16 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 COPY requirements.txt /usr/src/app/
+# The arm/v6 build runs pip under QEMU, whose default CPU reports armv7l, so pip
+# installs armv7l wheels whose compiled modules crash on real ARMv6 hardware
+# (Raspberry Pi Zero and Pi 1). On v6 only, build those packages from source so
+# Alpine's gcc targets ARMv6. CI runs the v6 image on an emulated ARMv6 CPU to
+# catch any new package that needs adding here. See issue #424.
+ARG TARGETVARIANT
 RUN apk --update-cache add --virtual build-dependencies gcc libc-dev make \
+  && if [ "$TARGETVARIANT" = "v6" ]; then \
+    export PIP_NO_BINARY="charset-normalizer,markupsafe,websockets"; \
+  fi \
   && pip install --no-cache-dir -r requirements.txt \
   && apk del build-dependencies
 
