@@ -2,3 +2,4 @@ __pycache__
 node_modules
 front/dist
 .venv
+/config.yml

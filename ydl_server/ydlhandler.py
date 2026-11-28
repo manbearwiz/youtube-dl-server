@@ -10,7 +10,6 @@ import signal
 import time
 from datetime import datetime, timezone
 from importlib import metadata
-from pathlib import Path
 from queue import Empty, Queue
 from subprocess import PIPE, STDOUT, Popen, TimeoutExpired
 from threading import BoundedSemaphore, Condition, Event, RLock, Thread, Timer
@@ -142,7 +141,7 @@ class YdlHandler:
         self.done = False
         self.ydl_module_name = None
         self.ydl_version = None
-        self.ydls_version = Path(__file__).with_name("VERSION").read_text(encoding="ascii").strip()
+        self.ydls_version = metadata.version("youtube-dl-server")
         self.ydls_release_date = os.environ.get("YDLS_RELEASE_DATE", "")
         self.ydl_extractors = []
         self.app_config = app_config

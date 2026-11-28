@@ -57,7 +57,8 @@ This is an example service definition that could be put in `docker-compose.yml`.
 
 ## Configuration
 
-Configuration is done through the config.yml file at the root of the project.
+Configuration is done through a `config.yml` file, by default in the working directory.
+If it does not exist, it is created from `ydl_server/default_config.yml`.
 
 An alternate configuration path or file path can be forced by setting the environment
 variable `YDL_CONFIG_PATH`:
@@ -226,21 +227,22 @@ cd front && npm install && npm run build
 Run the server:
 
 ```shell
-uv run python -u ./youtube-dl-server.py
+uv run youtube-dl-server
 ```
 
 To force a specific yt-dlp/youtube-dl fork, set the `YOUTUBE_DL` environment variable:
 
 ```shell
-YOUTUBE_DL=yt-dlp uv run python -u ./youtube-dl-server.py
+YOUTUBE_DL=yt-dlp uv run youtube-dl-server
 ```
 
-The server version shown in the footer and `/api/info` comes from `ydl_server/VERSION`.
+The server version shown in the footer and `/api/info` is the `version` in `pyproject.toml`.
 Set `YDLS_RELEASE_DATE` to supply a release date string to `/api/info`.
 
 ## Releasing
 
-Bump `ydl_server/VERSION` to a higher `MAJOR.MINOR.PATCH` version and merge it into `master`.
+Bump the version with `uv version --bump patch` (or `minor`, `major`), which updates both `pyproject.toml`
+and `uv.lock`, and merge it into `master`. The version must stay `MAJOR.MINOR.PATCH`.
 Jenkins publishes both Docker images under the new version and updates the floating tags after both images are available.
 If publishing fails, rerun the full Jenkins build before merging another version bump.
 

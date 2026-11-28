@@ -2,7 +2,7 @@
 name = "youtube-dl-server"
 description = "Web / REST interface for downloading youtube videos onto a server."
 readme = "README.md"
-version = "0.0.0"
+version = "1.3.0"
 license = { text = "MIT" }
 requires-python = ">=3.11"
 dependencies = [
@@ -18,6 +18,9 @@ dependencies = [
 yt-dlp = ["yt-dlp[default]>=2026.11.23"]
 youtube-dl = ["youtube-dl>=2021.12.17"]
 
+[project.scripts]
+youtube-dl-server = "ydl_server.__main__:main"
+
 [project.urls]
 homepage = "https://github.com/nbr23/youtube-dl-server"
 repository = "https://github.com/nbr23/youtube-dl-server"
@@ -25,8 +28,13 @@ repository = "https://github.com/nbr23/youtube-dl-server"
 [dependency-groups]
 dev = ["ruff"]
 
-[tool.uv]
-package = false
+[build-system]
+requires = ["uv_build>=0.13.8,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "ydl_server"
+module-root = ""
 
 [tool.ruff]
 line-length = 120

@@ -1,12 +1,16 @@
 import os
 import shutil
 from functools import cache
+from pathlib import Path
 
 import yaml
 
 
 class ConfigError(Exception):
     pass
+
+
+DEFAULT_CONFIG_PATH = Path(__file__).with_name("default_config.yml")
 
 
 YDL_PATH_TYPES = (
@@ -104,7 +108,7 @@ def resolve_aliases(config):
 
 def copy_default_config(config_file_path):
     try:
-        shutil.copy("./default_config.yml", config_file_path)
+        shutil.copy(DEFAULT_CONFIG_PATH, config_file_path)
     except OSError as e:
         raise ConfigError(
             f"Error copying default config file to {config_file_path}:\n{e!s}"
@@ -131,7 +135,7 @@ def load_config():
             copy_default_config(config_file_path)
         except ConfigError:
             print("Error copying default config file, loading it directly")
-            config_file_path = "./default_config.yml"
+            config_file_path = DEFAULT_CONFIG_PATH
     with open(config_file_path) as configfile:
         config = yaml.load(configfile, Loader=yaml.SafeLoader)
 

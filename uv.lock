@@ -960,8 +960,8 @@ wheels = [
 
 [[package]]
 name = "youtube-dl-server"
-version = "0.0.0"
-source = { virtual = "." }
+version = "1.3.0"
+source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
     { name = "jinja2" },

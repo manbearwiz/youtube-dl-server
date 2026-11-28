@@ -21,10 +21,14 @@ pipeline {
                         returnStdout: true,
                         script: '''#!/bin/bash
                             set -euo pipefail
-                            version="$(cat ydl_server/VERSION)"
+                            read_version() {
+                                python3 -c 'import sys, tomllib; print(tomllib.load(sys.stdin.buffer)["project"]["version"])'
+                            }
+
+                            version="$(read_version < pyproject.toml)"
                             version_pattern='^(0|[1-9][0-9]*)[.](0|[1-9][0-9]*)[.](0|[1-9][0-9]*)$'
                             if [[ ! "$version" =~ $version_pattern ]]; then
-                                echo "Expected MAJOR.MINOR.PATCH in ydl_server/VERSION" >&2
+                                echo "Expected MAJOR.MINOR.PATCH as the pyproject.toml version" >&2
                                 exit 1
                             fi
 
@@ -41,9 +45,15 @@ pipeline {
                                 exit 1
                             fi
 
-                            version_entry="$(git ls-tree "$base" -- ydl_server/VERSION)"
-                            if [[ -n "$version_entry" ]]; then
+                            previous_version=""
+                            # Releases before the pyproject.toml switch kept the version in ydl_server/VERSION
+                            # and a 0.0.0 placeholder in pyproject.toml; drop this branch once master has built past it
+                            if [[ -n "$(git ls-tree "$base" -- ydl_server/VERSION)" ]]; then
                                 previous_version="$(git show "${base}:ydl_server/VERSION")"
+                            elif [[ -n "$(git ls-tree "$base" -- pyproject.toml)" ]]; then
+                                previous_version="$(git show "${base}:pyproject.toml" | read_version)"
+                            fi
+                            if [[ -n "$previous_version" ]]; then
                                 if [[ ! "$previous_version" =~ $version_pattern ]]; then
                                     echo "Invalid release version at $base" >&2
                                     exit 1

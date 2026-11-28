@@ -12,7 +12,8 @@ from ydl_server.jobshandler import JobsHandler
 from ydl_server.routes import routes
 from ydl_server.ydlhandler import YdlHandler
 
-if __name__ == "__main__":
+
+def main():
     JobsDB.init()
 
     @asynccontextmanager
@@ -62,3 +63,7 @@ if __name__ == "__main__":
         )
     finally:
         shutdown()
+
+
+if __name__ == "__main__":
+    main()

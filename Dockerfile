@@ -26,20 +26,30 @@ COPY ./pyproject.toml ./uv.lock ./
 RUN uv sync --locked --no-dev --no-install-project
 
 FROM venv AS test
+ENV PATH="${PYTHON_ENV}/bin:$PATH"
+COPY ./README.md ./
+COPY ./ydl_server ./ydl_server
+RUN uv sync --locked --no-dev --no-editable
 
 WORKDIR /usr/src/app
-ENV PATH="${PYTHON_ENV}/bin:$PATH"
-
-COPY ./ydl_server ./ydl_server
 COPY ./tests ./tests
 
 CMD ["python", "-m", "unittest", "discover", "-s", "tests", "-v"]
 
+FROM scratch AS src
+COPY ./README.md /build/
+COPY ./ydl_server /build/ydl_server
+COPY --from=nodebuild /app/dist /build/ydl_server/static
+
 FROM venv AS venv-yt-dlp
 RUN uv sync --locked --no-dev --no-install-project --extra yt-dlp
+COPY --from=src /build /build
+RUN uv sync --locked --no-dev --no-editable --extra yt-dlp
 
 FROM venv AS venv-youtube-dl
 RUN uv sync --locked --no-dev --no-install-project --extra youtube-dl
+COPY --from=src /build /build
+RUN uv sync --locked --no-dev --no-editable --extra youtube-dl
 
 
 FROM python:alpine AS base
@@ -66,18 +76,13 @@ COPY --from=venv-youtube-dl $PYTHON_ENV $PYTHON_ENV
 
 FROM ${YOUTUBE_DL}
 
-COPY ./config.yml /usr/src/app/default_config.yml
-COPY ./ydl_server /usr/src/app/ydl_server
-COPY ./youtube-dl-server.py /usr/src/app/
-
-COPY --from=nodebuild /app/dist /usr/src/app/ydl_server/static
-
 EXPOSE 8080
 
 ENV YOUTUBE_DL=$YOUTUBE_DL
 ENV YDL_CONFIG_PATH='/app_config'
 ENV PATH="${PYTHON_ENV}/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
 
-CMD [ "python", "-u", "./youtube-dl-server.py" ]
+CMD [ "youtube-dl-server" ]
 
 HEALTHCHECK CMD wget 127.0.0.1:8080/api/info --spider -q -Y off
