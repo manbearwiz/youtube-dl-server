@@ -179,12 +179,13 @@ jobs:
           fi
         shell: bash
 
-      # The arm/v6 image is built under QEMU's default CPU, which is ARMv7, so pip
-      # can install armv7l wheels whose code passes every check here and then
-      # crashes on a real Raspberry Pi Zero (issue #424). Import every compiled
-      # module in the published v6 image on QEMU's arm1176 model, the Pi Zero's
-      # ARMv6 core, where ARMv7 instructions fail. A module that crashes needs
-      # adding to PIP_NO_BINARY in the Dockerfile.
+      # ARMv7 code in the arm/v6 image runs under QEMU's default CPU, which is
+      # ARMv7, so it passes every other check here and then crashes on a real
+      # Raspberry Pi Zero (issue #424). The Dockerfile runs pip on QEMU's arm1176
+      # model to keep armv7l wheels out; this guards that, and anything else
+      # that installs compiled Python code. Load every compiled file in the
+      # published v6 image on arm1176, the Pi Zero's ARMv6 core, where ARMv7
+      # instructions fail.
       - name: Check the arm/v6 image runs on an ARMv6 CPU
         if: github.event_name != 'pull_request'
         env:
