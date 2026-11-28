@@ -209,12 +209,12 @@ loaded, at server startup.
 
 ## Python
 
-Requires Python ^3.8.
+Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
-Install dependencies:
+Install dependencies, picking the downloader as an extra (`yt-dlp` or `youtube-dl`):
 
 ```shell
-pip install -r requirements.txt
+uv sync --extra yt-dlp
 ```
 
 Build the frontend:
@@ -226,13 +226,13 @@ cd front && npm install && npm run build
 Run the server:
 
 ```shell
-python3 -u ./youtube-dl-server.py
+uv run python -u ./youtube-dl-server.py
 ```
 
 To force a specific yt-dlp/youtube-dl fork, set the `YOUTUBE_DL` environment variable:
 
 ```shell
-YOUTUBE_DL=yt-dlp python3 -u ./youtube-dl-server.py
+YOUTUBE_DL=yt-dlp uv run python -u ./youtube-dl-server.py
 ```
 
 The server version shown in the footer and `/api/info` comes from `ydl_server/VERSION`.

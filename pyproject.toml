@@ -1,0 +1,33 @@
+[project]
+name = "youtube-dl-server"
+description = "Web / REST interface for downloading youtube videos onto a server."
+readme = "README.md"
+version = "0.0.0"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+    "starlette>=1.10.0",
+    "uvicorn>=0.54.0",
+    "aiofiles>=25.1.0",
+    "Jinja2>=3.1.6",
+    "PyYAML>=6.0.4",
+    "python-multipart>=0.0.34",
+]
+
+[project.optional-dependencies]
+yt-dlp = ["yt-dlp[default]>=2026.11.23"]
+youtube-dl = ["youtube-dl>=2021.12.17"]
+
+[project.urls]
+homepage = "https://github.com/nbr23/youtube-dl-server"
+repository = "https://github.com/nbr23/youtube-dl-server"
+
+[dependency-groups]
+dev = ["ruff"]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"

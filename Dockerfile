@@ -14,15 +14,16 @@ COPY ./front /app
 RUN npm run build
 
 FROM python:alpine AS venv
-ENV PYTHON_ENV="/usr/local/python-env"
+ENV PYTHON_ENV="/usr/local/python-env" \
+    UV_PROJECT_ENVIRONMENT="/usr/local/python-env" \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1
 
-RUN apk add --no-cache g++
-COPY ./requirements.txt .
-RUN pip install uv --break-system-packages && \
-    uv venv $PYTHON_ENV && \
-    source $PYTHON_ENV/bin/activate && \
-    uv pip install -r <(cat ./requirements.txt| grep -v youtube-dl | grep -v yt-dlp) && \
-    uv pip install pip
+RUN apk add --no-cache g++ && pip install uv --break-system-packages
+WORKDIR /build
+COPY ./pyproject.toml ./uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project
 
 FROM venv AS test
 
@@ -35,14 +36,10 @@ COPY ./tests ./tests
 CMD ["python", "-m", "unittest", "discover", "-s", "tests", "-v"]
 
 FROM venv AS venv-yt-dlp
-
-RUN source $PYTHON_ENV/bin/activate && \
-  uv pip install -r <(cat ./requirements.txt| grep yt-dlp)
+RUN uv sync --locked --no-dev --no-install-project --extra yt-dlp
 
 FROM venv AS venv-youtube-dl
-
-RUN source $PYTHON_ENV/bin/activate && \
-  uv pip install -r <(cat ./requirements.txt| grep youtube-dl)
+RUN uv sync --locked --no-dev --no-install-project --extra youtube-dl
 
 
 FROM python:alpine AS base
