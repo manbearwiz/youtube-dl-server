@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import optparse
 import os
 import subprocess
 import sys
@@ -16,7 +17,7 @@ from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Route
 from starlette.status import HTTP_303_SEE_OTHER
 from starlette.templating import Jinja2Templates
-from yt_dlp import YoutubeDL, version
+from yt_dlp import YoutubeDL, parse_options, version
 
 config = Config(".env")
 
@@ -39,7 +40,8 @@ def split_langs(value):
 
 
 # Options are data, not per-option code: name -> (cast, default). Resolution
-# order is the process environment, then the .env file, then the default.
+# order is the process environment, then the .env file, then a yt-dlp config file
+# (CONFIG_PARAMS below), then the default.
 OPTIONS = {
     "YDL_FORMAT": (str, "bestvideo+bestaudio/best"),
     "YDL_EXTRACT_AUDIO_FORMAT": (str, None),
@@ -77,9 +79,81 @@ def resolve(key, cast, default):
     return default if value == "" else value
 
 
-app_defaults = {
-    key: resolve(key, cast, default) for key, (cast, default) in OPTIONS.items()
+def read_ydl_config():
+    # The params yt-dlp's own config files set, such as the mounted
+    # /root/.config/yt-dlp the README documents and the image's /etc/yt-dlp/config.
+    # The embedding API reads no config file, and parse_options reads them (from the
+    # places the yt-dlp command line does) only when it parses sys.argv, which here
+    # is uvicorn's: an empty command line stands in for it meanwhile.
+    argv, sys.argv = sys.argv, ["yt-dlp"]
+    try:
+        configured = parse_options().ydl_opts
+    except (optparse.OptParseError, SystemExit) as exc:
+        # A file yt-dlp cannot parse warns and is skipped, as a bad option value
+        # does: raising here would stop the app at import. The reason is the last
+        # line, after yt-dlp's usage text.
+        reason = str(exc).strip().rpartition("\n")[2]
+        logger.warning("Ignoring yt-dlp config files: %s", reason)
+        return {}
+    finally:
+        sys.argv = argv
+
+    # Only what the files change. parse_options fills in every command-line
+    # default, and some differ from the API's (ignoreerrors, retries), so an install
+    # without a config file must see none of them. A value equal to the
+    # command-line default cannot be told from an unset one, so it is left to the
+    # API's default.
+    defaults = parse_options([]).ydl_opts
+    params = {
+        key: value for key, value in configured.items() if value != defaults.get(key)
+    }
+    if "postprocessors" in params:
+        params["postprocessors"] = [
+            pp
+            for pp in params["postprocessors"]
+            if pp not in defaults["postprocessors"]
+        ]
+    if params:
+        # Names only: a config file can hold credentials.
+        logger.info("yt-dlp config files set: %s", ", ".join(sorted(params)))
+    return params
+
+
+# The yt-dlp param behind each option that a config file can also set. A value from
+# a config file takes the place of the option's default, so the environment and
+# the .env file still win over it. YDL_OUTPUT_TEMPLATE is the config file's default
+# output template (outtmpl["default"]), see resolve_options.
+CONFIG_PARAMS = {
+    "YDL_FORMAT": "format",
+    "YDL_ARCHIVE_FILE": "download_archive",
+    "YDL_UPDATE_TIME": "updatetime",
+    "YDL_IGNORE_ERRORS": "ignoreerrors",
+    "YDL_PROXY": "proxy",
+    "YDL_COOKIE_FILE": "cookiefile",
+    "YDL_WRITE_SUBTITLES": "writesubtitles",
+    "YDL_SUBTITLES_LANGS": "subtitleslangs",
+    "YDL_WRITE_THUMBNAIL": "writethumbnail",
 }
+
+
+def resolve_options(params):
+    options = {
+        key: resolve(key, cast, default) for key, (cast, default) in OPTIONS.items()
+    }
+    configured = {
+        key: params[param] for key, param in CONFIG_PARAMS.items() if param in params
+    }
+    if "default" in params.get("outtmpl", {}):
+        configured["YDL_OUTPUT_TEMPLATE"] = params["outtmpl"]["default"]
+    for key, value in configured.items():
+        # Set means a non-empty value, the rule resolve applies.
+        if not config(key, default=""):
+            options[key] = value
+    return options
+
+
+ydl_config = read_ydl_config()
+app_defaults = resolve_options(ydl_config)
 
 templates = Jinja2Templates(directory="templates")
 
@@ -241,6 +315,52 @@ REQUEST_AUDIO_FORMATS = {
 }
 REQUEST_RECODE_FORMATS = {"mp4", "flv", "webm", "ogg", "mkv", "avi"}
 
+# The postprocessors that convert the downloaded file into another format.
+CONVERTERS = {"FFmpegExtractAudio", "FFmpegVideoRemuxer", "FFmpegVideoConvertor"}
+
+# The order yt-dlp itself runs these in (yt_dlp.get_postprocessors), so one the
+# server adds runs where yt-dlp would run it among a config file's postprocessors.
+POSTPROCESSOR_ORDER = {
+    key: rank
+    for rank, key in enumerate(
+        (
+            "FFmpegExtractAudio",
+            "FFmpegVideoRemuxer",
+            "FFmpegVideoConvertor",
+            "FFmpegEmbedSubtitle",
+            "ModifyChapters",
+            "FFmpegMetadata",
+            "EmbedThumbnail",
+            "FFmpegSplitChapters",
+            "XAttrMetadata",
+        )
+    )
+}
+
+
+def merge_postprocessors(configured, own):
+    # The server's converter selects the one pipeline, so it replaces the config
+    # file's conversions (ffmpeg would otherwise convert the result again). Its
+    # metadata postprocessor is folded into the config file's, which keeps that
+    # one's chapter and info.json settings.
+    if any(pp["key"] in CONVERTERS for pp in own):
+        configured = [pp for pp in configured if pp["key"] not in CONVERTERS]
+    merged = list(configured)
+    for pp in own:
+        keys = [other["key"] for other in merged]
+        if pp["key"] in keys:
+            index = keys.index(pp["key"])
+            merged[index] = {**merged[index], **pp}
+            continue
+        # Before the first one yt-dlp runs later; keys it does not order (another
+        # stage's, a plugin's) do not move it.
+        rank = POSTPROCESSOR_ORDER[pp["key"]]
+        later = (
+            i for i, key in enumerate(keys) if POSTPROCESSOR_ORDER.get(key, -1) > rank
+        )
+        merged.insert(next(later, len(merged)), pp)
+    return merged
+
 
 def get_ydl_options(request_options):
     # The env values are defaults: they apply when the request names no codec or
@@ -281,10 +401,21 @@ def get_ydl_options(request_options):
         # conversion may not carry metadata (3gp, webm).
         postprocessors.append({"key": "FFmpegMetadata", "add_metadata": True})
 
+    # A config file can name templates for other files too (thumbnails, subtitles);
+    # those stay, and the default one is the option's.
+    outtmpl = ydl_vars["YDL_OUTPUT_TEMPLATE"]
+    if "outtmpl" in ydl_config:
+        outtmpl = {**ydl_config["outtmpl"], "default": outtmpl}
+
+    # The config file's params are the base: the server's own are set on top, and
+    # those already carry a config file's value where it replaced the default.
     options = {
+        **ydl_config,
         "format": ydl_vars["YDL_FORMAT"],
-        "postprocessors": postprocessors,
-        "outtmpl": ydl_vars["YDL_OUTPUT_TEMPLATE"],
+        "postprocessors": merge_postprocessors(
+            ydl_config.get("postprocessors", []), postprocessors
+        ),
+        "outtmpl": outtmpl,
         "download_archive": ydl_vars["YDL_ARCHIVE_FILE"],
         "cookiefile": ydl_vars["YDL_COOKIE_FILE"],
         "proxy": ydl_vars["YDL_PROXY"],
@@ -298,6 +429,12 @@ def get_ydl_options(request_options):
     # yt-dlp's own default language selection, and the value must be a list.
     if ydl_vars["YDL_SUBTITLES_LANGS"]:
         options["subtitleslangs"] = ydl_vars["YDL_SUBTITLES_LANGS"]
+
+    # The config file's final extension names the result of its own conversion,
+    # which the server's replaced: yt-dlp would take an existing file with that
+    # extension for this download, already converted, and skip it.
+    if any(pp["key"] in CONVERTERS for pp in postprocessors):
+        options.pop("final_ext", None)
 
     return options
 

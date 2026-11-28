@@ -6,6 +6,7 @@ Each test pins one observable behavior.
 import asyncio
 import importlib
 import logging
+import sys
 from urllib.parse import quote
 
 from starlette.testclient import TestClient
@@ -467,4 +468,147 @@ def test_get_ydl_options_base_keys(client):
         "updatetime",
         "writesubtitles",
         "writethumbnail",
+    ]
+
+
+def test_ydl_config_file_is_read(ydl_config_dir):
+    # The embedding API reads no config file, so the server reads the ones the
+    # yt-dlp command line does: the README's mounted /root/.config/yt-dlp is one.
+    (ydl_config_dir / "config").write_text(
+        "# every download\n"
+        "--cookies /config/cookies.txt\n"
+        "--js-runtimes node\n"
+        "--embed-thumbnail\n"
+    )
+    argv = list(sys.argv)
+    params = app.read_ydl_config()
+    assert params["cookiefile"] == "/config/cookies.txt"
+    assert "node" in params["js_runtimes"]
+    assert params["writethumbnail"] is True
+    assert [pp["key"] for pp in params["postprocessors"]] == ["EmbedThumbnail"]
+    # The command line yt-dlp parsed in its place is uvicorn's again.
+    assert sys.argv == argv
+
+
+def test_no_ydl_config_file_changes_nothing(ydl_config_dir):
+    # Only what a config file sets is kept: yt-dlp's command-line defaults differ
+    # from its API defaults, and an install without a config file must not change.
+    assert app.read_ydl_config() == {}
+
+
+def test_unparseable_ydl_config_file_warns_and_is_ignored(ydl_config_dir, caplog):
+    # Like a bad option value, a bad config file must not stop the app at import.
+    caplog.set_level(logging.WARNING, logger="youtube-dl-server")
+    (ydl_config_dir / "config").write_text("--no-such-option\n")
+    assert app.read_ydl_config() == {}
+    assert "Ignoring yt-dlp config files" in caplog.text
+    assert "no such option: --no-such-option" in caplog.text
+
+
+def test_ydl_config_replaces_option_defaults(monkeypatch):
+    # Resolution is the process environment, then .env, then the config file, then
+    # the default.
+    for key in ("YDL_FORMAT", "YDL_OUTPUT_TEMPLATE", "YDL_WRITE_THUMBNAIL"):
+        monkeypatch.delenv(key, raising=False)
+    params = {
+        "format": "bestaudio/best",
+        "outtmpl": {"default": "/youtube-dl/%(uploader)s/%(title)s.%(ext)s"},
+        "writethumbnail": True,
+    }
+    options = app.resolve_options(params)
+    assert options["YDL_FORMAT"] == "bestaudio/best"
+    assert (
+        options["YDL_OUTPUT_TEMPLATE"] == "/youtube-dl/%(uploader)s/%(title)s.%(ext)s"
+    )
+    assert options["YDL_WRITE_THUMBNAIL"] is True
+
+    monkeypatch.setenv("YDL_FORMAT", "worst")
+    monkeypatch.setenv("YDL_WRITE_THUMBNAIL", "false")
+    options = app.resolve_options(params)
+    assert options["YDL_FORMAT"] == "worst"
+    assert options["YDL_WRITE_THUMBNAIL"] is False
+
+
+def test_ydl_config_params_reach_downloads(monkeypatch):
+    # Params without an option of their own pass through to yt-dlp. The default
+    # output template stays the option's, next to the config file's other
+    # templates.
+    monkeypatch.setattr(
+        app,
+        "ydl_config",
+        {
+            "js_runtimes": {"deno": {"path": None}, "node": {"path": None}},
+            "writeinfojson": True,
+            "outtmpl": {"default": "ignored", "pl_thumbnail": ""},
+        },
+    )
+    opts = app.get_ydl_options({})
+    assert opts["js_runtimes"] == {"deno": {"path": None}, "node": {"path": None}}
+    assert opts["writeinfojson"] is True
+    assert opts["outtmpl"] == {
+        "default": app.app_defaults["YDL_OUTPUT_TEMPLATE"],
+        "pl_thumbnail": "",
+    }
+
+
+def test_request_format_replaces_the_ydl_config_conversion(monkeypatch):
+    # A request format selects one pipeline, so it replaces a conversion from the
+    # config file, and runs where yt-dlp would run it among the config file's
+    # other postprocessors.
+    monkeypatch.setattr(
+        app,
+        "ydl_config",
+        {
+            "final_ext": "mp3",
+            "postprocessors": [
+                {
+                    "key": "SponsorBlock",
+                    "categories": {"sponsor"},
+                    "when": "after_filter",
+                },
+                {"key": "FFmpegExtractAudio", "preferredcodec": "mp3"},
+                {"key": "EmbedThumbnail", "already_have_thumbnail": False},
+            ],
+        },
+    )
+    opts = app.get_ydl_options({"format": "mp4"})
+    assert [pp["key"] for pp in opts["postprocessors"]] == [
+        "SponsorBlock",
+        "FFmpegVideoConvertor",
+        "EmbedThumbnail",
+    ]
+    # The config file's final extension named the conversion that was replaced.
+    assert "final_ext" not in opts
+
+    # A request that names no codec or container leaves the config file's.
+    opts = app.get_ydl_options({})
+    assert [pp["key"] for pp in opts["postprocessors"]] == [
+        "SponsorBlock",
+        "FFmpegExtractAudio",
+        "EmbedThumbnail",
+    ]
+    assert opts["final_ext"] == "mp3"
+
+
+def test_embed_metadata_folds_into_the_ydl_config_metadata(monkeypatch):
+    # One metadata postprocessor, keeping the config file's chapter setting.
+    monkeypatch.setattr(
+        app,
+        "ydl_config",
+        {
+            "postprocessors": [
+                {"key": "FFmpegMetadata", "add_chapters": True, "add_metadata": False},
+                {"key": "EmbedThumbnail", "already_have_thumbnail": False},
+            ],
+        },
+    )
+    monkeypatch.setitem(app.app_defaults, "YDL_EMBED_METADATA", True)
+    assert app.get_ydl_options({"format": "mp3"})["postprocessors"] == [
+        {
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
+        },
+        {"key": "FFmpegMetadata", "add_chapters": True, "add_metadata": True},
+        {"key": "EmbedThumbnail", "already_have_thumbnail": False},
     ]

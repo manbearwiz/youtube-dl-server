@@ -1,6 +1,7 @@
 import importlib
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,12 @@ ROOT = Path(__file__).resolve().parent.parent
 # the CWD to the repo root for hermetic runs from any caller.
 os.chdir(ROOT)
 sys.path.insert(0, str(ROOT))
+
+# The app reads yt-dlp's config files from the home directory at import, so point
+# the lookup at an empty one: a developer's own yt-dlp config must not change what
+# the tests see.
+EMPTY_HOME = tempfile.TemporaryDirectory()
+os.environ["HOME"] = os.environ["XDG_CONFIG_HOME"] = EMPTY_HOME.name
 
 # Module name contains a hyphen, so it cannot be a plain `import`.
 app_module = importlib.import_module("youtube-dl-server")
@@ -44,6 +51,16 @@ def fetch(monkeypatch, calls):
 
     monkeypatch.setattr(app_module, "fetch_latest", fake_latest)
     return calls
+
+
+@pytest.fixture
+def ydl_config_dir(monkeypatch, tmp_path):
+    """The user config directory yt-dlp's lookup finds, empty to start with."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    path = tmp_path / "yt-dlp"
+    path.mkdir()
+    return path
 
 
 @pytest.fixture
